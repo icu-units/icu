@@ -41,6 +41,12 @@ Scale::Scale(const Scale& other)
         : fMagnitude(other.fMagnitude), fArbitrary(nullptr), fError(other.fError) {
     if (other.fArbitrary != nullptr) {
         UErrorCode localStatus = U_ZERO_ERROR;
+        // TODO(hugovdm): I noticed localStatus simply gets lost? Why is this
+        // not using this->fError instead of localStatus, such that a bad
+        // fArbitrary would at least come with a corresponding error? See if we
+        // can exercise this code path with a unit test. (Unrelated to units
+        // work, but might as well fix? Or keep this commit separate from the
+        // Units-related PR?)
         fArbitrary = new DecNum(*other.fArbitrary, localStatus);
     }
 }
