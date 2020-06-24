@@ -19,5 +19,3 @@ jobs:
       run: make ./icu4c/source
     - name: make check
       run: make check ./icu4c/source
-    - name: make distcheck
-      run: make distcheck ./icu4c/source
