@@ -1586,7 +1586,7 @@ bool GeneratorHelpers::precision(const MacroProps& macros, UnicodeString& sb, UE
     }
 
     // NOTE: Always return true for rounding because the default value depends on other options.
-    return true;
+    return true; // TODO: impossible. Revisit/remove?
 }
 
 bool GeneratorHelpers::roundingMode(const MacroProps& macros, UnicodeString& sb, UErrorCode&) {
