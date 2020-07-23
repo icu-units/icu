@@ -9,27 +9,62 @@
 
 #include "cmemory.h"
 #include "complexunitsconverter.h"
+#include "uarrsort.h"
 #include "uassert.h"
 #include "unicode/fmtable.h"
 #include "unicode/localpointer.h"
+#include "unicode/measunit.h"
+#include "unicode/measure.h"
 #include "unitconverter.h"
 
 U_NAMESPACE_BEGIN
 namespace units {
 
-ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnit &inputUnit,
-                                             const MeasureUnit &outputUnits,
-                                             const ConversionRates &ratesInfo, UErrorCode &status) {
-
-    if (outputUnits.getComplexity(status) != UMeasureUnitComplexity::UMEASURE_UNIT_MIXED) {
-        unitConverters_.emplaceBackAndCheckErrorCode(status, inputUnit, outputUnits, ratesInfo, status);
-        if (U_FAILURE(status)) {
-            return;
-        }
-
-        units_.emplaceBackAndCheckErrorCode(status, outputUnits);
+ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
+                                             const MeasureUnitImpl &outputUnits,
+                                             const ConversionRates &ratesInfo, UErrorCode &status)
+    : units_(outputUnits.extractIndividualUnits(status)) {
+    if (U_FAILURE(status)) {
         return;
     }
+
+    if (units_.length() == 0) {
+        status = U_ILLEGAL_ARGUMENT_ERROR;
+        return;
+    }
+
+    auto compareUnits = [](const void *context, const void *left, const void *right) {
+        UErrorCode status = U_ZERO_ERROR;
+
+        typedef MeasureUnitImpl *MUIPointer;
+
+        const auto *leftPointer = static_cast<const MUIPointer *>(left);
+        const MeasureUnitImpl *leftU = *leftPointer;
+
+        const auto *rightPointer = static_cast<const MUIPointer *>(right);
+        const MeasureUnitImpl *rightU = *rightPointer;
+
+        // TODO: use the compare function that will be added to UnitConveter.
+        UnitConverter fromLeftToRight(*leftU,                                         //
+                                      *rightU,                                        //
+                                      *static_cast<const ConversionRates *>(context), //
+                                      status);
+        if (fromLeftToRight.convert(1.0) > 1.0) {
+            return -1;
+        };
+
+        return 1;
+    };
+
+    uprv_sortArray(
+        units_.getAlias(), //
+        units_.length(),   //
+        units_.elementSize(), // TODO: add a function that returns the size of the element of the array.
+        compareUnits,      //
+        &ratesInfo,        //
+        false,             //
+        &status            //
+    );
 
     // In case the `outputUnits` are `UMEASURE_UNIT_MIXED` such as `foot+inch`. In this case we need more
     // converters to convert from the `inputUnit` to the first unit in the `outputUnits`. Then, a
@@ -45,47 +80,19 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnit &inputUnit,
     //              2. convert the residual of 6.56168 feet (0.56168) to inches, which will be (6.74016
     //              inches)
     //              3. then, the final result will be (6 feet and 6.74016 inches)
-    int32_t length;
-    auto singleUnits = outputUnits.splitToSingleUnits(length, status);
-    MaybeStackVector<MeasureUnit> singleUnitsInOrder;
-    for (int i = 0; i < length; ++i) {
-        /**
-         *  TODO(younies): ensure units being in order by the biggest unit at first.
-         * 
-         * HINT:
-         *  MaybeStackVector<SingleUnitImpl> singleUnitsInOrder =  MeasureUnitImpl::forMeasureUnitMaybeCopy(outputUnits, status).units;
-         *      uprv_sortArray(
-         *      singleUnitsInOrder.getAlias(),
-         *      singleUnitsInOrder.length(),
-         *      sizeof(singleUnitsInOrder[0]),
-         *      compareSingleUnits,
-         *      nullptr,
-         *      false,
-         *      &status);
-         */ 
-        singleUnitsInOrder.emplaceBackAndCheckErrorCode(status, singleUnits[i]);
-    }
-
-    if (singleUnitsInOrder.length() == 0) {
-        status = U_ILLEGAL_ARGUMENT_ERROR;
-        return;
-    }
-
-    for (int i = 0, n = singleUnitsInOrder.length(); i < n; i++) {
+    for (int i = 0, n = units_.length(); i < n; i++) {
         if (i == 0) { // first element
-            unitConverters_.emplaceBackAndCheckErrorCode(status, inputUnit, *singleUnitsInOrder[i],
-                                                         ratesInfo, status);
+            unitConverters_.emplaceBackAndCheckErrorCode(status, inputUnit, *units_[i], ratesInfo,
+                                                         status);
         } else {
-            unitConverters_.emplaceBackAndCheckErrorCode(status, *singleUnitsInOrder[i - 1],
-                                                         *singleUnitsInOrder[i], ratesInfo, status);
+            unitConverters_.emplaceBackAndCheckErrorCode(status, *units_[i - 1], *units_[i], ratesInfo,
+                                                         status);
         }
 
         if (U_FAILURE(status)) {
             return;
         }
     }
-
-    units_.appendAll(singleUnitsInOrder, status);
 }
 
 UBool ComplexUnitsConverter::greaterThanOrEqual(double quantity, double limit) const {
@@ -106,8 +113,8 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
             Formattable formattableNewQuantity(newQuantity);
 
             // NOTE: Measure would own its MeasureUnit.
-            result.emplaceBackAndCheckErrorCode(status, formattableNewQuantity,
-                                                new MeasureUnit(*units_[i]), status);
+            MeasureUnit *type = new MeasureUnit(units_[i]->copy(status).build(status));
+            result.emplaceBackAndCheckErrorCode(status, formattableNewQuantity, type, status);
 
             // Keep the residual of the quantity.
             //   For example: `3.6 feet`, keep only `0.6 feet`
@@ -116,8 +123,8 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
             Formattable formattableQuantity(quantity);
 
             // NOTE: Measure would own its MeasureUnit.
-            result.emplaceBackAndCheckErrorCode(status, formattableQuantity, new MeasureUnit(*units_[i]),
-                                                status);
+            MeasureUnit *type = new MeasureUnit(units_[i]->copy(status).build(status));
+            result.emplaceBackAndCheckErrorCode(status, formattableQuantity, type, status);
         }
     }
 

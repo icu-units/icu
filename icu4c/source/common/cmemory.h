@@ -796,6 +796,10 @@ public:
         return this->fPool.getAlias();
     }
 
+    int32_t elementSize() { 
+        return sizeof(T *);
+    }
+
     /**
      * Array item access (read-only).
      * No index bounds check.
