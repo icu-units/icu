@@ -49,10 +49,10 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
                                       *rightU,                                        //
                                       *static_cast<const ConversionRates *>(context), //
                                       status);
+
         if (fromLeftToRight.convert(1.0) > 1.0) {
             return -1;
         };
-
         return 1;
     };
 
