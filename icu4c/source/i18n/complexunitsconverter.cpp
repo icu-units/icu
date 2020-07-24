@@ -56,14 +56,13 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
         return 1;
     };
 
-    uprv_sortArray(
-        units_.getAlias(), //
-        units_.length(),   //
-        units_.elementSize(), // TODO: add a function that returns the size of the element of the array.
-        compareUnits,      //
-        &ratesInfo,        //
-        false,             //
-        &status            //
+    uprv_sortArray(units_.getAlias(),    //
+                   units_.length(),      //
+                   units_.elementSize(), //
+                   compareUnits,         //
+                   &ratesInfo,           //
+                   false,                //
+                   &status               //
     );
 
     // In case the `outputUnits` are `UMEASURE_UNIT_MIXED` such as `foot+inch`. In this case we need more
