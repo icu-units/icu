@@ -514,6 +514,8 @@ void NumberFormatterApiTest::notationCompact() {
 }
 
 void NumberFormatterApiTest::unitMeasure() {
+    IcuTestErrorCode status(*this, "unitMeasure()");
+
     assertFormatDescending(
             u"Meters Short and unit() method",
             u"measure-unit/length-meter",
@@ -680,6 +682,87 @@ void NumberFormatterApiTest::unitMeasure() {
             Locale("es-MX"),
             5,
             u"5 a\u00F1os");
+
+//     // Almost works: skeleton generation is missing.
+//     assertFormatSingle(
+//             u"Mixed unit",
+//             nullptr, nullptr,
+//         //     u"unit/yard-and-foot-and-inch",
+//         //     u"unit/yard-and-foot-and-inch",
+//             NumberFormatter::with()
+//                 .unit(MeasureUnit::forIdentifier("yard-and-foot-and-inch", status)),
+//             Locale("en-US"),
+//             3.65,
+//             "3 yd, 1 ft, 11.4 in");
+    // In the meantime:
+    UnlocalizedNumberFormatter unloc_formatter;
+    FormattedNumber formattedNum;
+    U_ASSERT(U_SUCCESS(status));
+    unloc_formatter = NumberFormatter::forSkeleton("unit/yard-and-foot-and-inch", status);
+    status.errIfFailureAndReset("forSkeleton(\"unit/yard-and-foot-and-inch\", status)");
+    formattedNum = unloc_formatter.locale("en-US").formatDouble(3.65, status);
+    status.errIfFailureAndReset("Mixed unit formatDouble(...)");
+    assertEquals("FIXME", "3 yd, 1 ft, 11.4 in", formattedNum.toString(status));
+    status.errIfFailureAndReset("Mixed unit formattedNum.toString(...)");
+
+//     // Almost works: skeleton generation is missing.
+//     assertFormatSingle(
+//             u"Mixed unit, Scientific",
+//             nullptr, nullptr,
+//         //     u"unit/yard-and-foot-and-inch E0",
+//         //     u"unit/yard-and-foot-and-inch E0",
+//             NumberFormatter::with()
+//                 .unit(MeasureUnit::forIdentifier("yard-and-foot-and-inch", status))
+//                 .notation(Notation::scientific()),
+//             Locale("en-US"),
+//             3.65,
+//             "3 yd, 1 ft, 1.14E1 in");
+    // In the meantime:
+    unloc_formatter = NumberFormatter::forSkeleton("unit/yard-and-foot-and-inch E0", status);
+    status.errIfFailureAndReset("forSkeleton(\"unit/yard-and-foot-and-inch E0\", status)");
+    formattedNum = unloc_formatter.locale("en-US").formatDouble(3.65, status);
+    status.errIfFailureAndReset("Mixed unit E0 formatDouble(...)");
+    assertEquals("FIXME", "3 yd, 1 ft, 1.14E1 in", formattedNum.toString(status));
+    status.errIfFailureAndReset("Mixed unit E0 formattedNum.toString(...)");
+
+//     // Almost works: skeleton generation is missing.
+//     assertFormatSingle(
+//             u"Mixed Unit (Narrow Version)",
+//             nullptr, nullptr,
+//         //     u"unit/metric-ton-and-kilogram-and-gram unit-width-narrow",
+//         //     u"measure-unit/metric-ton-and-kilogram-and-gram unit-width-narrow",
+//             NumberFormatter::with()
+//                 .unit(MeasureUnit::forIdentifier("metric-ton-and-kilogram-and-gram", status))
+//                 .unitWidth(UNUM_UNIT_WIDTH_NARROW),
+//             Locale("en-US"),
+//             4.28571,
+//             u"4t 285kg 710g");
+
+//     // Almost works: skeleton generation is missing.
+//     assertFormatSingle(
+//             u"Mixed Unit (Short Version)",
+//             nullptr, nullptr,
+//         //     u"unit/metric-ton-and-kilogram-and-gram unit-width-short",
+//         //     u"measure-unit/mass-metric-ton-and-kilogram-and-gram unit-width-short",
+//             NumberFormatter::with()
+//                 .unit(MeasureUnit::forIdentifier("metric-ton-and-kilogram-and-gram", status))
+//                 .unitWidth(UNUM_UNIT_WIDTH_SHORT),
+//             Locale("en-US"),
+//             4.28571,
+//             u"4 t, 285 kg, 710 g");
+
+//     // Almost works: skeleton generation is missing.
+//     assertFormatSingle(
+//             u"Mixed Unit (Full Name Version)",
+//             nullptr, nullptr,
+//         //     u"unit/metric-ton-and-kilogram-and-gram unit-width-full-name",
+//         //     u"measure-unit/mass-metric-ton-and-kilogram-and-gram unit-width-full-name",
+//             NumberFormatter::with()
+//                 .unit(MeasureUnit::forIdentifier("metric-ton-and-kilogram-and-gram", status))
+//                 .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME),
+//             Locale("en-US"),
+//             4.28571,
+//             u"4 metric tons, 285 kilograms, 710 grams");
 }
 
 // TODO(hugovdm): once one of #52 and #61 has been merged into the other, move
