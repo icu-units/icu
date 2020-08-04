@@ -36,23 +36,20 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
     auto compareUnits = [](const void *context, const void *left, const void *right) {
         UErrorCode status = U_ZERO_ERROR;
 
-        typedef MeasureUnitImpl *MUIPointer;
-
-        const auto *leftPointer = static_cast<const MUIPointer *>(left);
-        const MeasureUnitImpl *leftU = *leftPointer;
-
-        const auto *rightPointer = static_cast<const MUIPointer *>(right);
-        const MeasureUnitImpl *rightU = *rightPointer;
+        const auto *leftPointer = static_cast<const MeasureUnitImpl *const *>(left);
+        const auto *rightPointer = static_cast<const MeasureUnitImpl *const *>(right);
 
         // TODO: use the compare function that will be added to UnitConveter.
-        UnitConverter fromLeftToRight(*leftU,                                         //
-                                      *rightU,                                        //
+        UnitConverter fromLeftToRight(**leftPointer,                                   //
+                                      **rightPointer,                                  //
                                       *static_cast<const ConversionRates *>(context), //
                                       status);
 
-        if (fromLeftToRight.convert(1.0) > 1.0) {
+        double rightFromOneLeft = fromLeftToRight.convert(1.0);
+        if (rightFromOneLeft > 1.0) {
             return -1;
-        };
+        }
+
         return 1;
     };
 
