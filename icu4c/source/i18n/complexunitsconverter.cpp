@@ -40,17 +40,18 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
         const auto *rightPointer = static_cast<const MeasureUnitImpl *const *>(right);
 
         // TODO: use the compare function that will be added to UnitConveter.
-        UnitConverter fromLeftToRight(**leftPointer,                                   //
-                                      **rightPointer,                                  //
+        UnitConverter fromLeftToRight(**leftPointer,                                  //
+                                      **rightPointer,                                 //
                                       *static_cast<const ConversionRates *>(context), //
                                       status);
 
         double rightFromOneLeft = fromLeftToRight.convert(1.0);
-        if (rightFromOneLeft > 1.0) {
+        if (rightFromOneLeft > 1.0) { // Great Than
             return -1;
+        } else if (std::abs(rightFromOneLeft - 1.0) < 0.0000000001) { // Equal To
         }
 
-        return 1;
+        return 1; // Less Than
     };
 
     uprv_sortArray(units_.getAlias(),    //
