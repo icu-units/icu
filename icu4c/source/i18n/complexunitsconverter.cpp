@@ -28,12 +28,12 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
         return;
     }
 
-    if (units_.length() == 0) {
-        status = U_ILLEGAL_ARGUMENT_ERROR;
-        return;
-    }
+    U_ASSERT(units_.length() != 0);
 
-    auto compareUnits = [](const void *context, const void *left, const void *right) {
+    // NOTE:
+    //  This comparator is used to short the units in a descending order. Therefore, we return -1 if
+    //  the left is bigger than right and so on.
+    auto descendingCompareUnits = [](const void *context, const void *left, const void *right) {
         UErrorCode status = U_ZERO_ERROR;
 
         const auto *leftPointer = static_cast<const MeasureUnitImpl *const *>(left);
@@ -46,21 +46,22 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
                                       status);
 
         double rightFromOneLeft = fromLeftToRight.convert(1.0);
-        if (rightFromOneLeft > 1.0) { // Great Than
+        if (std::abs(rightFromOneLeft - 1.0) < 0.0000000001) { // Equal To
+            return 0;
+        } else if (rightFromOneLeft > 1.0)  { // Greater Than
             return -1;
-        } else if (std::abs(rightFromOneLeft - 1.0) < 0.0000000001) { // Equal To
         }
 
         return 1; // Less Than
     };
 
-    uprv_sortArray(units_.getAlias(),    //
-                   units_.length(),      //
-                   units_.elementSize(), //
-                   compareUnits,         //
-                   &ratesInfo,           //
-                   false,                //
-                   &status               //
+    uprv_sortArray(units_.getAlias(),                                                                  //
+                   units_.length(),                                                                    //
+                   sizeof units_[0], /* NOTE: we have already asserted that the units_ is not empty.*/ //
+                   descendingCompareUnits,                                                             //
+                   &ratesInfo,                                                                         //
+                   false,                                                                              //
+                   &status                                                                             //
     );
 
     // In case the `outputUnits` are `UMEASURE_UNIT_MIXED` such as `foot+inch`. In this case we need more
