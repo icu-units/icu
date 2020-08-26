@@ -5,7 +5,7 @@
 
 #if !UCONFIG_NO_FORMATTING
 
-#include <math.h>
+#include <cmath>
 
 #include "cmemory.h"
 #include "complexunitsconverter.h"
@@ -46,7 +46,7 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
                                       status);
 
         double rightFromOneLeft = fromLeftToRight.convert(1.0);
-        if (std::abs(rightFromOneLeft - 1.0) < 0.0000000001) { // Equal To
+        if (std::fabsl(rightFromOneLeft - 1.0) < 0.0000000001) { // Equal To
             return 0;
         } else if (rightFromOneLeft > 1.0)  { // Greater Than
             return -1;
