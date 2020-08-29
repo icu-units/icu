@@ -81,10 +81,11 @@ private:
     void TestNumericTimeSomeSpecialFormats();
     void TestIdentifiers();
     void TestInvalidIdentifiers();
-    void TestParseToBuiltIn();
+    void TestKilogramIdentifier();
     void TestCompoundUnitOperations();
     void TestDimensionlessBehaviour();
     void Test21060_AddressSanitizerProblem();
+    void Test21223_FrenchDuration();
 
     void verifyFormat(
         const char *description,
@@ -206,10 +207,11 @@ void MeasureFormatTest::runIndexedTest(
     TESTCASE_AUTO(TestNumericTimeSomeSpecialFormats);
     TESTCASE_AUTO(TestIdentifiers);
     TESTCASE_AUTO(TestInvalidIdentifiers);
-    TESTCASE_AUTO(TestParseToBuiltIn);
+    TESTCASE_AUTO(TestKilogramIdentifier);
     TESTCASE_AUTO(TestCompoundUnitOperations);
     TESTCASE_AUTO(TestDimensionlessBehaviour);
     TESTCASE_AUTO(Test21060_AddressSanitizerProblem);
+    TESTCASE_AUTO(Test21223_FrenchDuration);
     TESTCASE_AUTO_END;
 }
 
@@ -3132,23 +3134,11 @@ void MeasureFormatTest::TestIndividualPluralFallback() {
     // and falls back to fr for the "other" form.
     IcuTestErrorCode errorCode(*this, "TestIndividualPluralFallback");
     MeasureFormat mf("fr_CA", UMEASFMT_WIDTH_SHORT, errorCode);
-    if (errorCode.errIfFailureAndReset("MeasureFormat mf(...) failed.")) {
-        return;
-    }
     LocalPointer<Measure> twoDeg(
         new Measure(2.0, MeasureUnit::createGenericTemperature(errorCode), errorCode), errorCode);
-    if (errorCode.errIfFailureAndReset("Creating twoDeg failed.")) {
-        return;
-    }
     UnicodeString expected = UNICODE_STRING_SIMPLE("2\\u00B0").unescape();
     UnicodeString actual;
-    // Formattable adopts the pointer
-    mf.format(Formattable(twoDeg.orphan()), actual, errorCode);
-    if (errorCode.errIfFailureAndReset("mf.format(...) failed.")) {
-        return;
-    }
-    assertEquals("2 deg temp in fr_CA", expected, actual, TRUE);
-    errorCode.errIfFailureAndReset("mf.format failed");
+    assertEquals("2 deg temp in fr_CA", expected, mf.format(twoDeg.orphan(), actual, errorCode), TRUE);
 }
 
 void MeasureFormatTest::Test20332_PersonUnits() {
@@ -3335,31 +3325,43 @@ void MeasureFormatTest::TestInvalidIdentifiers() {
     }
 }
 
-void MeasureFormatTest::TestParseToBuiltIn() {
-    IcuTestErrorCode status(*this, "TestParseToBuiltIn()");
-    const struct TestCase {
-        const char *identifier;
-        MeasureUnit expectedBuiltIn;
-    } cases[] = {
-        {"meter-per-second-per-second", MeasureUnit::getMeterPerSecondSquared()},
-        {"meter-per-second-second", MeasureUnit::getMeterPerSecondSquared()},
-        {"centimeter-centimeter", MeasureUnit::getSquareCentimeter()},
-        {"square-foot", MeasureUnit::getSquareFoot()},
-        {"pow2-inch", MeasureUnit::getSquareInch()},
-        {"milligram-per-deciliter", MeasureUnit::getMilligramPerDeciliter()},
-        {"pound-force-per-pow2-inch", MeasureUnit::getPoundPerSquareInch()},
-        {"yard-pow2-yard", MeasureUnit::getCubicYard()},
-        {"square-yard-yard", MeasureUnit::getCubicYard()},
-    };
+// Kilogram is a "base unit", although it's also "gram" with a kilo- prefix.
+// This tests that it is handled in the preferred manner.
+void MeasureFormatTest::TestKilogramIdentifier() {
+    IcuTestErrorCode status(*this, "TestKilogramIdentifier");
 
-    for (auto &cas : cases) {
-        MeasureUnit fromIdent = MeasureUnit::forIdentifier(cas.identifier, status);
-        status.assertSuccess();
-        assertEquals("forIdentifier returns a normal built-in unit when it exists",
-                     cas.expectedBuiltIn.getOffset(), fromIdent.getOffset());
-        assertEquals("type", cas.expectedBuiltIn.getType(), fromIdent.getType());
-        assertEquals("subType", cas.expectedBuiltIn.getSubtype(), fromIdent.getSubtype());
-    }
+    // SI unit of mass
+    MeasureUnit kilogram = MeasureUnit::forIdentifier("kilogram", status);
+    // Metric mass unit
+    MeasureUnit gram = MeasureUnit::forIdentifier("gram", status);
+    // Microgram: still a built-in type
+    MeasureUnit microgram = MeasureUnit::forIdentifier("microgram", status);
+    // Nanogram: not a built-in type at this time
+    MeasureUnit nanogram = MeasureUnit::forIdentifier("nanogram", status);
+    status.assertSuccess();
+
+    assertEquals("parsed kilogram equals built-in kilogram", MeasureUnit::getKilogram().getType(),
+                 kilogram.getType());
+    assertEquals("parsed kilogram equals built-in kilogram", MeasureUnit::getKilogram().getSubtype(),
+                 kilogram.getSubtype());
+    assertEquals("parsed gram equals built-in gram", MeasureUnit::getGram().getType(), gram.getType());
+    assertEquals("parsed gram equals built-in gram", MeasureUnit::getGram().getSubtype(),
+                 gram.getSubtype());
+    assertEquals("parsed microgram equals built-in microgram", MeasureUnit::getMicrogram().getType(),
+                 microgram.getType());
+    assertEquals("parsed microgram equals built-in microgram", MeasureUnit::getMicrogram().getSubtype(),
+                 microgram.getSubtype());
+    assertEquals("nanogram", "", nanogram.getType());
+    assertEquals("nanogram", "nanogram", nanogram.getIdentifier());
+
+    assertEquals("prefix of kilogram", UMEASURE_SI_PREFIX_KILO, kilogram.getSIPrefix(status));
+    assertEquals("prefix of gram", UMEASURE_SI_PREFIX_ONE, gram.getSIPrefix(status));
+    assertEquals("prefix of microgram", UMEASURE_SI_PREFIX_MICRO, microgram.getSIPrefix(status));
+    assertEquals("prefix of nanogram", UMEASURE_SI_PREFIX_NANO, nanogram.getSIPrefix(status));
+
+    MeasureUnit tmp = kilogram.withSIPrefix(UMEASURE_SI_PREFIX_MILLI, status);
+    assertEquals(UnicodeString("Kilogram + milli should be milligram, got: ") + tmp.getIdentifier(),
+                 MeasureUnit::getMilligram().getIdentifier(), tmp.getIdentifier());
 }
 
 void MeasureFormatTest::TestCompoundUnitOperations() {
@@ -3590,6 +3592,29 @@ void MeasureFormatTest::Test21060_AddressSanitizerProblem() {
     status.errIfFailureAndReset();
 }
 
+void MeasureFormatTest::Test21223_FrenchDuration() {
+    IcuTestErrorCode status(*this, "Test21223_FrenchDuration");
+    MeasureFormat mf("fr-FR", UMEASFMT_WIDTH_NARROW, status);
+    Measure H5M10[] = {
+        {5, MeasureUnit::createHour(status), status},
+        {10, MeasureUnit::createMinute(status), status}
+    };
+    UnicodeString result;
+    FieldPosition pos;
+    mf.formatMeasures(H5M10, UPRV_LENGTHOF(H5M10), result, pos, status);
+    assertEquals("Should have consistent spacing", u"5h 10min", result);
+
+    // Test additional locales:
+    // int32_t localeCount;
+    // const Locale* locales = Locale::getAvailableLocales(localeCount);
+    // for (int32_t i=0; i<localeCount; i++) {
+    //     auto& loc = locales[i];
+    //     MeasureFormat mf1(loc, UMEASFMT_WIDTH_NARROW, status);
+    //     mf1.formatMeasures(H5M10, UPRV_LENGTHOF(H5M10), result.remove(), pos, status);
+    //     assertFalse(result + u" " + loc.getName(), TRUE);
+    // }
+}
+
 
 void MeasureFormatTest::verifyFieldPosition(
         const char *description,
@@ -3757,4 +3782,3 @@ extern IntlTest *createMeasureFormatTest() {
 }
 
 #endif
-
