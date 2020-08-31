@@ -75,7 +75,8 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
     for (int i = 0, n = unitConverters_.length(); i < n; ++i) {
         quantity = (*unitConverters_[i]).convert(quantity);
         if (i < n - 1) {
-            int64_t newQuantity = floor(quantity);
+            // TODO: find a better solution to this threshold-related hack:
+            int64_t newQuantity = floor(quantity * 1.000000000001);
             Formattable formattableNewQuantity(newQuantity);
 
             // NOTE: Measure would own its MeasureUnit.
@@ -91,6 +92,9 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
             // NOTE: Measure would own its MeasureUnit.
             MeasureUnit *type = new MeasureUnit(units_[i]->copy(status).build(status));
             result.emplaceBackAndCheckErrorCode(status, formattableQuantity, type, status);
+
+            // TODO: add unit tests to trigger negative numbers. Then fix by
+            // checking for negative numbers here and rounding to zero.
         }
     }
 

@@ -71,7 +71,11 @@ RouteResult UnitsRouter::route(double quantity, UErrorCode &status) const {
     for (int i = 0, n = converterPreferences_.length(); i < n; i++) {
         const auto &converterPreference = *converterPreferences_[i];
 
-        if (converterPreference.converter.greaterThanOrEqual(quantity, converterPreference.limit)) {
+        // TODO: add unit tests for just-under-threshold values which still fail
+        // with this threshold tweak - then reconsider cutoffs appropriate for
+        // the rounding/precision in use?
+        if (converterPreference.converter.greaterThanOrEqual(quantity * 1.000000000001,
+                                                             converterPreference.limit)) {
             return RouteResult(converterPreference.converter.convert(quantity, status),
                                converterPreference.precision,
                                converterPreference.targetUnit.copy(status));
