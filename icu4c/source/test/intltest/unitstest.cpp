@@ -462,6 +462,24 @@ void UnitsTest::testComplexUnitConverter() {
     assertEquals("1 - eps: measures[1] unit", MeasureUnit::getInch().getIdentifier(),
                  measures2[1]->getUnit().getIdentifier());
 
+    input = MeasureUnit::getLightYear();
+    output = MeasureUnit::forIdentifier("light-year-and-kilometer", status);
+    // TODO: reusing tempInput and tempOutput results in a leak.
+    MeasureUnitImpl tempInput3, tempOutput3;
+    const MeasureUnitImpl &inputImpl3 = MeasureUnitImpl::forMeasureUnit(input, tempInput3, status);
+    const MeasureUnitImpl &outputImpl3 = MeasureUnitImpl::forMeasureUnit(output, tempOutput3, status);
+    // TODO: reusing converter results in a leak.
+    ComplexUnitsConverter converter3 = ComplexUnitsConverter(inputImpl3, outputImpl3, rates, status);
+    // TODO: reusing measures results in a leak.
+    MaybeStackVector<Measure> measures3 = converter3.convert((2.0 - DBL_EPSILON), status);
+    assertEquals("measures length", 2, measures3.length());
+    assertEquals("light-year test: measures[0] value", 2.0, measures3[0]->getNumber().getDouble(status));
+    assertEquals("light-year test: measures[0] unit", MeasureUnit::getLightYear().getIdentifier(),
+                 measures3[0]->getUnit().getIdentifier());
+    assertEquals("light-year test: measures[1] value", 0.0, measures3[1]->getNumber().getDouble(status));
+    assertEquals("light-year test: measures[1] unit", MeasureUnit::getKilometer().getIdentifier(),
+                 measures3[1]->getUnit().getIdentifier());
+
     // TODO(icu-units#63): test negative numbers!
 }
 
