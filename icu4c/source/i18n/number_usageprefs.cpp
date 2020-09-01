@@ -181,8 +181,6 @@ Precision UsagePrefsHandler::parseSkeletonToPrecision(icu::UnicodeString precisi
     return macros.precision;
 }
 
-// TODO: this has similarities to UsagePrefsHandler, but doesn't have anything
-// to do with usageprefs. I propose we rename this file?
 UnitConversionHandler::UnitConversionHandler(const MeasureUnit &unit, const MicroPropsGenerator *parent,
                                              UErrorCode &status)
     : fOutputUnit(unit), fParent(parent) {
@@ -190,7 +188,10 @@ UnitConversionHandler::UnitConversionHandler(const MeasureUnit &unit, const Micr
     const MeasureUnitImpl &outputUnit = MeasureUnitImpl::forMeasureUnit(unit, temp, status);
     const MeasureUnitImpl *inputUnit = &outputUnit;
     MaybeStackVector<MeasureUnitImpl> singleUnits;
-    if (outputUnit.complexity == UMEASURE_UNIT_MIXED) {
+    U_ASSERT(outputUnit.complexity == UMEASURE_UNIT_MIXED);
+    // When we wish to support unit conversion, replace the above assert with this if:
+    // if (outputUnit.complexity == UMEASURE_UNIT_MIXED) {
+    {
         singleUnits = outputUnit.extractIndividualUnits(status);
         U_ASSERT(singleUnits.length() > 0);
         inputUnit = singleUnits[0];
