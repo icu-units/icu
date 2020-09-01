@@ -3339,7 +3339,6 @@ void MeasureFormatTest::TestInvalidIdentifiers() {
     }
 }
 
-
 void MeasureFormatTest::TestParseToBuiltIn() {
     IcuTestErrorCode status(*this, "TestParseToBuiltIn()");
     const struct TestCase {
