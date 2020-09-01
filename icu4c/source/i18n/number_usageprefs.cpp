@@ -84,7 +84,7 @@ void Usage::set(StringPiece value) {
     fUsage[fLength] = 0;
 }
 
-void MixedMeasuresToMicros(const MaybeStackVector<Measure> &measures, DecimalQuantity *quantity,
+void mixedMeasuresToMicros(const MaybeStackVector<Measure> &measures, DecimalQuantity *quantity,
                            MicroProps *micros, UErrorCode status) {
     micros->mixedMeasuresCount = measures.length() - 1;
     if (micros->mixedMeasuresCount > 0) {
@@ -146,7 +146,7 @@ void UsagePrefsHandler::processQuantity(DecimalQuantity &quantity, MicroProps &m
         return;
     }
 
-    MixedMeasuresToMicros(routedUnits, &quantity, &micros, status);
+    mixedMeasuresToMicros(routedUnits, &quantity, &micros, status);
 
     UnicodeString precisionSkeleton = routed.precision;
     if (micros.rounder.fPrecision.isBogus()) {
@@ -219,7 +219,7 @@ void UnitConversionHandler::processQuantity(DecimalQuantity &quantity, MicroProp
         return;
     }
 
-    MixedMeasuresToMicros(measures, &quantity, &micros, status);
+    mixedMeasuresToMicros(measures, &quantity, &micros, status);
 
     // TODO: add tests to explore behaviour that may suggest a more
     // human-centric default rounder?
