@@ -70,13 +70,19 @@ UBool ComplexUnitsConverter::greaterThanOrEqual(double quantity, double limit) c
 }
 
 MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UErrorCode &status) const {
+    constexpr double EPSILON = 1e-12; // Consider using DBL_EPSILON instead?
     MaybeStackVector<Measure> result;
 
     for (int i = 0, n = unitConverters_.length(); i < n; ++i) {
         quantity = (*unitConverters_[i]).convert(quantity);
         if (i < n - 1) {
-            // TODO: find a better solution to this threshold-related hack:
-            int64_t newQuantity = floor(quantity * 1.000000000001);
+            // The double type has 15 decimal digits of precision. For choosing
+            // whether to use the current unit or the next smaller unit, we
+            // therefore nudge up the number with which the thresholding
+            // decision is made. However after the thresholding, we use the
+            // original values to ensure unbiased accuracy (to the extent of
+            // double's capabilities).
+            int64_t newQuantity = floor(quantity * (1 + EPSILON));
             Formattable formattableNewQuantity(newQuantity);
 
             // NOTE: Measure would own its MeasureUnit.
@@ -93,7 +99,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
             MeasureUnit *type = new MeasureUnit(units_[i]->copy(status).build(status));
             result.emplaceBackAndCheckErrorCode(status, formattableQuantity, type, status);
 
-            // TODO: add unit tests to trigger negative numbers. Then fix by
+            // FIXME: add unit tests to trigger negative numbers. Then fix by
             // checking for negative numbers here and rounding to zero.
         }
     }

@@ -68,13 +68,10 @@ UnitsRouter::UnitsRouter(MeasureUnit inputUnit, StringPiece region, StringPiece 
 }
 
 RouteResult UnitsRouter::route(double quantity, UErrorCode &status) const {
+    constexpr double EPSILON = 1e-12; // Consider using DBL_EPSILON instead?
     for (int i = 0, n = converterPreferences_.length(); i < n; i++) {
         const auto &converterPreference = *converterPreferences_[i];
-
-        // TODO: add unit tests for just-under-threshold values which still fail
-        // with this threshold tweak - then reconsider cutoffs appropriate for
-        // the rounding/precision in use?
-        if (converterPreference.converter.greaterThanOrEqual(quantity * 1.000000000001,
+        if (converterPreference.converter.greaterThanOrEqual(quantity * (1 + EPSILON),
                                                              converterPreference.limit)) {
             return RouteResult(converterPreference.converter.convert(quantity, status),
                                converterPreference.precision,
