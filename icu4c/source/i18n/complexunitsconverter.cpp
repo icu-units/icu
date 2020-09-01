@@ -70,6 +70,7 @@ UBool ComplexUnitsConverter::greaterThanOrEqual(double quantity, double limit) c
 }
 
 MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UErrorCode &status) const {
+    // TODO(icu-units#63): test negative numbers!
     MaybeStackVector<Measure> result;
 
     for (int i = 0, n = unitConverters_.length(); i < n; ++i) {
@@ -92,14 +93,19 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
             //   For example: `3.6 feet`, keep only `0.6 feet`
             quantity -= newQuantity;
         } else { // LAST ELEMENT
+            if (quantity < 0) {
+                // Because we nudged the bigger units up by epsilon, we might
+                // end up with a negative number here. This number should be
+                // really tiny. (Unless someone is doing
+                // "light-year-and-nanometer" perhaps?)
+                U_ASSERT(quantity > -1e-6);
+                quantity = 0;
+            }
             Formattable formattableQuantity(quantity);
 
             // NOTE: Measure would own its MeasureUnit.
             MeasureUnit *type = new MeasureUnit(units_[i]->copy(status).build(status));
             result.emplaceBackAndCheckErrorCode(status, formattableQuantity, type, status);
-
-            // FIXME: add unit tests to trigger negative numbers. Then fix by
-            // checking for negative numbers here and rounding to zero.
         }
     }
 
