@@ -44,6 +44,7 @@ class UnitsTest : public IntlTest {
     void testUnitConstantFreshness();
     void testConversionCapability();
     void testConversions();
+    void testComplexUnitConverter();
     void testPreferences();
     void testSiPrefixes();
     void testMass();
@@ -61,6 +62,7 @@ void UnitsTest::runIndexedTest(int32_t index, UBool exec, const char *&name, cha
     TESTCASE_AUTO(testUnitConstantFreshness);
     TESTCASE_AUTO(testConversionCapability);
     TESTCASE_AUTO(testConversions);
+    TESTCASE_AUTO(testComplexUnitConverter);
     TESTCASE_AUTO(testPreferences);
     TESTCASE_AUTO(testSiPrefixes);
     TESTCASE_AUTO(testMass);
@@ -427,6 +429,39 @@ void UnitsTest::testConversions() {
     if (errorCode.errIfFailureAndReset("error parsing %s: %s\n", path.data(), u_errorName(errorCode))) {
         return;
     }
+}
+
+void UnitsTest::testComplexUnitConverter() {
+    IcuTestErrorCode status(*this, "UnitsTest::testComplexUnitConversions");
+    ConversionRates rates(status);
+    MeasureUnit input = MeasureUnit::getFoot();
+    MeasureUnit output = MeasureUnit::forIdentifier("foot-and-inch", status);
+    MeasureUnitImpl tempInput, tempOutput;
+    const MeasureUnitImpl &inputImpl = MeasureUnitImpl::forMeasureUnit(input, tempInput, status);
+    const MeasureUnitImpl &outputImpl = MeasureUnitImpl::forMeasureUnit(output, tempOutput, status);
+    auto converter = ComplexUnitsConverter(inputImpl, outputImpl, rates, status);
+
+    // Significantly less than 2.0.
+    MaybeStackVector<Measure> measures = converter.convert(1.9999, status);
+    assertEquals("measures length", 2, measures.length());
+    assertEquals("1.9999: measures[0] value", 1.0, measures[0]->getNumber().getDouble(status));
+    assertEquals("1.9999: measures[0] unit", MeasureUnit::getFoot().getIdentifier(),
+                 measures[0]->getUnit().getIdentifier());
+    assertEqualsNear("1.9999: measures[1] value", 11.9988, measures[1]->getNumber().getDouble(status), 0.0001);
+    assertEquals("1.9999: measures[1] unit", MeasureUnit::getInch().getIdentifier(),
+                 measures[1]->getUnit().getIdentifier());
+
+    // TODO: reusing measures results in a leak.
+    // A minimal nudge under 2.0.
+    MaybeStackVector<Measure> measures2 = converter.convert((2.0 - DBL_EPSILON), status);
+    assertEquals("measures length", 2, measures2.length());
+    assertEquals("1 - eps: measures[0] value", 2.0, measures2[0]->getNumber().getDouble(status));
+    assertEquals("1 - eps: measures[0] unit", MeasureUnit::getFoot().getIdentifier(),
+                 measures2[0]->getUnit().getIdentifier());
+    // FIXME: broken value, as demonstration of bad code.
+    assertTrue("1 - eps: measures[1] value", measures2[1]->getNumber().getDouble(status) < 0);
+    assertEquals("1 - eps: measures[1] unit", MeasureUnit::getInch().getIdentifier(),
+                 measures2[1]->getUnit().getIdentifier());
 }
 
 /**
