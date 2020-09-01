@@ -683,24 +683,22 @@ void NumberFormatterApiTest::unitMeasure() {
             5,
             u"5 a\u00F1os");
 
-    // Almost works: skeleton generation is missing.
+    // TODO(icu-units#35): skeleton generation.
     assertFormatSingle(
             u"Mixed unit",
-            nullptr, nullptr,
-        //     u"unit/yard-and-foot-and-inch",
-        //     u"unit/yard-and-foot-and-inch",
+            nullptr,
+            u"unit/yard-and-foot-and-inch",
             NumberFormatter::with()
                 .unit(MeasureUnit::forIdentifier("yard-and-foot-and-inch", status)),
             Locale("en-US"),
             3.65,
             "3 yd, 1 ft, 11.4 in");
 
-    // Almost works: skeleton generation is missing.
+    // TODO(icu-units#35): skeleton generation.
     assertFormatSingle(
             u"Mixed unit, Scientific",
-            nullptr, nullptr,
-        //     u"unit/yard-and-foot-and-inch E0",
-        //     u"unit/yard-and-foot-and-inch E0",
+            nullptr,
+            u"unit/yard-and-foot-and-inch E0",
             NumberFormatter::with()
                 .unit(MeasureUnit::forIdentifier("yard-and-foot-and-inch", status))
                 .notation(Notation::scientific()),
@@ -708,12 +706,11 @@ void NumberFormatterApiTest::unitMeasure() {
             3.65,
             "3 yd, 1 ft, 1.14E1 in");
 
-    // Almost works: skeleton generation is missing.
+    // TODO(icu-units#35): skeleton generation.
     assertFormatSingle(
             u"Mixed Unit (Narrow Version)",
-            nullptr, nullptr,
-        //     u"unit/metric-ton-and-kilogram-and-gram unit-width-narrow",
-        //     u"measure-unit/metric-ton-and-kilogram-and-gram unit-width-narrow",
+            nullptr,
+            u"unit/metric-ton-and-kilogram-and-gram unit-width-narrow",
             NumberFormatter::with()
                 .unit(MeasureUnit::forIdentifier("metric-ton-and-kilogram-and-gram", status))
                 .unitWidth(UNUM_UNIT_WIDTH_NARROW),
@@ -721,12 +718,11 @@ void NumberFormatterApiTest::unitMeasure() {
             4.28571,
             u"4t 285kg 710g");
 
-    // Almost works: skeleton generation is missing.
+    // TODO(icu-units#35): skeleton generation.
     assertFormatSingle(
             u"Mixed Unit (Short Version)",
-            nullptr, nullptr,
-        //     u"unit/metric-ton-and-kilogram-and-gram unit-width-short",
-        //     u"measure-unit/mass-metric-ton-and-kilogram-and-gram unit-width-short",
+            nullptr,
+            u"unit/metric-ton-and-kilogram-and-gram unit-width-short",
             NumberFormatter::with()
                 .unit(MeasureUnit::forIdentifier("metric-ton-and-kilogram-and-gram", status))
                 .unitWidth(UNUM_UNIT_WIDTH_SHORT),
@@ -734,12 +730,11 @@ void NumberFormatterApiTest::unitMeasure() {
             4.28571,
             u"4 t, 285 kg, 710 g");
 
-    // Almost works: skeleton generation is missing.
+    // TODO(icu-units#35): skeleton generation.
     assertFormatSingle(
             u"Mixed Unit (Full Name Version)",
-            nullptr, nullptr,
-        //     u"unit/metric-ton-and-kilogram-and-gram unit-width-full-name",
-        //     u"measure-unit/mass-metric-ton-and-kilogram-and-gram unit-width-full-name",
+            nullptr,
+            u"unit/metric-ton-and-kilogram-and-gram unit-width-full-name",
             NumberFormatter::with()
                 .unit(MeasureUnit::forIdentifier("metric-ton-and-kilogram-and-gram", status))
                 .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME),
