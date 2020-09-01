@@ -70,7 +70,6 @@ UBool ComplexUnitsConverter::greaterThanOrEqual(double quantity, double limit) c
 }
 
 MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UErrorCode &status) const {
-    constexpr double EPSILON = 1e-12; // Consider using DBL_EPSILON instead?
     MaybeStackVector<Measure> result;
 
     for (int i = 0, n = unitConverters_.length(); i < n; ++i) {
@@ -82,7 +81,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
             // decision is made. However after the thresholding, we use the
             // original values to ensure unbiased accuracy (to the extent of
             // double's capabilities).
-            int64_t newQuantity = floor(quantity * (1 + EPSILON));
+            int64_t newQuantity = floor(quantity * (1 + DBL_EPSILON));
             Formattable formattableNewQuantity(newQuantity);
 
             // NOTE: Measure would own its MeasureUnit.

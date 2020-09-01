@@ -68,10 +68,9 @@ UnitsRouter::UnitsRouter(MeasureUnit inputUnit, StringPiece region, StringPiece 
 }
 
 RouteResult UnitsRouter::route(double quantity, UErrorCode &status) const {
-    constexpr double EPSILON = 1e-12; // Consider using DBL_EPSILON instead?
     for (int i = 0, n = converterPreferences_.length(); i < n; i++) {
         const auto &converterPreference = *converterPreferences_[i];
-        if (converterPreference.converter.greaterThanOrEqual(quantity * (1 + EPSILON),
+        if (converterPreference.converter.greaterThanOrEqual(quantity * (1 + DBL_EPSILON),
                                                              converterPreference.limit)) {
             return RouteResult(converterPreference.converter.convert(quantity, status),
                                converterPreference.precision,
