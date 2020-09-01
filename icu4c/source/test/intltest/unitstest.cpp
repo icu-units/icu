@@ -458,10 +458,11 @@ void UnitsTest::testComplexUnitConverter() {
     assertEquals("1 - eps: measures[0] value", 2.0, measures2[0]->getNumber().getDouble(status));
     assertEquals("1 - eps: measures[0] unit", MeasureUnit::getFoot().getIdentifier(),
                  measures2[0]->getUnit().getIdentifier());
-    // FIXME: broken value, as demonstration of bad code.
-    assertTrue("1 - eps: measures[1] value", measures2[1]->getNumber().getDouble(status) < 0);
+    assertEquals("1 - eps: measures[1] value", 0.0, measures2[1]->getNumber().getDouble(status));
     assertEquals("1 - eps: measures[1] unit", MeasureUnit::getInch().getIdentifier(),
                  measures2[1]->getUnit().getIdentifier());
+
+    // TODO(icu-units#63): test negative numbers!
 }
 
 /**
