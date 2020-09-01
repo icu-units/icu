@@ -367,7 +367,6 @@ NumberFormatterImpl::macrosToMicroGenerator(const MacroProps& macros, bool safe,
                 status);
             chain = fLongNameMultiplexer.getAlias();
         } else if (isMixedUnit) {
-            // Do we want a constructor instead of a filling-in factory method?
             fMixedUnitLongNameHandler.adoptInsteadAndCheckErrorCode(new MixedUnitLongNameHandler(),
                                                                     status);
             MixedUnitLongNameHandler::forMeasureUnit(
