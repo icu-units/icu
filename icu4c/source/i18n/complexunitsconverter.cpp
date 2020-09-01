@@ -91,13 +91,15 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
 
             // Keep the residual of the quantity.
             //   For example: `3.6 feet`, keep only `0.6 feet`
-            quantity -= newQuantity;
-        } else { // LAST ELEMENT
-            if (quantity < 0) {
-                // Because we nudged the bigger units up by epsilon, we might
-                // end up with a negative number here.
+            //
+            // When the calculation is near enough +/- DBL_EPSILON, we round to
+            // zero. (We also ensure no negative values here.)
+            if ((quantity - newQuantity) / quantity < DBL_EPSILON) {
                 quantity = 0;
+            } else {
+                quantity -= newQuantity;
             }
+        } else { // LAST ELEMENT
             Formattable formattableQuantity(quantity);
 
             // NOTE: Measure would own its MeasureUnit.

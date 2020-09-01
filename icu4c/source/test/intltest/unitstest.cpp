@@ -44,7 +44,7 @@ class UnitsTest : public IntlTest {
     void testUnitConstantFreshness();
     void testConversionCapability();
     void testConversions();
-    void testComplexUnitConverter();
+    void testComplexUnitsConverter();
     void testPreferences();
     void testSiPrefixes();
     void testMass();
@@ -62,7 +62,7 @@ void UnitsTest::runIndexedTest(int32_t index, UBool exec, const char *&name, cha
     TESTCASE_AUTO(testUnitConstantFreshness);
     TESTCASE_AUTO(testConversionCapability);
     TESTCASE_AUTO(testConversions);
-    TESTCASE_AUTO(testComplexUnitConverter);
+    TESTCASE_AUTO(testComplexUnitsConverter);
     TESTCASE_AUTO(testPreferences);
     TESTCASE_AUTO(testSiPrefixes);
     TESTCASE_AUTO(testMass);
@@ -431,7 +431,7 @@ void UnitsTest::testConversions() {
     }
 }
 
-void UnitsTest::testComplexUnitConverter() {
+void UnitsTest::testComplexUnitsConverter() {
     IcuTestErrorCode status(*this, "UnitsTest::testComplexUnitConversions");
     ConversionRates rates(status);
     MeasureUnit input = MeasureUnit::getFoot();
@@ -451,6 +451,10 @@ void UnitsTest::testComplexUnitConverter() {
     assertEquals("1.9999: measures[1] unit", MeasureUnit::getInch().getIdentifier(),
                  measures[1]->getUnit().getIdentifier());
 
+    // TODO: consider factoring out the set of tests to make this function more
+    // data-driven, *after* dealing appropriately with the memory leaks that can
+    // be demonstrated by this code.
+
     // TODO: reusing measures results in a leak.
     // A minimal nudge under 2.0.
     MaybeStackVector<Measure> measures2 = converter.convert((2.0 - DBL_EPSILON), status);
@@ -462,8 +466,13 @@ void UnitsTest::testComplexUnitConverter() {
     assertEquals("1 - eps: measures[1] unit", MeasureUnit::getInch().getIdentifier(),
                  measures2[1]->getUnit().getIdentifier());
 
+    // Testing precision with meter and light-year. 1e-16 light years is
+    // 0.946073 meters, and double precision can provide only ~15 decimal
+    // digits, so we don't expect to get anything less than 1 meter.
+
+    // An epsilon's nudge under one light-year: should give 1 ly, 0 m.
     input = MeasureUnit::getLightYear();
-    output = MeasureUnit::forIdentifier("light-year-and-kilometer", status);
+    output = MeasureUnit::forIdentifier("light-year-and-meter", status);
     // TODO: reusing tempInput and tempOutput results in a leak.
     MeasureUnitImpl tempInput3, tempOutput3;
     const MeasureUnitImpl &inputImpl3 = MeasureUnitImpl::forMeasureUnit(input, tempInput3, status);
@@ -477,8 +486,33 @@ void UnitsTest::testComplexUnitConverter() {
     assertEquals("light-year test: measures[0] unit", MeasureUnit::getLightYear().getIdentifier(),
                  measures3[0]->getUnit().getIdentifier());
     assertEquals("light-year test: measures[1] value", 0.0, measures3[1]->getNumber().getDouble(status));
-    assertEquals("light-year test: measures[1] unit", MeasureUnit::getKilometer().getIdentifier(),
+    assertEquals("light-year test: measures[1] unit", MeasureUnit::getMeter().getIdentifier(),
                  measures3[1]->getUnit().getIdentifier());
+
+    // 1e-15 light years is 9.46073 meters (calculated using "bc" and the CLDR
+    // conversion factor). With double-precision maths, we get 10.5. In this
+    // case, we're off by almost 1 meter.
+    MaybeStackVector<Measure> measures4 = converter3.convert((1.0 + 1e-15), status);
+    assertEquals("measures length", 2, measures4.length());
+    assertEquals("light-year test: measures[0] value", 1.0, measures4[0]->getNumber().getDouble(status));
+    assertEquals("light-year test: measures[0] unit", MeasureUnit::getLightYear().getIdentifier(),
+                 measures4[0]->getUnit().getIdentifier());
+    assertEqualsNear("light-year test: measures[1] value", 10,
+                     measures4[1]->getNumber().getDouble(status), 1);
+    assertEquals("light-year test: measures[1] unit", MeasureUnit::getMeter().getIdentifier(),
+                 measures4[1]->getUnit().getIdentifier());
+
+    // 2e-16 light years is 1.892146 meters. We consider this in the noise, and
+    // thus expect a 0.
+    MaybeStackVector<Measure> measures5 = converter3.convert((1.0 + 2e-16), status);
+    assertEquals("measures length", 2, measures5.length());
+    assertEquals("light-year test: measures[0] value", 1.0, measures5[0]->getNumber().getDouble(status));
+    assertEquals("light-year test: measures[0] unit", MeasureUnit::getLightYear().getIdentifier(),
+                 measures5[0]->getUnit().getIdentifier());
+    assertEquals("light-year test: measures[1] value", 0.0,
+                     measures5[1]->getNumber().getDouble(status));
+    assertEquals("light-year test: measures[1] unit", MeasureUnit::getMeter().getIdentifier(),
+                 measures5[1]->getUnit().getIdentifier());
 
     // TODO(icu-units#63): test negative numbers!
 }
