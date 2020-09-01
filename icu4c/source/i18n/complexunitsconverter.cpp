@@ -82,8 +82,8 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
             // decision is made. However after the thresholding, we use the
             // original values to ensure unbiased accuracy (to the extent of
             // double's capabilities).
-            int64_t newQuantity = floor(quantity * (1 + DBL_EPSILON));
-            Formattable formattableNewQuantity(newQuantity);
+            int64_t roundedQuantity = floor(quantity * (1 + DBL_EPSILON));
+            Formattable formattableNewQuantity(roundedQuantity);
 
             // NOTE: Measure would own its MeasureUnit.
             MeasureUnit *type = new MeasureUnit(units_[i]->copy(status).build(status));
@@ -94,10 +94,10 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
             //
             // When the calculation is near enough +/- DBL_EPSILON, we round to
             // zero. (We also ensure no negative values here.)
-            if ((quantity - newQuantity) / quantity < DBL_EPSILON) {
+            if ((quantity - roundedQuantity) / quantity < DBL_EPSILON) {
                 quantity = 0;
             } else {
-                quantity -= newQuantity;
+                quantity -= roundedQuantity;
             }
         } else { // LAST ELEMENT
             Formattable formattableQuantity(quantity);
