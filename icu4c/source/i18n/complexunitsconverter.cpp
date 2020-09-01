@@ -95,10 +95,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity, UError
         } else { // LAST ELEMENT
             if (quantity < 0) {
                 // Because we nudged the bigger units up by epsilon, we might
-                // end up with a negative number here. This number should be
-                // really tiny. (Unless someone is doing
-                // "light-year-and-nanometer" perhaps?)
-                U_ASSERT(quantity > -1e-6);
+                // end up with a negative number here.
                 quantity = 0;
             }
             Formattable formattableQuantity(quantity);
