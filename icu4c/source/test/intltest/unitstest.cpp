@@ -503,7 +503,7 @@ void UnitsTest::testComplexUnitsConverter() {
                  measures4[1]->getUnit().getIdentifier());
 
     // 2e-16 light years is 1.892146 meters. We consider this in the noise, and
-    // thus expect a 0.
+    // thus expect a 0. (This test fails when 2e-16 is increased to 4e-16.)
     MaybeStackVector<Measure> measures5 = converter3.convert((1.0 + 2e-16), status);
     assertEquals("measures length", 2, measures5.length());
     assertEquals("light-year test: measures[0] value", 1.0, measures5[0]->getNumber().getDouble(status));
