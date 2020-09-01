@@ -3370,12 +3370,6 @@ class U_I18N_API MeasureUnit: public UObject {
      */
     void initCurrency(StringPiece isoCurrency);
 
-    /**
-     * For ICU use only.
-     * @internal
-     */
-    void initNoUnit(const char *subtype);
-
 #endif  /* U_HIDE_INTERNAL_API */
 
 private:

@@ -146,10 +146,8 @@ class NumberFormatterImpl {
         return unit != null && "currency".equals(unit.getType());
     }
 
-    private static boolean unitIsNoUnit(MeasureUnit unit) {
-        // NOTE: In ICU4C, units cannot be null, and the default unit is a NoUnit.
-        // In ICU4J, return TRUE for a null unit from this method.
-        return unit == null || "none".equals(unit.getType());
+    private static boolean unitIsBaseUnit(MeasureUnit unit) {
+        return unit == null;
     }
 
     private static boolean unitIsPercent(MeasureUnit unit) {
@@ -181,9 +179,10 @@ class NumberFormatterImpl {
 
         // Pre-compute a few values for efficiency.
         boolean isCurrency = unitIsCurrency(macros.unit);
-        boolean isNoUnit = unitIsNoUnit(macros.unit);
+        boolean isBaseUnit = unitIsBaseUnit(macros.unit);
         boolean isPercent = unitIsPercent(macros.unit);
         boolean isPermille = unitIsPermille(macros.unit);
+        boolean isCompactNotation = (macros.notation instanceof CompactNotation);
         boolean isAccounting = macros.sign == SignDisplay.ACCOUNTING
                 || macros.sign == SignDisplay.ACCOUNTING_ALWAYS
                 || macros.sign == SignDisplay.ACCOUNTING_EXCEPT_ZERO;
@@ -192,8 +191,18 @@ class NumberFormatterImpl {
         if (macros.unitWidth != null) {
             unitWidth = macros.unitWidth;
         }
-        boolean isCldrUnit = !isCurrency && !isNoUnit &&
-            (unitWidth == UnitWidth.FULL_NAME || !(isPercent || isPermille));
+        // Use CLDR unit data for all MeasureUnits (not currency and not
+        // no-unit), except use the dedicated percent pattern for percent and
+        // permille. However, use the CLDR unit data for percent/permille if a
+        // long name was requested OR if compact notation is being used, since
+        // compact notation overrides the middle modifier (micros.modMiddle)
+        // normally used for the percent pattern.
+        boolean isCldrUnit = !isCurrency
+            && !isBaseUnit
+            && (unitWidth == UnitWidth.FULL_NAME
+                || !(isPercent || isPermille)
+                || isCompactNotation
+            );
         PluralRules rules = macros.rules;
 
         // Select the numbering system.
@@ -254,7 +263,7 @@ class NumberFormatterImpl {
         // Rounding strategy
         if (macros.precision != null) {
             micros.rounder = macros.precision;
-        } else if (macros.notation instanceof CompactNotation) {
+        } else if (isCompactNotation) {
             micros.rounder = Precision.COMPACT_STRATEGY;
         } else if (isCurrency) {
             micros.rounder = Precision.MONETARY_STANDARD;
@@ -272,7 +281,7 @@ class NumberFormatterImpl {
             micros.grouping = (Grouper) macros.grouping;
         } else if (macros.grouping instanceof GroupingStrategy) {
             micros.grouping = Grouper.forStrategy((GroupingStrategy) macros.grouping);
-        } else if (macros.notation instanceof CompactNotation) {
+        } else if (isCompactNotation) {
             // Compact notation uses minGrouping by default since ICU 59
             micros.grouping = Grouper.forStrategy(GroupingStrategy.MIN2);
         } else {
@@ -358,7 +367,7 @@ class NumberFormatterImpl {
         }
 
         // Compact notation
-        if (macros.notation instanceof CompactNotation) {
+        if (isCompactNotation) {
             if (rules == null) {
                 // Lazily create PluralRules
                 rules = PluralRules.forLocale(macros.loc);
