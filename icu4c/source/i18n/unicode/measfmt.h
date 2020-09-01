@@ -193,10 +193,6 @@ class U_I18N_API MeasureFormat : public Format {
      * @return appendTo reference
      *
      * @stable ICU 53
-     *
-     * TODO(units): add support for mixed units. Or rather: Add tests for the
-     * behavior, and if the behavior is reasonable, no reason to touch this
-     * function.
      */
     UnicodeString &formatMeasures(
             const Measure *measures,
