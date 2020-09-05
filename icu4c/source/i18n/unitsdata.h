@@ -44,7 +44,7 @@ CharString U_I18N_API getUnitCategory(const char *baseUnitIdentifier, UErrorCode
  */
 class U_I18N_API ConversionRateInfo : public UMemory {
   public:
-    ConversionRateInfo(){};
+    ConversionRateInfo() {}
     ConversionRateInfo(StringPiece sourceUnit, StringPiece baseUnit, StringPiece factor,
                        StringPiece offset, UErrorCode &status)
         : sourceUnit(), baseUnit(), factor(), offset() {
@@ -52,12 +52,21 @@ class U_I18N_API ConversionRateInfo : public UMemory {
         this->baseUnit.append(baseUnit, status);
         this->factor.append(factor, status);
         this->offset.append(offset, status);
-    };
+    }
     CharString sourceUnit;
     CharString baseUnit;
     CharString factor;
     CharString offset;
 };
+
+// Export explicit template instantiations of MaybeStackArray, MemoryPool and
+// MaybeStackVector. This is required when building DLLs for Windows. (See
+// datefmt.h, collationiterator.h, erarules.h and others for similar examples.)
+#if U_PF_WINDOWS <= U_PLATFORM && U_PLATFORM <= U_PF_CYGWIN
+template class U_I18N_API MaybeStackArray<ConversionRateInfo*, 8>;
+template class U_I18N_API MemoryPool<ConversionRateInfo, 8>;
+template class U_I18N_API MaybeStackVector<ConversionRateInfo, 8>;
+#endif
 
 /**
  * Returns ConversionRateInfo for all supported conversions.
@@ -87,10 +96,6 @@ class U_I18N_API ConversionRates {
      */
     const ConversionRateInfo *extractConversionInfo(StringPiece source, UErrorCode &status) const;
 
-    // TODO(younies): hugovdm added this to resolve "git merge" issues. The API
-    // should be improved to make this unnecessary.
-    const MaybeStackVector<ConversionRateInfo> *getInternalList() const { return &conversionInfo_; };
-
   private:
     MaybeStackVector<ConversionRateInfo> conversionInfo_;
 };
@@ -115,7 +120,7 @@ struct U_I18N_API UnitPreference : public UMemory {
  */
 class U_I18N_API UnitPreferenceMetadata : public UMemory {
   public:
-    UnitPreferenceMetadata(){};
+    UnitPreferenceMetadata() {}
     // Constructor, makes copies of the parameters passed to it.
     UnitPreferenceMetadata(StringPiece category, StringPiece usage, StringPiece region,
                            int32_t prefsOffset, int32_t prefsCount, UErrorCode &status);
@@ -139,6 +144,18 @@ class U_I18N_API UnitPreferenceMetadata : public UMemory {
     int32_t compareTo(const UnitPreferenceMetadata &other, bool *foundCategory, bool *foundUsage,
                       bool *foundRegion) const;
 };
+
+// Export explicit template instantiations of MaybeStackArray, MemoryPool and
+// MaybeStackVector. This is required when building DLLs for Windows. (See
+// datefmt.h, collationiterator.h, erarules.h and others for similar examples.)
+#if U_PF_WINDOWS <= U_PLATFORM && U_PLATFORM <= U_PF_CYGWIN
+template class U_I18N_API MaybeStackArray<UnitPreferenceMetadata*, 8>;
+template class U_I18N_API MemoryPool<UnitPreferenceMetadata, 8>;
+template class U_I18N_API MaybeStackVector<UnitPreferenceMetadata, 8>;
+template class U_I18N_API MaybeStackArray<UnitPreference*, 8>;
+template class U_I18N_API MemoryPool<UnitPreference, 8>;
+template class U_I18N_API MaybeStackVector<UnitPreference, 8>;
+#endif
 
 /**
  * Unit Preferences information for various locales and usages.
