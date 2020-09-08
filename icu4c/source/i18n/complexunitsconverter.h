@@ -16,19 +16,22 @@
 
 U_NAMESPACE_BEGIN
 
-namespace units {
-
 // Export explicit template instantiations of MaybeStackArray, MemoryPool and
 // MaybeStackVector. This is required when building DLLs for Windows. (See
 // datefmt.h, collationiterator.h, erarules.h and others for similar examples.)
+//
+// Note: These need to be outside of the units namespace, or Clang will generate
+// a compile error.
 #if U_PF_WINDOWS <= U_PLATFORM && U_PLATFORM <= U_PF_CYGWIN
-template class U_I18N_API MaybeStackArray<UnitConverter*, 8>;
-template class U_I18N_API MemoryPool<UnitConverter, 8>;
-template class U_I18N_API MaybeStackVector<UnitConverter, 8>;
+template class U_I18N_API MaybeStackArray<units::UnitConverter*, 8>;
+template class U_I18N_API MemoryPool<units::UnitConverter, 8>;
+template class U_I18N_API MaybeStackVector<units::UnitConverter, 8>;
 template class U_I18N_API MaybeStackArray<MeasureUnitImpl*, 8>;
 template class U_I18N_API MemoryPool<MeasureUnitImpl, 8>;
 template class U_I18N_API MaybeStackVector<MeasureUnitImpl, 8>;
 #endif
+
+namespace units {
 
 /**
  *  Converts from single or compound unit to single, compound or mixed units.
@@ -71,7 +74,10 @@ class U_I18N_API ComplexUnitsConverter : public UMemory {
 
   private:
     MaybeStackVector<UnitConverter> unitConverters_;
+    // Individual units of mixed units, sorted big to small
     MaybeStackVector<MeasureUnitImpl> units_;
+    // Individual units of mixed units, sorted in desired output order
+    MaybeStackVector<MeasureUnit> outputUnits_;
 };
 
 } // namespace units
