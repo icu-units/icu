@@ -136,7 +136,7 @@ struct MicroProps : public MicroPropsGenerator {
 
     /**
      * As MicroProps is the "base instance", this implementation of
-     * MicoPropsGenerator::processQuantity() just ensures that the output
+     * MicroPropsGenerator::processQuantity() just ensures that the output
      * `micros` is correctly initialized.
      *
      * For the "safe" invocation of this function, micros must not be *this,
