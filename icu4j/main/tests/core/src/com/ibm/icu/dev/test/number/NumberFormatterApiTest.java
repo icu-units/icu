@@ -3332,6 +3332,7 @@ public class NumberFormatterApiTest extends TestFmwk {
                 conciseSkeleton = conciseSkeleton.substring(1);
                 shouldRoundTrip = false;
             }
+
             LocalizedNumberFormatter l4 = NumberFormatter.forSkeleton(conciseSkeleton).locale(locale);
             if (shouldRoundTrip) {
                 assertEquals(message + ": Concise Skeleton:", normalized, l4.toSkeleton());
