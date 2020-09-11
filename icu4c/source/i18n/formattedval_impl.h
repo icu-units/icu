@@ -231,7 +231,7 @@ struct UFormattedValueImpl : public UMemory, public UFormattedValueApiHelper {
         return fData->appendTo(appendable, status); \
     } \
     UBool Name::nextPosition(ConstrainedFieldPosition& cfpos, UErrorCode& status) const { \
-        UPRV_FORMATTED_VALUE_METHOD_GUARD(FALSE) \
+        UPRV_FORMATTED_VALUE_METHOD_GUARD(false) \
         return fData->nextPosition(cfpos, status); \
     }
 
@@ -250,7 +250,7 @@ struct UFormattedValueImpl : public UMemory, public UFormattedValueApiHelper {
         } \
         return static_cast<HelperType*>(impl)->exportForC(); \
     } \
-    U_DRAFT const UFormattedValue* U_EXPORT2 \
+    U_CAPI const UFormattedValue* U_EXPORT2 \
     Prefix ## _resultAsValue (const CType* uresult, UErrorCode* ec) { \
         const ImplType* result = HelperType::validate(uresult, *ec); \
         if (U_FAILURE(*ec)) { return nullptr; } \
