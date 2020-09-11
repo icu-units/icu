@@ -4,18 +4,18 @@
 #include "unicode/utypes.h"
 
 #if !UCONFIG_NO_FORMATTING
-#ifndef __UNITSROUTER_H__
-#define __UNITSROUTER_H__
+#ifndef __UNITS_ROUTER_H__
+#define __UNITS_ROUTER_H__
 
 #include <limits>
 
 #include "cmemory.h"
-#include "complexunitsconverter.h"
 #include "measunit_impl.h"
 #include "unicode/measunit.h"
 #include "unicode/stringpiece.h"
 #include "unicode/uobject.h"
-#include "unitsdata.h"
+#include "units_complexconverter.h"
+#include "units_data.h"
 
 U_NAMESPACE_BEGIN
 
@@ -85,10 +85,7 @@ struct ConverterPreference : UMemory {
 //
 // Note: These need to be outside of the units namespace, or Clang will generate
 // a compile error.
-#if U_PF_WINDOWS <= U_PLATFORM && U_PLATFORM <= U_PF_CYGWIN || 1
-template class U_I18N_API MaybeStackArray<MeasureUnit*, 8>;
-template class U_I18N_API MemoryPool<MeasureUnit, 8>;
-template class U_I18N_API MaybeStackVector<MeasureUnit, 8>;
+#if U_PF_WINDOWS <= U_PLATFORM && U_PLATFORM <= U_PF_CYGWIN
 template class U_I18N_API MaybeStackArray<units::ConverterPreference*, 8>;
 template class U_I18N_API MemoryPool<units::ConverterPreference, 8>;
 template class U_I18N_API MaybeStackVector<units::ConverterPreference, 8>;
@@ -151,6 +148,6 @@ class U_I18N_API UnitsRouter {
 } // namespace units
 U_NAMESPACE_END
 
-#endif //__UNITSROUTER_H__
+#endif //__UNITS_ROUTER_H__
 
 #endif /* #if !UCONFIG_NO_FORMATTING */

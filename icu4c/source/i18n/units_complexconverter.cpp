@@ -8,14 +8,14 @@
 #include <cmath>
 
 #include "cmemory.h"
-#include "complexunitsconverter.h"
 #include "uarrsort.h"
 #include "uassert.h"
 #include "unicode/fmtable.h"
 #include "unicode/localpointer.h"
 #include "unicode/measunit.h"
 #include "unicode/measure.h"
-#include "unitconverter.h"
+#include "units_complexconverter.h"
+#include "units_converter.h"
 
 U_NAMESPACE_BEGIN
 namespace units {
@@ -36,7 +36,7 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
     }
 
     // NOTE:
-    //  This comparator is used to short the units in a descending order. Therefore, we return -1 if
+    //  This comparator is used to sort the units in a descending order. Therefore, we return -1 if
     //  the left is bigger than right and so on.
     auto descendingCompareUnits = [](const void *context, const void *left, const void *right) {
         UErrorCode status = U_ZERO_ERROR;
