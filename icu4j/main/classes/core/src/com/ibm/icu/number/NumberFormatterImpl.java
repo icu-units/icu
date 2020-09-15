@@ -7,9 +7,23 @@ package com.ibm.icu.number;
 import com.ibm.icu.impl.FormattedStringBuilder;
 import com.ibm.icu.impl.StandardPlural;
 import com.ibm.icu.impl.number.CompactData.CompactType;
-import com.ibm.icu.impl.number.*;
+import com.ibm.icu.impl.number.ConstantAffixModifier;
+import com.ibm.icu.impl.number.DecimalQuantity;
+import com.ibm.icu.impl.number.DecimalQuantity_DualStorageBCD;
+import com.ibm.icu.impl.number.Grouper;
+import com.ibm.icu.impl.number.LongNameHandler;
+import com.ibm.icu.impl.number.MacroProps;
+import com.ibm.icu.impl.number.MicroProps;
+import com.ibm.icu.impl.number.MicroPropsGenerator;
+import com.ibm.icu.impl.number.MultiplierFormatHandler;
+import com.ibm.icu.impl.number.MutablePatternModifier;
 import com.ibm.icu.impl.number.MutablePatternModifier.ImmutablePatternModifier;
+import com.ibm.icu.impl.number.Padder;
+import com.ibm.icu.impl.number.PatternStringParser;
 import com.ibm.icu.impl.number.PatternStringParser.ParsedPatternInfo;
+import com.ibm.icu.impl.number.RoundingUtils;
+import com.ibm.icu.impl.number.UnitConversionHandler;
+import com.ibm.icu.impl.number.UsagePrefsHandler;
 import com.ibm.icu.number.NumberFormatter.DecimalSeparatorDisplay;
 import com.ibm.icu.number.NumberFormatter.GroupingStrategy;
 import com.ibm.icu.number.NumberFormatter.SignDisplay;
@@ -172,6 +186,7 @@ class NumberFormatterImpl {
         boolean isBaseUnit = unitIsBaseUnit(macros.unit);
         boolean isPercent = unitIsPercent(macros.unit);
         boolean isPermille = unitIsPermille(macros.unit);
+        boolean isCompactNotation = (macros.notation instanceof CompactNotation);
         boolean isAccounting = macros.sign == SignDisplay.ACCOUNTING
                 || macros.sign == SignDisplay.ACCOUNTING_ALWAYS
                 || macros.sign == SignDisplay.ACCOUNTING_EXCEPT_ZERO;
@@ -180,8 +195,18 @@ class NumberFormatterImpl {
         if (macros.unitWidth != null) {
             unitWidth = macros.unitWidth;
         }
-        boolean isCldrUnit = !isCurrency && !isBaseUnit &&
-            (unitWidth == UnitWidth.FULL_NAME || !(isPercent || isPermille));
+        // Use CLDR unit data for all MeasureUnits (not currency and not
+        // no-unit), except use the dedicated percent pattern for percent and
+        // permille. However, use the CLDR unit data for percent/permille if a
+        // long name was requested OR if compact notation is being used, since
+        // compact notation overrides the middle modifier (micros.modMiddle)
+        // normally used for the percent pattern.
+        boolean isCldrUnit = !isCurrency
+            && !isBaseUnit
+            && (unitWidth == UnitWidth.FULL_NAME
+                || !(isPercent || isPermille)
+                || isCompactNotation
+            );
         boolean isMixedUnit = isCldrUnit && macros.unit.getType() == null &&
                 macros.unit.getComplexity() == MeasureUnit.Complexity.MIXED;
         PluralRules rules = macros.rules;
@@ -256,7 +281,7 @@ class NumberFormatterImpl {
         // Rounding strategy
         if (macros.precision != null) {
             micros.rounder = macros.precision;
-        } else if (macros.notation instanceof CompactNotation) {
+        } else if (isCompactNotation) {
             micros.rounder = Precision.COMPACT_STRATEGY;
         } else if (isCurrency) {
             micros.rounder = Precision.MONETARY_STANDARD;
@@ -274,7 +299,7 @@ class NumberFormatterImpl {
             micros.grouping = (Grouper) macros.grouping;
         } else if (macros.grouping instanceof GroupingStrategy) {
             micros.grouping = Grouper.forStrategy((GroupingStrategy) macros.grouping);
-        } else if (macros.notation instanceof CompactNotation) {
+        } else if (isCompactNotation) {
             // Compact notation uses minGrouping by default since ICU 59
             micros.grouping = Grouper.forStrategy(GroupingStrategy.MIN2);
         } else {
@@ -360,7 +385,7 @@ class NumberFormatterImpl {
         }
 
         // Compact notation
-        if (macros.notation instanceof CompactNotation) {
+        if (isCompactNotation) {
             if (rules == null) {
                 // Lazily create PluralRules
                 rules = PluralRules.forLocale(macros.loc);
