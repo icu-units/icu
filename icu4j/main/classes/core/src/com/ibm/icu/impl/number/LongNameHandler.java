@@ -101,7 +101,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
 
         // Map duration-year-person, duration-week-person, etc. to duration-year, duration-week, ...
         // TODO(ICU-20400): Get duration-*-person data properly with aliases.
-        if (unit.getType() != null && unit.getSubtype().endsWith("-person")) {
+        if (unit.getSubtype() != null && unit.getSubtype().endsWith("-person")) {
             key.append(unit.getSubtype(), 0, unit.getSubtype().length() - 7);
         } else {
             key.append(unit.getSubtype());

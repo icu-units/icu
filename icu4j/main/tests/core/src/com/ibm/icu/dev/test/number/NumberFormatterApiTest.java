@@ -835,7 +835,6 @@ public class NumberFormatterApiTest {
         formatter = unloc_formatter.locale(new ULocale("en-ZA"));
         formattedNum = formatter.format(321d);
 
-        // status.errIfFailureAndReset("unitUsage() en-ZA road formatDouble");
 
         assertTrue(
                 uTestCase + ", got outputUnit: \"" + formattedNum.getOutputUnit().getIdentifier() + "\"",
@@ -843,7 +842,7 @@ public class NumberFormatterApiTest {
         assertEquals(uTestCase, "300 m", formattedNum.toString());
         {
             final Object[][] expectedFieldPositions = {
-                    {NumberFormat.INTEGER_FIELD, 0, 3},
+                    {NumberFormat.Field.INTEGER, 0, 3},
                     {NumberFormat.Field.MEASURE_UNIT, 4, 5}
             };
 
@@ -883,7 +882,7 @@ public class NumberFormatterApiTest {
         //status.errIfFailureAndReset("unitUsage() en-GB road, toString(...)");
         {
             final Object[][] expectedFieldPositions = {
-                    {NumberFormat.INTEGER_FIELD, 0, 3},
+                    {NumberFormat.Field.INTEGER, 0, 3},
                     {NumberFormat.Field.MEASURE_UNIT, 4, 6}};
             assertNumberFieldPositions(
                     (uTestCase + " field positions"),
@@ -922,7 +921,7 @@ public class NumberFormatterApiTest {
         {
             final Object[][] expectedFieldPositions = {
                     {NumberFormat.Field.GROUPING_SEPARATOR, 1, 2},
-                    {NumberFormat.INTEGER_FIELD, 0, 5},
+                    {NumberFormat.Field.INTEGER, 0, 5},
                     {NumberFormat.Field.MEASURE_UNIT, 6, 8}};
             assertNumberFieldPositions(
                     uTestCase + " field positions",
@@ -961,16 +960,16 @@ public class NumberFormatterApiTest {
         {
             final Object[][] expectedFieldPositions = {
                     // // Desired output: TODO(icu-units#67)
-                    // {NumberFormat.INTEGER_FIELD, 0, 2},
+                    // {NumberFormat.Field.INTEGER, 0, 2},
                     // {NumberFormat.Field.MEASURE_UNIT, 3, 5},
                     // {NumberFormat.ULISTFMT_LITERAL_FIELD, 5, 6},
-                    // {NumberFormat.INTEGER_FIELD, 7, 8},
+                    // {NumberFormat.Field.INTEGER, 7, 8},
                     // {NumberFormat.DECIMAL_SEPARATOR_FIELD, 8, 9},
                     // {NumberFormat.FRACTION_FIELD, 9, 10},
                     // {NumberFormat.Field.MEASURE_UNIT, 11, 13}};
 
                     // Current output: rather no fields than wrong fields
-                    {NumberFormat.INTEGER_FIELD, 7, 8},
+                    {NumberFormat.Field.INTEGER, 7, 8},
                     {NumberFormat.Field.DECIMAL_SEPARATOR, 8, 9},
                     {NumberFormat.FRACTION_FIELD, 9, 10},
             };

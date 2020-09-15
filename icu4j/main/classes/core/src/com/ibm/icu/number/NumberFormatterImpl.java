@@ -54,14 +54,14 @@ class NumberFormatterImpl {
     /**
      * Builds and evaluates an "unsafe" MicroPropsGenerator, which is cheaper but can be used only once.
      */
-    public static int formatStatic(
+    public static MicroProps formatStatic(
             MacroProps macros,
             DecimalQuantity inValue,
             FormattedStringBuilder outString) {
         MicroProps micros = preProcessUnsafe(macros, inValue);
         int length = writeNumber(micros, inValue, outString, 0);
-        length += writeAffixes(micros, outString, 0, length);
-        return length;
+        writeAffixes(micros, outString, 0, length);
+        return micros;
     }
 
     /**
@@ -88,11 +88,11 @@ class NumberFormatterImpl {
     /**
      * Evaluates the "safe" MicroPropsGenerator created by "fromMacros".
      */
-    public int format(DecimalQuantity inValue, FormattedStringBuilder outString) {
+    public MicroProps format(DecimalQuantity inValue, FormattedStringBuilder outString) {
         MicroProps micros = preProcess(inValue);
         int length = writeNumber(micros, inValue, outString, 0);
-        length += writeAffixes(micros, outString, 0, length);
-        return length;
+        writeAffixes(micros, outString, 0, length);
+        return micros;
     }
 
     /**
