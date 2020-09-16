@@ -123,8 +123,12 @@ public class LocalizedNumberFormatter extends NumberFormatterSettings<LocalizedN
         return new LocalizedNumberFormatterAsFormat(this, resolve().loc);
     }
 
-    /** Helper method that creates a FormattedStringBuilder and formats. */
-    private FormattedNumber format(DecimalQuantity fq) {
+    /**
+     *  Helper method that creates a FormattedStringBuilder and formats.
+     * @internal
+     * @deprecated
+     */
+    public FormattedNumber format(DecimalQuantity fq) {
         FormattedStringBuilder string = new FormattedStringBuilder();
         MicroProps micros = formatImpl(fq, string);
         return new FormattedNumber(string, fq, micros.outputUnit);
