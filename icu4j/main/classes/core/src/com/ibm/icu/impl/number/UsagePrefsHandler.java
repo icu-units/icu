@@ -18,93 +18,104 @@ import java.util.List;
 
 public class UsagePrefsHandler implements MicroPropsGenerator {
 
-private final MicroPropsGenerator fParent;
-private UnitsRouter fUnitsRouter;
+    private final MicroPropsGenerator fParent;
+    private UnitsRouter fUnitsRouter;
 
-public UsagePrefsHandler(ULocale locale, MeasureUnit inputUnit, String usage, MicroPropsGenerator parent) {
-    this.fParent = parent;
-    this.fUnitsRouter =
-            new UnitsRouter(MeasureUnitImpl.forIdentifier(inputUnit.getIdentifier()), locale.getCountry(), usage);
-}
-
-private static Precision parseSkeletonToPrecision(String precisionSkeleton) {
-    final String kSuffixPrefix = "precision-increment/";
-    if (!precisionSkeleton.startsWith(kSuffixPrefix)) {
-        throw new IllegalIcuArgumentException("precisionSkeleton is only precision-increment");
+    public UsagePrefsHandler(ULocale locale, MeasureUnit inputUnit, String usage, MicroPropsGenerator parent) {
+        this.fParent = parent;
+        this.fUnitsRouter =
+                new UnitsRouter(MeasureUnitImpl.forIdentifier(inputUnit.getIdentifier()), locale.getCountry(), usage);
     }
 
-    String skeleton = precisionSkeleton.substring(kSuffixPrefix.length());
-    String skeletons[] = skeleton.split("/");
-    BigDecimal num = new BigDecimal(skeletons[0]);
-    BigDecimal den =
-            skeletons.length == 2 ?
-                    new BigDecimal(skeletons[1]) :
-                    new BigDecimal("1");
+    private static Precision parseSkeletonToPrecision(String precisionSkeleton) {
+        final String kSuffixPrefix = "precision-increment/";
+        if (!precisionSkeleton.startsWith(kSuffixPrefix)) {
+            throw new IllegalIcuArgumentException("precisionSkeleton is only precision-increment");
+        }
+
+        String skeleton = precisionSkeleton.substring(kSuffixPrefix.length());
+        String skeletons[] = skeleton.split("/");
+        BigDecimal num = new BigDecimal(skeletons[0]);
+        BigDecimal den =
+                skeletons.length == 2 ?
+                        new BigDecimal(skeletons[1]) :
+                        new BigDecimal("1");
 
 
-    return Precision.increment(num.divide(den, MathContext.DECIMAL128));
-}
+        return Precision.increment(num.divide(den, MathContext.DECIMAL128));
+    }
 
-protected static void mixedMeasuresToMicros(List<Measure> measures, DecimalQuantity quantity, MicroProps micros) {
-    if (measures.size() > 1) {
-        // For debugging
-        assert (micros.outputUnit.getComplexity() == MeasureUnit.Complexity.MIXED);
+    protected static void mixedMeasuresToMicros(List<Measure> measures, DecimalQuantity quantity, MicroProps micros) {
+        if (measures.size() > 1) {
+            // For debugging
+            assert (micros.outputUnit.getComplexity() == MeasureUnit.Complexity.MIXED);
 
-        // Check that we received measurements with the expected MeasureUnits:
-        List<MeasureUnit> singleUnits =
-                micros.outputUnit.splitToSingleUnits();
+            // Check that we received measurements with the expected MeasureUnits:
+            List<MeasureUnit> singleUnits =
+                    micros.outputUnit.splitToSingleUnits();
 
-        assert measures.size() == singleUnits.size();
+            assert measures.size() == singleUnits.size();
 
-        // Mixed units: except for the last value, we pass all values to the
-        // LongNameHandler via micros->mixedMeasures.
-        for (int i = 0, n = measures.size(); i < n; i++) {
-            if (i == n - 1) {
-                // The last value (potentially the only value) gets passed on via quantity.
-                quantity.setToBigDecimal((BigDecimal) measures.get(i).getNumber());
-                break;
+            // Mixed units: except for the last value, we pass all values to the
+            // LongNameHandler via micros->mixedMeasures.
+            for (int i = 0, n = measures.size(); i < n; i++) {
+                if (i == n - 1) {
+                    // The last value (potentially the only value) gets passed on via quantity.
+                    quantity.setToBigDecimal((BigDecimal) measures.get(i).getNumber());
+                    break;
+                }
+
+                micros.mixedMeasures.add(measures.get(i));
             }
-
-            micros.mixedMeasures.add(measures.get(i));
         }
     }
-}
 
-/**
- * Obtains the appropriate output value, MeasureUnit and
- * rounding/precision behaviour from the UnitsRouter.
- * <p>
- * The output unit is passed on to the LongNameHandler via
- * micros.outputUnit.
- */
-@Override
-public MicroProps processQuantity(DecimalQuantity quantity) {
-    MicroProps result = fParent.processQuantity(quantity);
-
-
-    quantity.roundToInfinity(); // Enables toDouble
-    final UnitsRouter.RouteResult routed = fUnitsRouter.route(quantity.toBigDecimal());
-
-    final List<Measure> routedMeasures = routed.measures;
-    result.outputUnit = routed.outputUnit.build();
-    result.mixedMeasures = new ArrayList<>();
-
-    UsagePrefsHandler.mixedMeasuresToMicros(routedMeasures, quantity, result);
-
-    String precisionSkeleton = routed.precision;
-
-    assert result.rounder != null;
-
-    // TODO: use the user precision if the user already set precision.
-    if (precisionSkeleton != null && precisionSkeleton.length() > 0) {
-        result.rounder = parseSkeletonToPrecision(precisionSkeleton);
-    } else {
-        // We use the same rounding mode as COMPACT notation: known to be a
-        // human-friendly rounding mode: integers, but add a decimal digit
-        // as needed to ensure we have at least 2 significant digits.
-        result.rounder = Precision.integer().withMinDigits(2);
+    /**
+     * Returns the list of possible output units, i.e. the full set of
+     * preferences, for the localized, usage-specific unit preferences.
+     * <p>
+     * The returned pointer should be valid for the lifetime of the
+     * UsagePrefsHandler instance.
+     */
+    public List<MeasureUnit> getOutputUnits() {
+        return fUnitsRouter.getOutputUnits();
     }
 
-    return result;
-}
+    /**
+     * Obtains the appropriate output value, MeasureUnit and
+     * rounding/precision behaviour from the UnitsRouter.
+     * <p>
+     * The output unit is passed on to the LongNameHandler via
+     * micros.outputUnit.
+     */
+    @Override
+    public MicroProps processQuantity(DecimalQuantity quantity) {
+        MicroProps result = fParent.processQuantity(quantity);
+
+
+        quantity.roundToInfinity(); // Enables toDouble
+        final UnitsRouter.RouteResult routed = fUnitsRouter.route(quantity.toBigDecimal());
+
+        final List<Measure> routedMeasures = routed.measures;
+        result.outputUnit = routed.outputUnit.build();
+        result.mixedMeasures = new ArrayList<>();
+
+        UsagePrefsHandler.mixedMeasuresToMicros(routedMeasures, quantity, result);
+
+        String precisionSkeleton = routed.precision;
+
+        assert result.rounder != null;
+
+        // TODO: use the user precision if the user already set precision.
+        if (precisionSkeleton != null && precisionSkeleton.length() > 0) {
+            result.rounder = parseSkeletonToPrecision(precisionSkeleton);
+        } else {
+            // We use the same rounding mode as COMPACT notation: known to be a
+            // human-friendly rounding mode: integers, but add a decimal digit
+            // as needed to ensure we have at least 2 significant digits.
+            result.rounder = Precision.integer().withMinDigits(2);
+        }
+
+        return result;
+    }
 }

@@ -232,14 +232,14 @@ class NumberFormatterImpl {
         /////////////////////////////////////////////////////////////////////////////////////
 
         // Unit Preferences and Conversions as our first step
+        UsagePrefsHandler usagePrefsHandler = null;
         if (macros.usage != null) {
             if (!isCldrUnit) {
                 throw new IllegalIcuArgumentException(
                         "We only support \"usage\" when the input unit is specified, and is a CLDR Unit.");
             }
 
-            chain = new UsagePrefsHandler(macros.loc, macros.unit, macros.usage, chain);
-
+            chain = usagePrefsHandler = new UsagePrefsHandler(macros.loc, macros.unit, macros.usage, chain);
         } else if (isMixedUnit) {
             chain = new UnitConversionHandler(macros.unit, chain);
         }
@@ -347,9 +347,10 @@ class NumberFormatterImpl {
                     PluralRules.forLocale(macros.loc);
 
             if (macros.usage != null) {
+                assert usagePrefsHandler != null;
                 chain = LongNameMultiplexer.forMeasureUnits(
                         macros.loc,
-                        micros.outputUnit.splitToSingleUnits(),
+                        usagePrefsHandler.getOutputUnits(),
                         unitWidth,
                         pluralRules,
                         chain);
