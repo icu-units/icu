@@ -22,6 +22,8 @@ public class UsagePrefsHandler implements MicroPropsGenerator {
     private UnitsRouter fUnitsRouter;
 
     public UsagePrefsHandler(ULocale locale, MeasureUnit inputUnit, String usage, MicroPropsGenerator parent) {
+        assert parent != null;
+
         this.fParent = parent;
         this.fUnitsRouter =
                 new UnitsRouter(MeasureUnitImpl.forIdentifier(inputUnit.getIdentifier()), locale.getCountry(), usage);
@@ -90,36 +92,31 @@ public class UsagePrefsHandler implements MicroPropsGenerator {
      */
     @Override
     public MicroProps processQuantity(DecimalQuantity quantity) {
-        /* TODO: Question: sffc , shall we check if the parent is null? */
-
-        MicroProps result = fParent == null?
-                new MicroProps(false):
-                fParent.processQuantity(quantity);
-
+        MicroProps micros = this.fParent.processQuantity(quantity);
 
         quantity.roundToInfinity(); // Enables toDouble
         final UnitsRouter.RouteResult routed = fUnitsRouter.route(quantity.toBigDecimal());
 
         final List<Measure> routedMeasures = routed.measures;
-        result.outputUnit = routed.outputUnit.build();
-        result.mixedMeasures = new ArrayList<>();
+        micros.outputUnit = routed.outputUnit.build();
+        micros.mixedMeasures = new ArrayList<>();
 
-        UsagePrefsHandler.mixedMeasuresToMicros(routedMeasures, quantity, result);
+        UsagePrefsHandler.mixedMeasuresToMicros(routedMeasures, quantity, micros);
 
         String precisionSkeleton = routed.precision;
 
-        assert result.rounder != null;
+        assert micros.rounder != null;
 
         // TODO: use the user precision if the user already set precision.
         if (precisionSkeleton != null && precisionSkeleton.length() > 0) {
-            result.rounder = parseSkeletonToPrecision(precisionSkeleton);
+            micros.rounder = parseSkeletonToPrecision(precisionSkeleton);
         } else {
             // We use the same rounding mode as COMPACT notation: known to be a
             // human-friendly rounding mode: integers, but add a decimal digit
             // as needed to ensure we have at least 2 significant digits.
-            result.rounder = Precision.integer().withMinDigits(2);
+            micros.rounder = Precision.integer().withMinDigits(2);
         }
 
-        return result; /* TODO: sffc, shall we return this?*/
+        return micros;
     }
 }

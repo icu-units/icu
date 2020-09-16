@@ -125,10 +125,8 @@ public class LocalizedNumberFormatter extends NumberFormatterSettings<LocalizedN
 
     /**
      *  Helper method that creates a FormattedStringBuilder and formats.
-     * @internal
-     * @deprecated
      */
-    public FormattedNumber format(DecimalQuantity fq) {
+    private FormattedNumber format(DecimalQuantity fq) {
         FormattedStringBuilder string = new FormattedStringBuilder();
         MicroProps micros = formatImpl(fq, string);
         return new FormattedNumber(string, fq, micros.outputUnit);
