@@ -56,12 +56,12 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
             result.fMeasureUnits.add(unit);
             if (unit.getComplexity() == MeasureUnit.Complexity.MIXED) {
                 MixedUnitLongNameHandler mlnh = MixedUnitLongNameHandler
-                        .forMeasureUnit(locale, unit, width, rules, null);
+                        .forMeasureUnit(locale, unit, width, rules, null); /*TODO: why is null*/
                 result.fMixedUnitHandlers.add(mlnh);
                 result.fHandlers.add(mlnh);
             } else {
                 LongNameHandler lnh = LongNameHandler
-                        .forMeasureUnit(locale, unit, NoUnit.BASE, width, rules, null);
+                        .forMeasureUnit(locale, unit, NoUnit.BASE, width, rules, null ); /*TODO: why is null */
                 result.fLongNameHandlers.add(lnh);
                 result.fHandlers.add(lnh);
             }
@@ -82,7 +82,7 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
 
         // Call the correct LongNameHandler based on outputUnit
         for (int i = 0; i < this.fHandlers.size(); i++) {
-            if (fMeasureUnits.get(i) == micros.outputUnit) {
+            if (fMeasureUnits.get(i).equals( micros.outputUnit)) {
                 return fHandlers.get(i).processQuantity(quantity);
             }
         }

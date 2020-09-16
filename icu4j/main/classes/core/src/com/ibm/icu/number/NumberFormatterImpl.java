@@ -564,6 +564,7 @@ class NumberFormatterImpl {
         return getPrefixSuffixImpl(microPropsGenerator, signum, output);
     }
 
+
     public MicroProps getRawMicroProps() {
         return micros;
     }

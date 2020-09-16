@@ -90,7 +90,11 @@ public class UsagePrefsHandler implements MicroPropsGenerator {
      */
     @Override
     public MicroProps processQuantity(DecimalQuantity quantity) {
-        MicroProps result = fParent.processQuantity(quantity);
+        /* TODO: Question: sffc , shall we check if the parent is null? */
+
+        MicroProps result = fParent == null?
+                new MicroProps(false):
+                fParent.processQuantity(quantity);
 
 
         quantity.roundToInfinity(); // Enables toDouble
@@ -116,6 +120,6 @@ public class UsagePrefsHandler implements MicroPropsGenerator {
             result.rounder = Precision.integer().withMinDigits(2);
         }
 
-        return result;
+        return result; /* TODO: sffc, shall we return this?*/
     }
 }
