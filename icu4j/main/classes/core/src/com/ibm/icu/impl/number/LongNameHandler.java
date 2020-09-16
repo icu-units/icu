@@ -216,56 +216,23 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
             UnitWidth width,
             PluralRules rules,
             MicroPropsGenerator parent) {
-//        if (perUnit != null) {
-//            // Compound unit: first try to simplify (e.g., meters per second is its own unit).
-//            MeasureUnit simplified = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
-//            if (simplified != null) {
-//                unit = simplified;
-//            } else {
-//                // No simplified form is available.
-//                return forCompoundUnit(locale, unit, perUnit, width, rules, parent);
-//            }
-//        }
-//
-//        String[] simpleFormats = new String[ARRAY_LENGTH];
-//        getMeasureData(locale, unit, width, simpleFormats);
-//        // TODO(ICU4J): Reduce the number of object creations here?
-//        Map<StandardPlural, SimpleModifier> modifiers = new EnumMap<>(
-//                StandardPlural.class);
-//        LongNameHandler result = new LongNameHandler(modifiers, rules, parent);
-//        result.simpleFormatsToModifiers(simpleFormats, NumberFormat.Field.MEASURE_UNIT);
-//        return result;
-//
-//
-
-        // Not valid for mixed units that aren't built-in units, and there should
-        // not be any built-in mixed units!
-        assert (unit.getType() != null || unit.getComplexity() != MeasureUnit.Complexity.MIXED);
-
-        if (unit.getType() == null || perUnit.getType() == null) {
-            // TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Set an
-            // error code. Once we support not-built-in units here, unitRef may be
-            // anything, but if not built-in, perUnit has to be "none".
-            throw new UnsupportedOperationException();
-        }
-
-        if (perUnit != null && perUnit.getType() != null) {
-            // Compound unit: first try to simplify (e.g. "meter per second" is a
-            // built-in unit).
-            MeasureUnit resolved = MeasureUnit.resolveUnitPerUnit(unit, perUnit); /*TODO: sffc, is this correct*/
-            if (resolved != null) {
-                unit = resolved;
+        if (perUnit != null) {
+            // Compound unit: first try to simplify (e.g., meters per second is its own unit).
+            MeasureUnit simplified = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
+            if (simplified != null) {
+                unit = simplified;
             } else {
                 // No simplified form is available.
                 return forCompoundUnit(locale, unit, perUnit, width, rules, parent);
-
             }
         }
 
+        String[] simpleFormats = new String[ARRAY_LENGTH];
+        getMeasureData(locale, unit, width, simpleFormats);
+        // TODO(ICU4J): Reduce the number of object creations here?
         Map<StandardPlural, SimpleModifier> modifiers = new EnumMap<>(
                 StandardPlural.class);
         LongNameHandler result = new LongNameHandler(modifiers, rules, parent);
-        String[] simpleFormats = new String[ARRAY_LENGTH];
         result.simpleFormatsToModifiers(simpleFormats, NumberFormat.Field.MEASURE_UNIT);
         return result;
     }
@@ -340,6 +307,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
             modifiers.put(plural, new SimpleModifier(compoundCompiled, field, false, parameters));
         }
     }
+
 
     @Override
     public MicroProps processQuantity(DecimalQuantity quantity) {
