@@ -24,9 +24,9 @@ import java.util.MissingResourceException;
 
 public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
 
-    private static final int DNAM_INDEX = StandardPlural.COUNT;
-    private static final int PER_INDEX = StandardPlural.COUNT + 1;
-    private static final int ARRAY_LENGTH = StandardPlural.COUNT + 2;
+    protected static final int DNAM_INDEX = StandardPlural.COUNT;
+    protected static final int PER_INDEX = StandardPlural.COUNT + 1;
+    protected static final int ARRAY_LENGTH = StandardPlural.COUNT + 2;
 
     private static int getIndex(String pluralKeyword) {
         // pluralKeyword can also be "dnam" or "per"
@@ -39,7 +39,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
         }
     }
 
-    private static String getWithPlural(String[] strings, StandardPlural plural) {
+    static String getWithPlural(String[] strings, StandardPlural plural) {
         String result = strings[plural.ordinal()];
         if (result == null) {
             result = strings[StandardPlural.OTHER.ordinal()];
@@ -79,7 +79,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
 
     // NOTE: outArray MUST have at least ARRAY_LENGTH entries. No bounds checking is performed.
 
-    private static void getMeasureData(
+    protected static void getMeasureData(
             ULocale locale,
             MeasureUnit unit,
             UnitWidth width,
@@ -191,6 +191,23 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
         return result;
     }
 
+    /**
+     * Construct a localized LongNameHandler for the specified MeasureUnit.
+     *
+     * Compound units can be constructed via `unit` and `perUnit`. Both of these
+     * must then be built-in units.
+     *
+     * Mixed units are not supported, use MixedUnitLongNameHandler.forMeasureUnit.
+     *
+     *
+     * @param locale The desired locale.
+     * @param unit The measure unit to construct a LongNameHandler for. If
+     *     `perUnit` is also defined, `unit` must not be a mixed unit.
+     * @param perUnit If `unit` is a mixed unit, `perUnit` must be "none".
+     * @param width Specifies the desired unit rendering.
+     * @param rules Does not take ownership.
+     * @param parent Does not take ownership.
+     */
     public static LongNameHandler forMeasureUnit(
             ULocale locale,
             MeasureUnit unit,
@@ -198,23 +215,56 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
             UnitWidth width,
             PluralRules rules,
             MicroPropsGenerator parent) {
-        if (perUnit != null) {
-            // Compound unit: first try to simplify (e.g., meters per second is its own unit).
-            MeasureUnit simplified = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
-            if (simplified != null) {
-                unit = simplified;
-            } else {
-                // No simplified form is available.
-                return forCompoundUnit(locale, unit, perUnit, width, rules, parent);
-            }
-        }
+//        if (perUnit != null) {
+//            // Compound unit: first try to simplify (e.g., meters per second is its own unit).
+//            MeasureUnit simplified = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
+//            if (simplified != null) {
+//                unit = simplified;
+//            } else {
+//                // No simplified form is available.
+//                return forCompoundUnit(locale, unit, perUnit, width, rules, parent);
+//            }
+//        }
+//
+//        String[] simpleFormats = new String[ARRAY_LENGTH];
+//        getMeasureData(locale, unit, width, simpleFormats);
+//        // TODO(ICU4J): Reduce the number of object creations here?
+//        Map<StandardPlural, SimpleModifier> modifiers = new EnumMap<>(
+//                StandardPlural.class);
+//        LongNameHandler result = new LongNameHandler(modifiers, rules, parent);
+//        result.simpleFormatsToModifiers(simpleFormats, NumberFormat.Field.MEASURE_UNIT);
+//        return result;
+//
+//
 
-        String[] simpleFormats = new String[ARRAY_LENGTH];
-        getMeasureData(locale, unit, width, simpleFormats);
-        // TODO(ICU4J): Reduce the number of object creations here?
-        Map<StandardPlural, SimpleModifier> modifiers = new EnumMap<>(
+    // Not valid for mixed units that aren't built-in units, and there should
+    // not be any built-in mixed units!
+    assert (!unit.getType().isEmpty() || unit.getComplexity() != MeasureUnit.Complexity.MIXED);
+
+    if (unit.getType() == null || perUnit.getType() == null) {
+        // TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Set an
+        // error code. Once we support not-built-in units here, unitRef may be
+        // anything, but if not built-in, perUnit has to be "none".
+        throw new UnsupportedOperationException();
+    }
+
+    if (perUnit != null && perUnit.getType() != null && !perUnit.getType().equals("none")) {
+        // Compound unit: first try to simplify (e.g. "meter per second" is a
+        // built-in unit).
+        MeasureUnit resolved = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
+        if (resolved != null) {
+            unit = resolved;
+        } else {
+            // No simplified form is available.
+            return forCompoundUnit(locale, unit, perUnit, width, rules, parent);
+
+        }
+    }
+
+    Map<StandardPlural, SimpleModifier> modifiers = new EnumMap<>(
                 StandardPlural.class);
         LongNameHandler result = new LongNameHandler(modifiers, rules, parent);
+        String []simpleFormats = new String[ARRAY_LENGTH];
         result.simpleFormatsToModifiers(simpleFormats, NumberFormat.Field.MEASURE_UNIT);
         return result;
     }

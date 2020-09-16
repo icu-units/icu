@@ -12,9 +12,11 @@ import com.ibm.icu.impl.number.DecimalQuantity;
 import com.ibm.icu.impl.number.DecimalQuantity_DualStorageBCD;
 import com.ibm.icu.impl.number.Grouper;
 import com.ibm.icu.impl.number.LongNameHandler;
+import com.ibm.icu.impl.number.LongNameMultiplexer;
 import com.ibm.icu.impl.number.MacroProps;
 import com.ibm.icu.impl.number.MicroProps;
 import com.ibm.icu.impl.number.MicroPropsGenerator;
+import com.ibm.icu.impl.number.MixedUnitLongNameHandler;
 import com.ibm.icu.impl.number.MultiplierFormatHandler;
 import com.ibm.icu.impl.number.MutablePatternModifier;
 import com.ibm.icu.impl.number.MutablePatternModifier.ImmutablePatternModifier;
@@ -45,7 +47,13 @@ import com.ibm.icu.util.MeasureUnit;
  */
 class NumberFormatterImpl {
 
-    /** Builds a "safe" MicroPropsGenerator, which is thread-safe and can be used repeatedly. */
+    private static final Currency DEFAULT_CURRENCY = Currency.getInstance("XXX");
+    final MicroProps micros;
+    final MicroPropsGenerator microPropsGenerator;
+
+    /**
+     * Builds a "safe" MicroPropsGenerator, which is thread-safe and can be used repeatedly.
+     */
     public NumberFormatterImpl(MacroProps macros) {
         micros = new MicroProps(true);
         microPropsGenerator = macrosToMicroGenerator(macros, micros, true);
@@ -68,7 +76,7 @@ class NumberFormatterImpl {
      * Prints only the prefix and suffix; used for DecimalFormat getters.
      *
      * @return The index into the output at which the prefix ends and the suffix starts; in other words,
-     *         the prefix length.
+     * the prefix length.
      */
     public static int getPrefixSuffixStatic(
             MacroProps macros,
@@ -78,35 +86,6 @@ class NumberFormatterImpl {
         MicroProps micros = new MicroProps(false);
         MicroPropsGenerator microPropsGenerator = macrosToMicroGenerator(macros, micros, false);
         return getPrefixSuffixImpl(microPropsGenerator, signum, output);
-    }
-
-    private static final Currency DEFAULT_CURRENCY = Currency.getInstance("XXX");
-
-    final MicroProps micros;
-    final MicroPropsGenerator microPropsGenerator;
-
-    /**
-     * Evaluates the "safe" MicroPropsGenerator created by "fromMacros".
-     */
-    public MicroProps format(DecimalQuantity inValue, FormattedStringBuilder outString) {
-        MicroProps micros = preProcess(inValue);
-        int length = writeNumber(micros, inValue, outString, 0);
-        writeAffixes(micros, outString, 0, length);
-        return micros;
-    }
-
-    /**
-     * Like format(), but saves the result into an output MicroProps without additional processing.
-     */
-    public MicroProps preProcess(DecimalQuantity inValue) {
-        MicroProps micros = microPropsGenerator.processQuantity(inValue);
-        if (micros.integerWidth.maxInt == -1) {
-            inValue.setMinInteger(micros.integerWidth.minInt);
-        } else {
-            inValue.setMinInteger(micros.integerWidth.minInt);
-            inValue.applyMaxInteger(micros.integerWidth.maxInt);
-        }
-        return micros;
     }
 
     private static MicroProps preProcessUnsafe(MacroProps macros, DecimalQuantity inValue) {
@@ -122,10 +101,6 @@ class NumberFormatterImpl {
         return micros;
     }
 
-    public int getPrefixSuffix(byte signum, StandardPlural plural, FormattedStringBuilder output) {
-        return getPrefixSuffixImpl(microPropsGenerator, signum, output);
-    }
-
     private static int getPrefixSuffixImpl(MicroPropsGenerator generator, byte signum, FormattedStringBuilder output) {
         // #13453: DecimalFormat wants the affixes from the pattern only (modMiddle).
         // TODO: Clean this up, closer to C++. The pattern modifier is not as accessible as in C++.
@@ -138,12 +113,6 @@ class NumberFormatterImpl {
         micros.modMiddle.apply(output, 0, 0);
         return micros.modMiddle.getPrefixLength();
     }
-
-    public MicroProps getRawMicroProps() {
-        return micros;
-    }
-
-    //////////
 
     private static boolean unitIsCurrency(MeasureUnit unit) {
         // TODO: Check using "instanceof" operator instead?
@@ -162,18 +131,18 @@ class NumberFormatterImpl {
         return unit != null && "permille".equals(unit.getSubtype());
     }
 
+    //////////
+
     /**
      * Synthesizes the MacroProps into a MicroPropsGenerator. All information, including the locale, is
      * encoded into the MicroPropsGenerator, except for the quantity itself, which is left abstract and
      * must be provided to the returned MicroPropsGenerator instance.
      *
+     * @param macros The {@link MacroProps} to consume. This method does not mutate the MacroProps instance.
+     * @param safe   If true, the returned MicroPropsGenerator will be thread-safe. If false, the returned
+     *               value will <em>not</em> be thread-safe, intended for a single "one-shot" use only.
+     *               Building the thread-safe object is more expensive.
      * @see MicroPropsGenerator
-     * @param macros
-     *            The {@link MacroProps} to consume. This method does not mutate the MacroProps instance.
-     * @param safe
-     *            If true, the returned MicroPropsGenerator will be thread-safe. If false, the returned
-     *            value will <em>not</em> be thread-safe, intended for a single "one-shot" use only.
-     *            Building the thread-safe object is more expensive.
      */
     private static MicroPropsGenerator macrosToMicroGenerator(MacroProps macros, MicroProps micros, boolean safe) {
         MicroPropsGenerator chain = micros;
@@ -202,11 +171,11 @@ class NumberFormatterImpl {
         // compact notation overrides the middle modifier (micros.modMiddle)
         // normally used for the percent pattern.
         boolean isCldrUnit = !isCurrency
-            && !isBaseUnit
-            && (unitWidth == UnitWidth.FULL_NAME
+                && !isBaseUnit
+                && (unitWidth == UnitWidth.FULL_NAME
                 || !(isPercent || isPermille)
                 || isCompactNotation
-            );
+        );
         boolean isMixedUnit = isCldrUnit && macros.unit.getType() == null &&
                 macros.unit.getComplexity() == MeasureUnit.Complexity.MIXED;
         PluralRules rules = macros.rules;
@@ -371,14 +340,43 @@ class NumberFormatterImpl {
                 // Lazily create PluralRules
                 rules = PluralRules.forLocale(macros.loc);
             }
-            chain = LongNameHandler
-                    .forMeasureUnit(macros.loc, macros.unit, macros.perUnit, unitWidth, rules, chain);
+            PluralRules pluralRules = macros.rules != null ?
+                    macros.rules :
+                    PluralRules.forLocale(macros.loc);
+
+            if (macros.usage != null) {
+                chain = LongNameMultiplexer.forMeasureUnits(
+                        macros.loc,
+                        micros.outputUnit.splitToSingleUnits(),
+                        unitWidth,
+                        pluralRules,
+                        chain);
+            } else if (isMixedUnit) {
+                chain = MixedUnitLongNameHandler.forMeasureUnit(
+                        macros.loc,
+                        macros.unit,
+                        unitWidth,
+                        pluralRules,
+                        chain);
+            } else {
+                chain = LongNameHandler.forMeasureUnit(macros.loc,
+                        macros.unit,
+                        macros.perUnit,
+                        unitWidth,
+                        pluralRules,
+                        chain);
+            }
         } else if (isCurrency && unitWidth == UnitWidth.FULL_NAME) {
             if (rules == null) {
                 // Lazily create PluralRules
                 rules = PluralRules.forLocale(macros.loc);
             }
-            chain = LongNameHandler.forCurrencyLongNames(macros.loc, currency, rules, chain);
+
+            chain = LongNameHandler.forCurrencyLongNames(
+                    macros.loc,
+                    currency,
+                    rules,
+                    chain);
         } else {
             // No outer modifier required
             micros.modOuter = ConstantAffixModifier.EMPTY;
@@ -392,7 +390,7 @@ class NumberFormatterImpl {
             }
             CompactType compactType = (macros.unit instanceof Currency
                     && macros.unitWidth != UnitWidth.FULL_NAME) ? CompactType.CURRENCY
-                            : CompactType.DECIMAL;
+                    : CompactType.DECIMAL;
             chain = ((CompactNotation) macros.notation).withLocaleData(macros.loc,
                     micros.nsName,
                     compactType,
@@ -532,5 +530,38 @@ class NumberFormatterImpl {
             }
         }
         return length;
+    }
+
+
+    /**
+     * Evaluates the "safe" MicroPropsGenerator created by "fromMacros".
+     */
+    public MicroProps format(DecimalQuantity inValue, FormattedStringBuilder outString) {
+        MicroProps micros = preProcess(inValue);
+        int length = writeNumber(micros, inValue, outString, 0);
+        writeAffixes(micros, outString, 0, length);
+        return micros;
+    }
+
+    /**
+     * Like format(), but saves the result into an output MicroProps without additional processing.
+     */
+    public MicroProps preProcess(DecimalQuantity inValue) {
+        MicroProps micros = microPropsGenerator.processQuantity(inValue);
+        if (micros.integerWidth.maxInt == -1) {
+            inValue.setMinInteger(micros.integerWidth.minInt);
+        } else {
+            inValue.setMinInteger(micros.integerWidth.minInt);
+            inValue.applyMaxInteger(micros.integerWidth.maxInt);
+        }
+        return micros;
+    }
+
+    public int getPrefixSuffix(byte signum, StandardPlural plural, FormattedStringBuilder output) {
+        return getPrefixSuffixImpl(microPropsGenerator, signum, output);
+    }
+
+    public MicroProps getRawMicroProps() {
+        return micros;
     }
 }
