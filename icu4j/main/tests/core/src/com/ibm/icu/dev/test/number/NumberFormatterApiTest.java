@@ -4,6 +4,7 @@
 
 package com.ibm.icu.dev.test.number;
 
+import com.ibm.icu.dev.test.TestFmwk;
 import com.ibm.icu.dev.test.format.FormattedValueTest;
 import com.ibm.icu.dev.test.serializable.SerializableTestUtility;
 import com.ibm.icu.impl.number.Grouper;
@@ -54,9 +55,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.*;
-
-public class NumberFormatterApiTest {
+public class NumberFormatterApiTest  extends TestFmwk {
 
     private static final Currency USD = Currency.getInstance("USD");
     private static final Currency GBP = Currency.getInstance("GBP");
@@ -440,6 +439,17 @@ public class NumberFormatterApiTest {
                 new ULocale("zh-Hant"),
                 1e7,
                 "1000\u842C");
+
+        if (!logKnownIssue("21258", "StandardPlural cannot handle keywords 1, 0")) {
+            assertFormatSingle(
+                    "Compact with plural form =1 (ICU-21258)",
+                    "compact-long",
+                    "K",
+                    NumberFormatter.with().notation(Notation.compactLong()),
+                    ULocale.FRANCE,
+                    1e3,
+                    "mille");
+        }
 
         assertFormatSingle(
                 "Compact Infinity",
@@ -1490,6 +1500,65 @@ public class NumberFormatterApiTest {
                 ULocale.ENGLISH,
                 -98.7654321,
                 "-98.765432%");
+
+        // ICU-20923
+        assertFormatDescendingBig(
+                "Compact Percent",
+                "compact-short percent",
+                "K %",
+                NumberFormatter.with()
+                        .notation(Notation.compactShort())
+                        .unit(NoUnit.PERCENT),
+                ULocale.ENGLISH,
+                "88M%",
+                "8.8M%",
+                "876K%",
+                "88K%",
+                "8.8K%",
+                "876%",
+                "88%",
+                "8.8%",
+                "0%");
+
+        // ICU-20923
+        assertFormatDescendingBig(
+                "Compact Percent with Scale",
+                "compact-short percent scale/100",
+                "K %x100",
+                NumberFormatter.with()
+                        .notation(Notation.compactShort())
+                        .unit(NoUnit.PERCENT)
+                        .scale(Scale.powerOfTen(2)),
+                ULocale.ENGLISH,
+                "8.8B%",
+                "876M%",
+                "88M%",
+                "8.8M%",
+                "876K%",
+                "88K%",
+                "8.8K%",
+                "876%",
+                "0%");
+
+        // ICU-20923
+        assertFormatDescendingBig(
+                "Compact Percent Long Name",
+                "compact-short percent unit-width-full-name",
+                "K % unit-width-full-name",
+                NumberFormatter.with()
+                        .notation(Notation.compactShort())
+                        .unit(NoUnit.PERCENT)
+                        .unitWidth(UnitWidth.FULL_NAME),
+                ULocale.ENGLISH,
+                "88M percent",
+                "8.8M percent",
+                "876K percent",
+                "88K percent",
+                "8.8K percent",
+                "876 percent",
+                "88 percent",
+                "8.8 percent",
+                "0 percent");
 
         assertFormatSingle(
                 "Per Percent",
