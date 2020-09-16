@@ -199,13 +199,13 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
      * <p>
      * Mixed units are not supported, use MixedUnitLongNameHandler.forMeasureUnit.
      *
-     * @param locale  The desired locale.
-     * @param unit    The measure unit to construct a LongNameHandler for. If
-     *                `perUnit` is also defined, `unit` must not be a mixed unit.
-     * @param perUnit If `unit` is a mixed unit, `perUnit` must be "none".
-     * @param width   Specifies the desired unit rendering.
-     * @param rules   Does not take ownership.
-     * @param parent  Does not take ownership.
+     * @param locale The desired locale.
+     * @param unit The measure unit to construct a LongNameHandler for. If
+     *     `perUnit` is also defined, `unit` must not be a mixed unit.
+     * @param perUnit If `unit` is a mixed unit, `perUnit` must be null.
+     * @param width Specifies the desired unit rendering.
+     * @param rules Plural rules.
+     * @param parent Plural rules.
      */
     public static LongNameHandler forMeasureUnit(
             ULocale locale,
@@ -214,6 +214,12 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
             UnitWidth width,
             PluralRules rules,
             MicroPropsGenerator parent) {
+        if (unit.getType() == null || (perUnit != null && perUnit.getType() == null)) {
+            // TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Set an
+            // error code. Once we support not-built-in units here, unitRef may be
+            // anything, but if not built-in, perUnit has to be "none".
+          throw new ICUException("TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Is this the right exception?");
+        }
         if (perUnit != null) {
             // Compound unit: first try to simplify (e.g., meters per second is its own unit).
             MeasureUnit simplified = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
