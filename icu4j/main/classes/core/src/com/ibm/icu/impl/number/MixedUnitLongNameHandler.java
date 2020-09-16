@@ -17,7 +17,7 @@ import com.ibm.icu.util.ULocale;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MixedUnitLongNameHandler implements MicroPropsGenerator {
+public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierStore {
     // Not owned
     private final PluralRules rules;
     // Not owned
@@ -159,15 +159,33 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator {
         List<String> outputMeasuresList = new ArrayList<>();
 
         for (int i = 0; i < micros.mixedMeasures.size(); i++) {
+                        /*
+              // C++ part:
+            DecimalQuantity fdec;
+            fdec.setToLong(micros.mixedMeasures[i]);
+            StandardPlural::Form pluralForm = utils::getStandardPlural(rules, fdec);
+
+                UnicodeString simpleFormat =
+                    getWithPlural(&fMixedUnitData[i * ARRAY_LENGTH], pluralForm, status);
+                SimpleFormatter compiledFormatter(simpleFormat, 0, 1, status);
+
+                UnicodeString num;
+                auto appendable = UnicodeStringAppendable(num);
+                fIntegerFormatter.formatDecimalQuantity(fdec, status).appendTo(appendable, status);
+                compiledFormatter.format(num, outputMeasuresList[i], status);
+
+             */
             DecimalQuantity fdec = new DecimalQuantity_DualStorageBCD(micros.mixedMeasures.get(i).getNumber());
             StandardPlural pluralForm = fdec.getStandardPlural(rules);
 
             String simpleFormat = LongNameHandler.getWithPlural(this.fMixedUnitData.get(i), pluralForm);
             SimpleFormatter compiledFormatter = SimpleFormatter.compileMinMaxArguments(simpleFormat, 0, 1);
 
+
             FormattedStringBuilder appendable = new FormattedStringBuilder();
+            appendable.setAppendableField(ListFormatter.Field.LITERAL); /* TODO: sffc,  shall we use LITERAL or ELEMENT or something else???*/
             this.fIntegerFormatter.format(fdec).appendTo(appendable);
-            String num = compiledFormatter.format(outputMeasuresList.get(i));
+            outputMeasuresList.add( compiledFormatter.format(appendable.toString()));
         }
 
         String[] finalSimpleFormats = this.fMixedUnitData.get(this.fMixedUnitData.size() - 1);
