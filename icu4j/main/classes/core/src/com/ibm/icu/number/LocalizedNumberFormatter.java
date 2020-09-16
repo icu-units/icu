@@ -10,11 +10,9 @@ import com.ibm.icu.impl.number.LocalizedNumberFormatterAsFormat;
 import com.ibm.icu.impl.number.MacroProps;
 import com.ibm.icu.impl.number.MicroProps;
 import com.ibm.icu.math.BigDecimal;
-import com.ibm.icu.text.BidiTransform;
 import com.ibm.icu.util.CurrencyAmount;
 import com.ibm.icu.util.Measure;
 import com.ibm.icu.util.MeasureUnit;
-import com.ibm.icu.util.NoUnit;
 
 import java.math.BigInteger;
 import java.text.Format;
