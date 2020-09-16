@@ -101,6 +101,13 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
         return micros;
     }
 
+    // FIXME: consider name, style, etc
+    public MicroProps processQuantityWithMicros(DecimalQuantity quantity, MicroProps micros) {
+        assert (fMixedUnitData.size() > 1);
+        micros.modOuter = getMixedUnitModifier(quantity, micros);
+        return micros;
+    }
+
     // Required for ModifierStore. And ModifierStore is required by
     // SimpleModifier constructor's last parameter. We assert his will never get
     // called though.
