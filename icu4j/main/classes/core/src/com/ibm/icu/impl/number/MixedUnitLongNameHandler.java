@@ -25,8 +25,7 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
 
     // If this LongNameHandler is for a mixed unit, this stores unit data for
     // each of the individual units. For each unit, it stores ARRAY_LENGTH
-    // strings, as returned by getMeasureData. (Each unit with index `i` has
-    // ARRAY_LENGTH strings starting at index `i*ARRAY_LENGTH` in this array.)
+    // strings, as returned by getMeasureData.
     private List<String[]> fMixedUnitData;
 
     // A localized NumberFormatter used to format the integer-valued bigger
@@ -41,6 +40,7 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
         this.parent = parent;
     }
 
+    /*TODO: hugo, why do we need this ?*/
     private MixedUnitLongNameHandler() {
         this.rules = null;
         this.parent = null;
@@ -151,7 +151,7 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
         //   - 3 yards, 1 foot
         //
         // Use ListFormatter to combine, with one placeholder:
-        //   - 3 yards, 1 foot and {0} inches
+        //   - 3 yards, 1 foot and {0} inches /* TODO: how about the case of `1 inch` */
         //
         // Return a SimpleModifier for this pattern, letting the rest of the
         // pipeline take care of the remaining inches.
@@ -159,22 +159,6 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
         List<String> outputMeasuresList = new ArrayList<>();
 
         for (int i = 0; i < micros.mixedMeasures.size(); i++) {
-                        /*
-              // C++ part:
-            DecimalQuantity fdec;
-            fdec.setToLong(micros.mixedMeasures[i]);
-            StandardPlural::Form pluralForm = utils::getStandardPlural(rules, fdec);
-
-                UnicodeString simpleFormat =
-                    getWithPlural(&fMixedUnitData[i * ARRAY_LENGTH], pluralForm, status);
-                SimpleFormatter compiledFormatter(simpleFormat, 0, 1, status);
-
-                UnicodeString num;
-                auto appendable = UnicodeStringAppendable(num);
-                fIntegerFormatter.formatDecimalQuantity(fdec, status).appendTo(appendable, status);
-                compiledFormatter.format(num, outputMeasuresList[i], status);
-
-             */
             DecimalQuantity fdec = new DecimalQuantity_DualStorageBCD(micros.mixedMeasures.get(i).getNumber());
             StandardPlural pluralForm = fdec.getStandardPlural(rules);
 
@@ -183,9 +167,9 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
 
 
             FormattedStringBuilder appendable = new FormattedStringBuilder();
-            appendable.setAppendableField(ListFormatter.Field.LITERAL); /* TODO: sffc,  shall we use LITERAL or ELEMENT or something else???*/
-            this.fIntegerFormatter.format(fdec).appendTo(appendable);
-            outputMeasuresList.add( compiledFormatter.format(appendable.toString()));
+            this.fIntegerFormatter.formatImpl(fdec, appendable);
+            outputMeasuresList.add(compiledFormatter.format(appendable.toString()));
+            // TODO: fix this issue https://github.com/icu-units/icu/issues/67
         }
 
         String[] finalSimpleFormats = this.fMixedUnitData.get(this.fMixedUnitData.size() - 1);
@@ -200,11 +184,11 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
 
         // Return a SimpleModifier for the "premixed" pattern
         Modifier.Parameters params = new Modifier.Parameters();
-        params.obj = (ModifierStore) this;
+        params.obj = this;
         params.signum = Modifier.Signum.POS_ZERO;
         params.plural = finalPlural;
 
         return new SimpleModifier(premixedCompiled.getTextWithNoArguments(), null, false, params);
-        /*TODO: it was  SimpleModifier(premixedCompiled, kUndefinedField, false, {this, SIGNUM_POS_ZERO, finalPlural});*/
+        /*TODO: it was SimpleModifier(premixedCompiled, kUndefinedField, false, {this, SIGNUM_POS_ZERO, finalPlural});*/
     }
 }
