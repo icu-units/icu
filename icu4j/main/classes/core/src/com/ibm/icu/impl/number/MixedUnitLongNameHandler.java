@@ -6,8 +6,6 @@ package com.ibm.icu.impl.number;
 
 import com.ibm.icu.impl.FormattedStringBuilder;
 import com.ibm.icu.impl.StandardPlural;
-import com.ibm.icu.math.BigDecimal;
-import com.ibm.icu.number.FormattedNumber;
 import com.ibm.icu.number.LocalizedNumberFormatter;
 import com.ibm.icu.number.NumberFormatter;
 import com.ibm.icu.text.ListFormatter;
@@ -16,7 +14,6 @@ import com.ibm.icu.text.SimpleFormatter;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.ULocale;
 
-import java.text.Format;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,8 +99,12 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator {
      */
     @Override
     public MicroProps processQuantity(DecimalQuantity quantity) {
-        // TODO: implement
-        return null;
+        assert (fMixedUnitData.size() > 1);
+        MicroProps micros;
+        // if (parent != null)
+        micros = parent.processQuantity(quantity);
+        micros.modOuter = getMixedUnitModifier(quantity, micros);
+        return micros;
     }
 
     // Required for ModifierStore. And ModifierStore is required by
@@ -151,11 +152,11 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator {
         List<String> outputMeasuresList = new ArrayList<>();
 
         for (int i = 0; i < micros.mixedMeasures.size(); i++) {
-            DecimalQuantity fdec  = new DecimalQuantity_DualStorageBCD(micros.mixedMeasures.get(i).getNumber());
+            DecimalQuantity fdec = new DecimalQuantity_DualStorageBCD(micros.mixedMeasures.get(i).getNumber());
             StandardPlural pluralForm = fdec.getStandardPlural(rules);
 
-            String simpleFormat = LongNameHandler.getWithPlural( this.fMixedUnitData.get(i), pluralForm);
-            SimpleFormatter compiledFormatter = SimpleFormatter.compileMinMaxArguments(simpleFormat, 0 , 1);
+            String simpleFormat = LongNameHandler.getWithPlural(this.fMixedUnitData.get(i), pluralForm);
+            SimpleFormatter compiledFormatter = SimpleFormatter.compileMinMaxArguments(simpleFormat, 0, 1);
 
             FormattedStringBuilder appendable = new FormattedStringBuilder();
             this.fIntegerFormatter.format(fdec).appendTo(appendable);
@@ -163,9 +164,9 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator {
         }
 
         String[] finalSimpleFormats = this.fMixedUnitData.get(this.fMixedUnitData.size() - 1);
-        StandardPlural finalPlural = RoundingUtils.getPluralSafe (micros.rounder, rules, quantity);
+        StandardPlural finalPlural = RoundingUtils.getPluralSafe(micros.rounder, rules, quantity);
         String finalSimpleFormat = LongNameHandler.getWithPlural(finalSimpleFormats, finalPlural);
-        SimpleFormatter finalFormatter= SimpleFormatter.compileMinMaxArguments(finalSimpleFormat, 0, 1);
+        SimpleFormatter finalFormatter = SimpleFormatter.compileMinMaxArguments(finalSimpleFormat, 0, 1);
         finalFormatter.format("{0}", outputMeasuresList.get(this.fMixedUnitData.size() - 1));
 
         // Combine list into a "premixed" pattern
@@ -178,7 +179,7 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator {
         params.signum = Modifier.Signum.POS_ZERO;
         params.plural = finalPlural;
 
-        return  new SimpleModifier(premixedCompiled.getTextWithNoArguments(), null, false, params);
+        return new SimpleModifier(premixedCompiled.getTextWithNoArguments(), null, false, params);
         /*TODO: it was  SimpleModifier(premixedCompiled, kUndefinedField, false, {this, SIGNUM_POS_ZERO, finalPlural});*/
     }
 }

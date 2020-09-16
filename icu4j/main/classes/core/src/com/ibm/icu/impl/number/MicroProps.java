@@ -52,7 +52,7 @@ public class MicroProps implements Cloneable, MicroPropsGenerator {
     private final boolean immutable;
 
     // The MeasureUnit with which the output is represented. May also have
-    // UMEASURE_UNIT_MIXED complexity, in which case mixedMeasures comes into
+    // MeasureUnit.Complexity.MIXED complexity, in which case mixedMeasures comes into
     // play.
     public MeasureUnit outputUnit;
 

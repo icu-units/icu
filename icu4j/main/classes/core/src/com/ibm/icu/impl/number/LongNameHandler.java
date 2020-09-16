@@ -1,5 +1,7 @@
 // © 2017 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
+
+
 package com.ibm.icu.impl.number;
 
 import com.ibm.icu.impl.CurrencyData;
@@ -193,20 +195,19 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
 
     /**
      * Construct a localized LongNameHandler for the specified MeasureUnit.
-     *
+     * <p>
      * Compound units can be constructed via `unit` and `perUnit`. Both of these
      * must then be built-in units.
-     *
+     * <p>
      * Mixed units are not supported, use MixedUnitLongNameHandler.forMeasureUnit.
      *
-     *
-     * @param locale The desired locale.
-     * @param unit The measure unit to construct a LongNameHandler for. If
-     *     `perUnit` is also defined, `unit` must not be a mixed unit.
+     * @param locale  The desired locale.
+     * @param unit    The measure unit to construct a LongNameHandler for. If
+     *                `perUnit` is also defined, `unit` must not be a mixed unit.
      * @param perUnit If `unit` is a mixed unit, `perUnit` must be "none".
-     * @param width Specifies the desired unit rendering.
-     * @param rules Does not take ownership.
-     * @param parent Does not take ownership.
+     * @param width   Specifies the desired unit rendering.
+     * @param rules   Does not take ownership.
+     * @param parent  Does not take ownership.
      */
     public static LongNameHandler forMeasureUnit(
             ULocale locale,
@@ -237,34 +238,34 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
 //
 //
 
-    // Not valid for mixed units that aren't built-in units, and there should
-    // not be any built-in mixed units!
-    assert (!unit.getType().isEmpty() || unit.getComplexity() != MeasureUnit.Complexity.MIXED);
+        // Not valid for mixed units that aren't built-in units, and there should
+        // not be any built-in mixed units!
+        assert (unit.getType() != null || unit.getComplexity() != MeasureUnit.Complexity.MIXED);
 
-    if (unit.getType() == null || perUnit.getType() == null) {
-        // TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Set an
-        // error code. Once we support not-built-in units here, unitRef may be
-        // anything, but if not built-in, perUnit has to be "none".
-        throw new UnsupportedOperationException();
-    }
-
-    if (perUnit != null && perUnit.getType() != null && !perUnit.getType().equals("none")) {
-        // Compound unit: first try to simplify (e.g. "meter per second" is a
-        // built-in unit).
-        MeasureUnit resolved = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
-        if (resolved != null) {
-            unit = resolved;
-        } else {
-            // No simplified form is available.
-            return forCompoundUnit(locale, unit, perUnit, width, rules, parent);
-
+        if (unit.getType() == null || perUnit.getType() == null) {
+            // TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Set an
+            // error code. Once we support not-built-in units here, unitRef may be
+            // anything, but if not built-in, perUnit has to be "none".
+            throw new UnsupportedOperationException();
         }
-    }
 
-    Map<StandardPlural, SimpleModifier> modifiers = new EnumMap<>(
+        if (perUnit != null && perUnit.getType() != null) {
+            // Compound unit: first try to simplify (e.g. "meter per second" is a
+            // built-in unit).
+            MeasureUnit resolved = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
+            if (resolved != null) {
+                unit = resolved;
+            } else {
+                // No simplified form is available.
+                return forCompoundUnit(locale, unit, perUnit, width, rules, parent);
+
+            }
+        }
+
+        Map<StandardPlural, SimpleModifier> modifiers = new EnumMap<>(
                 StandardPlural.class);
         LongNameHandler result = new LongNameHandler(modifiers, rules, parent);
-        String []simpleFormats = new String[ARRAY_LENGTH];
+        String[] simpleFormats = new String[ARRAY_LENGTH];
         result.simpleFormatsToModifiers(simpleFormats, NumberFormat.Field.MEASURE_UNIT);
         return result;
     }
