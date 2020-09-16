@@ -252,7 +252,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
         if (perUnit != null && perUnit.getType() != null) {
             // Compound unit: first try to simplify (e.g. "meter per second" is a
             // built-in unit).
-            MeasureUnit resolved = MeasureUnit.resolveUnitPerUnit(unit, perUnit);
+            MeasureUnit resolved = MeasureUnit.resolveUnitPerUnit(unit, perUnit); /*TODO: sffc, is this correct*/
             if (resolved != null) {
                 unit = resolved;
             } else {
