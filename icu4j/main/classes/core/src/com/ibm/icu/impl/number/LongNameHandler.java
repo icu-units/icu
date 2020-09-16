@@ -218,7 +218,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
             // TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Set an
             // error code. Once we support not-built-in units here, unitRef may be
             // anything, but if not built-in, perUnit has to be "none".
-          throw new ICUException("TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Is this the right exception?");
+            throw new UnsupportedOperationException("Unsanctioned units, not yet supported");
         }
         if (perUnit != null) {
             // Compound unit: first try to simplify (e.g., meters per second is its own unit).
