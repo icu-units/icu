@@ -299,6 +299,13 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
         return micros;
     }
 
+    // FIXME: consider name, style, etc
+    public MicroProps processQuantityWithMicros(DecimalQuantity quantity, MicroProps micros) {
+        StandardPlural pluralForm = RoundingUtils.getPluralSafe(micros.rounder, rules, quantity);
+        micros.modOuter = modifiers.get(pluralForm);
+        return micros;
+    }
+
     @Override
     public Modifier getModifier(Signum signum, StandardPlural plural) {
         // Signum ignored

@@ -6,6 +6,7 @@ package com.ibm.icu.impl.number;
 
 import com.ibm.icu.number.NumberFormatter;
 import com.ibm.icu.text.PluralRules;
+import com.ibm.icu.util.ICUException;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.NoUnit;
 import com.ibm.icu.util.ULocale;
@@ -83,7 +84,17 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
         // Call the correct LongNameHandler based on outputUnit
         for (int i = 0; i < this.fHandlers.size(); i++) {
             if (fMeasureUnits.get(i).equals( micros.outputUnit)) {
-                return fHandlers.get(i).processQuantity(quantity);
+                // FIXME: ugly workaround
+                MicroPropsGenerator h = fHandlers.get(i);
+                if (MixedUnitLongNameHandler.class.isInstance(h)) {
+                    MixedUnitLongNameHandler hh = MixedUnitLongNameHandler.class.cast(h);
+                    return hh.processQuantityWithMicros(quantity, micros);
+                } else if (LongNameHandler.class.isInstance(h)) {
+                    LongNameHandler hh = LongNameHandler.class.cast(h);
+                    return hh.processQuantityWithMicros(quantity, micros);
+                } else {
+                    throw new ICUException("FIXME(exception) - BAD HANDLER");
+                }
             }
         }
 
