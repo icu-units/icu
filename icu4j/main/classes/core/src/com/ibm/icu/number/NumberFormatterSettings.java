@@ -492,39 +492,45 @@ public abstract class NumberFormatterSettings<T extends NumberFormatterSettings<
         return create(KEY_SCALE, scale);
     }
 
-     /**
-     * Sets the `usage` of the unit.
-     * <p>
-     * NOTE: `usage` will change the output unit depending on the `Locale`
-     * and the unit value.
-     *    For Example:
-     *        Locale: en_US
-     *        Usage : length-person
-     *        Unit  : Meter
+   /**
+     * Specifies the usage for which numbers will be formatted ("person-height",
+     * "road", "rainfall", etc.)
      *
-     *        If the unit value is 0.25, the output will be "10 inches."
-     *        If the unit value is 1.50, the output will be
-     *                                           "4 feet and 11 inches"
-     * </p>
+     * When a `usage` is specified, the output unit will change depending on the
+     * `Locale` and the unit quantity. For example, formatting length
+     * measurements specified in meters:
      *
-     * <P>
-     * If the input usage is not exist (e.g. length-dinosaur) or is
-     * misspelled, the output unit **will not change**.
-     * </p>
+     * `NumberFormatter.with().usage("person").unit(MeasureUnit.METER).locale(new ULocale("en-US"))`
+     *   * When formatting 0.25, the output will be "10 inches".
+     *   * When formatting 1.50, the output will be "4 feet and 11 inches".
      *
-     * <p>
-     * Pass an element of string to this setter.
-     * For example:
+     * The input unit specified via unit() determines the type of measurement
+     * being formatted (e.g. "length" when the unit is "foot"). The usage
+     * requested will be looked for only within this category of measurement
+     * units.
      *
-     * <pre>
-     * NumberFormatter.with().usage("length-person")
-     * </pre>
+     * The output unit can be found via FormattedNumber.getOutputUnit().
      *
-     * <p>
+     * If the usage has multiple parts (e.g. "land-agriculture-grain") and does
+     * not match a known usage preference, the last part will be dropped
+     * repeatedly until a match is found (e.g. trying "land-agriculture", then
+     * "land"). If a match is still not found, usage will fall back to
+     * "default".
      *
-     * @param usage the usage of the unit.
+     * Setting usage to an empty string clears the usage (disables usage-based
+     * localized formatting).
+     *
+     *
+     * When using usage, specifying rounding or precision is unnecessary.
+     * Specifying a precision in some manner will override the default
+     * formatting.
+     *
+     *
+     * @param usage A usage parameter from the units resource.
      * @return The fluent chain
+     * @throws IllegalArgumentException in case of Setting a usage string but not a correct input unit.
      * @draft ICU 67
+     * @provisional
      */
     public T usage(String usage) {
         return create(KEY_USAGE, usage);

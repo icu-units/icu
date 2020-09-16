@@ -40,6 +40,7 @@ import com.ibm.icu.util.Measure;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.NoUnit;
 import com.ibm.icu.util.ULocale;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -3176,10 +3177,10 @@ public class NumberFormatterApiTest  extends TestFmwk {
     @Test
     public void locale() {
         // Coverage for the locale setters.
-        assertEquals(NumberFormatter.with().locale(ULocale.ENGLISH), NumberFormatter.with().locale(Locale.ENGLISH));
-        assertEquals(NumberFormatter.with().locale(ULocale.ENGLISH), NumberFormatter.withLocale(ULocale.ENGLISH));
-        assertEquals(NumberFormatter.with().locale(ULocale.ENGLISH), NumberFormatter.withLocale(Locale.ENGLISH));
-        assertNotEquals(NumberFormatter.with().locale(ULocale.ENGLISH), NumberFormatter.with().locale(Locale.FRENCH));
+        Assert.assertEquals(NumberFormatter.with().locale(ULocale.ENGLISH), NumberFormatter.with().locale(Locale.ENGLISH));
+        Assert.assertEquals(NumberFormatter.with().locale(ULocale.ENGLISH), NumberFormatter.withLocale(ULocale.ENGLISH));
+        Assert.assertEquals(NumberFormatter.with().locale(ULocale.ENGLISH), NumberFormatter.withLocale(Locale.ENGLISH));
+        Assert.assertNotEquals(NumberFormatter.with().locale(ULocale.ENGLISH), NumberFormatter.with().locale(Locale.FRENCH));
     }
 
     @Test
@@ -3187,19 +3188,19 @@ public class NumberFormatterApiTest  extends TestFmwk {
         LocalizedNumberFormatter formatter = NumberFormatter.withLocale(ULocale.ENGLISH);
 
         // Double
-        assertEquals("514.23", formatter.format(514.23).toString());
+        Assert.assertEquals("514.23", formatter.format(514.23).toString());
 
         // Int64
-        assertEquals("51,423", formatter.format(51423L).toString());
+        Assert.assertEquals("51,423", formatter.format(51423L).toString());
 
         // BigDecimal
-        assertEquals("987,654,321,234,567,890",
+        Assert.assertEquals("987,654,321,234,567,890",
                 formatter.format(new BigDecimal("98765432123456789E1")).toString());
 
         // Also test proper DecimalQuantity bytes storage when all digits are in the fraction.
         // The number needs to have exactly 40 digits, which is the size of the default buffer.
         // (issue discovered by the address sanitizer in C++)
-        assertEquals("0.009876543210987654321098765432109876543211",
+        Assert.assertEquals("0.009876543210987654321098765432109876543211",
                 formatter.precision(Precision.unlimited())
                         .format(new BigDecimal("0.009876543210987654321098765432109876543211"))
                         .toString());

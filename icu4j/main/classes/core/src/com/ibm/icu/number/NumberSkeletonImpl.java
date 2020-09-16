@@ -1486,7 +1486,8 @@ class NumberSkeletonImpl {
 
         private static boolean usage(MacroProps macros, StringBuilder sb) {
             if (macros.usage != null  && macros.usage.length() > 0) {
-                sb.append("usage/" + macros.usage);
+                sb.append("usage/");
+                sb.append(macros.usage);
 
                 return true;
             }

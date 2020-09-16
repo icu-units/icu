@@ -5,6 +5,7 @@
 package com.ibm.icu.number;
 
 import com.ibm.icu.impl.FormattedStringBuilder;
+import com.ibm.icu.impl.IllegalIcuArgumentException;
 import com.ibm.icu.impl.StandardPlural;
 import com.ibm.icu.impl.number.CompactData.CompactType;
 import com.ibm.icu.impl.number.ConstantAffixModifier;
@@ -233,7 +234,8 @@ class NumberFormatterImpl {
         // Unit Preferences and Conversions as our first step
         if (macros.usage != null) {
             if (!isCldrUnit) {
-                throw new AssertionError("We only support \"usage\" when the input unit is specified, and is a CLDR Unit.");
+                throw new IllegalIcuArgumentException(
+                        "We only support \"usage\" when the input unit is specified, and is a CLDR Unit.");
             }
 
             chain = new UsagePrefsHandler(macros.loc, macros.unit, macros.usage, chain);
