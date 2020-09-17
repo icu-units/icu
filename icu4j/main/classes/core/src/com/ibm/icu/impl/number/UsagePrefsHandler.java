@@ -53,8 +53,7 @@ public class UsagePrefsHandler implements MicroPropsGenerator {
             assert (micros.outputUnit.getComplexity() == MeasureUnit.Complexity.MIXED);
 
             // Check that we received measurements with the expected MeasureUnits:
-            List<MeasureUnit> singleUnits =
-                    micros.outputUnit.splitToSingleUnits();
+            List<MeasureUnit> singleUnits = micros.outputUnit.splitToSingleUnits();
 
             assert measures.size() == singleUnits.size();
 

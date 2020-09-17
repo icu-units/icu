@@ -93,7 +93,7 @@ class NumberFormatterImpl {
         MicroProps micros = new MicroProps(false);
         MicroPropsGenerator microPropsGenerator = macrosToMicroGenerator(macros, micros, false);
         micros = microPropsGenerator.processQuantity(inValue);
-        if (micros.integerWidth.maxInt == -1) { /*TODO: sffc, shall we check if micros.integerWidth is null or not first?*/
+        if (micros.integerWidth.maxInt == -1) {
             inValue.setMinInteger(micros.integerWidth.minInt);
         } else {
             inValue.setMinInteger(micros.integerWidth.minInt);
