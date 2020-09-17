@@ -907,6 +907,9 @@ class NumberSkeletonImpl {
         if (macros.perUnit != null && GeneratorHelpers.perUnit(macros, sb)) {
             sb.append(' ');
         }
+        if (macros.usage != null && GeneratorHelpers.usage(macros, sb)) {
+            sb.append(' ');
+        }
         if (macros.precision != null && GeneratorHelpers.precision(macros, sb)) {
             sb.append(' ');
         }
