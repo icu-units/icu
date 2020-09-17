@@ -963,7 +963,7 @@ public class NumberFormatterApiTest  extends TestFmwk {
 
         assertTrue(
                 uTestCase + ", got outputUnit: \"" + formattedNum.getOutputUnit().getIdentifier() + "\"",
-                MeasureUnit.forIdentifier("stone-and-pound") == formattedNum.getOutputUnit());
+                MeasureUnit.forIdentifier("stone-and-pound").equals(formattedNum.getOutputUnit()));
         // status.errIfFailureAndReset("unitUsage() en-GB person - formattedNum.getOutputUnit(status)");
 
         assertEquals(uTestCase, "12 st, 8.4 lb", formattedNum.toString());
