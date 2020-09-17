@@ -59,16 +59,13 @@ public class UsagePrefsHandler implements MicroPropsGenerator {
 
             // Mixed units: except for the last value, we pass all values to the
             // LongNameHandler via micros->mixedMeasures.
-            for (int i = 0, n = measures.size(); i < n; i++) {
-                if (i == n - 1) {
-                    // The last value (potentially the only value) gets passed on via quantity.
-                    quantity.setToBigDecimal((BigDecimal) measures.get(i).getNumber());
-                    break;
-                }
-
+            for (int i = 0, n = measures.size() - 1; i < n; i++) {
                 micros.mixedMeasures.add(measures.get(i));
             }
         }
+
+        // The last value (potentially the only value) gets passed on via quantity.
+        quantity.setToBigDecimal((BigDecimal) measures.get(measures.size()- 1).getNumber());
     }
 
     /**
