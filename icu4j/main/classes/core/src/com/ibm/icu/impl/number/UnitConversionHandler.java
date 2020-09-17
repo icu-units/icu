@@ -44,10 +44,7 @@ public class UnitConversionHandler implements MicroPropsGenerator {
      */
     @Override
     public MicroProps processQuantity(DecimalQuantity quantity) {
-        /*TODO: Questions : shall we check the parent if it is equals null */
-        MicroProps result = this.fParent == null?
-                this.fParent.processQuantity(quantity):
-                new MicroProps(false);
+        MicroProps result = this.fParent.processQuantity(quantity);
 
         quantity.roundToInfinity(); // Enables toDouble
         List<Measure> measures = this.fComplexUnitConverter.convert(quantity.toBigDecimal());
