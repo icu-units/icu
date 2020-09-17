@@ -40,12 +40,6 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
         this.parent = parent;
     }
 
-    /*TODO: hugo, why do we need this ?*/
-    private MixedUnitLongNameHandler() {
-        this.rules = null;
-        this.parent = null;
-    }
-
     /**
      * Construct a localized MixedUnitLongNameHandler for the specified
      * MeasureUnit. It must be a MIXED unit.
