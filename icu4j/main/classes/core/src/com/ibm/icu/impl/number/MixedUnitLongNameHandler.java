@@ -169,7 +169,7 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
         StandardPlural finalPlural = RoundingUtils.getPluralSafe(micros.rounder, rules, quantity);
         String finalSimpleFormat = LongNameHandler.getWithPlural(finalSimpleFormats, finalPlural);
         SimpleFormatter finalFormatter = SimpleFormatter.compileMinMaxArguments(finalSimpleFormat, 0, 1);
-        finalFormatter.format("{0}", outputMeasuresList.get(this.fMixedUnitData.size() - 1));
+        finalFormatter.format("{0}", outputMeasuresList.get(outputMeasuresList.size() -1));
 
         // Combine list into a "premixed" pattern
         String premixedFormatPattern = this.fListFormatter.format(outputMeasuresList);
