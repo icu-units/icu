@@ -48,10 +48,6 @@ import com.ibm.icu.util.MeasureUnit;
  */
 class NumberFormatterImpl {
 
-    private static final Currency DEFAULT_CURRENCY = Currency.getInstance("XXX");
-    final MicroProps micros;
-    final MicroPropsGenerator microPropsGenerator;
-
     /**
      * Builds a "safe" MicroPropsGenerator, which is thread-safe and can be used repeatedly.
      */
@@ -89,6 +85,34 @@ class NumberFormatterImpl {
         return getPrefixSuffixImpl(microPropsGenerator, signum, output);
     }
 
+    private static final Currency DEFAULT_CURRENCY = Currency.getInstance("XXX");
+    final MicroProps micros;
+    final MicroPropsGenerator microPropsGenerator;
+
+    /**
+     * Evaluates the "safe" MicroPropsGenerator created by "fromMacros".
+     */
+    public MicroProps format(DecimalQuantity inValue, FormattedStringBuilder outString) {
+        MicroProps micros = preProcess(inValue);
+        int length = writeNumber(micros, inValue, outString, 0);
+        writeAffixes(micros, outString, 0, length);
+        return micros;
+    }
+
+    /**
+     * Like format(), but saves the result into an output MicroProps without additional processing.
+     */
+    public MicroProps preProcess(DecimalQuantity inValue) {
+        MicroProps micros = microPropsGenerator.processQuantity(inValue);
+        if (micros.integerWidth.maxInt == -1) {
+            inValue.setMinInteger(micros.integerWidth.minInt);
+        } else {
+            inValue.setMinInteger(micros.integerWidth.minInt);
+            inValue.applyMaxInteger(micros.integerWidth.maxInt);
+        }
+        return micros;
+    }
+
     private static MicroProps preProcessUnsafe(MacroProps macros, DecimalQuantity inValue) {
         MicroProps micros = new MicroProps(false);
         MicroPropsGenerator microPropsGenerator = macrosToMicroGenerator(macros, micros, false);
@@ -100,6 +124,10 @@ class NumberFormatterImpl {
             inValue.applyMaxInteger(micros.integerWidth.maxInt);
         }
         return micros;
+    }
+
+    public int getPrefixSuffix(byte signum, StandardPlural plural, FormattedStringBuilder output) {
+        return getPrefixSuffixImpl(microPropsGenerator, signum, output);
     }
 
     private static int getPrefixSuffixImpl(MicroPropsGenerator generator, byte signum, FormattedStringBuilder output) {
@@ -114,6 +142,12 @@ class NumberFormatterImpl {
         micros.modMiddle.apply(output, 0, 0);
         return micros.modMiddle.getPrefixLength();
     }
+
+    public MicroProps getRawMicroProps() {
+        return micros;
+    }
+
+    //////////
 
     private static boolean unitIsCurrency(MeasureUnit unit) {
         // TODO: Check using "instanceof" operator instead?
@@ -131,8 +165,6 @@ class NumberFormatterImpl {
     private static boolean unitIsPermille(MeasureUnit unit) {
         return unit != null && "permille".equals(unit.getSubtype());
     }
-
-    //////////
 
     /**
      * Synthesizes the MacroProps into a MicroPropsGenerator. All information, including the locale, is
@@ -533,39 +565,5 @@ class NumberFormatterImpl {
             }
         }
         return length;
-    }
-
-
-    /**
-     * Evaluates the "safe" MicroPropsGenerator created by "fromMacros".
-     */
-    public MicroProps format(DecimalQuantity inValue, FormattedStringBuilder outString) {
-        MicroProps micros = preProcess(inValue);
-        int length = writeNumber(micros, inValue, outString, 0);
-        writeAffixes(micros, outString, 0, length);
-        return micros;
-    }
-
-    /**
-     * Like format(), but saves the result into an output MicroProps without additional processing.
-     */
-    public MicroProps preProcess(DecimalQuantity inValue) {
-        MicroProps micros = microPropsGenerator.processQuantity(inValue);
-        if (micros.integerWidth.maxInt == -1) {
-            inValue.setMinInteger(micros.integerWidth.minInt);
-        } else {
-            inValue.setMinInteger(micros.integerWidth.minInt);
-            inValue.applyMaxInteger(micros.integerWidth.maxInt);
-        }
-        return micros;
-    }
-
-    public int getPrefixSuffix(byte signum, StandardPlural plural, FormattedStringBuilder output) {
-        return getPrefixSuffixImpl(microPropsGenerator, signum, output);
-    }
-
-
-    public MicroProps getRawMicroProps() {
-        return micros;
     }
 }
