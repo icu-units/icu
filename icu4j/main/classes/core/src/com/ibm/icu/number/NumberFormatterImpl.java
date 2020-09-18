@@ -177,6 +177,8 @@ class NumberFormatterImpl {
                 || !(isPercent || isPermille)
                 || isCompactNotation
         );
+
+        // TODO: Add the logic in this file that sets the rounder to bogus/pass-through if isMixedUnit is true.
         boolean isMixedUnit = isCldrUnit && macros.unit.getType() == null &&
                 macros.unit.getComplexity() == MeasureUnit.Complexity.MIXED;
         PluralRules rules = macros.rules;

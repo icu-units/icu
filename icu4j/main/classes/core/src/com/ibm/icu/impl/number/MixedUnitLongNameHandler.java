@@ -104,9 +104,10 @@ public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierSt
     // Required for ModifierStore. And ModifierStore is required by
     // SimpleModifier constructor's last parameter. We assert his will never get
     // called though.
+    @Override
     public Modifier getModifier(Modifier.Signum signum, StandardPlural plural) {
-        // TODO(units): investigate this method when investigating where
-        // LongNameHandler::getModifier() gets used. To be sure it remains
+        // TODO(units): investigate this method while investigating where
+        // LongNameHandler.getModifier() gets used. To be sure it remains
         // unreachable:
 
         return null;

@@ -16,15 +16,6 @@ import java.util.List;
 public class LongNameMultiplexer implements MicroPropsGenerator {
     private final MicroPropsGenerator fParent;
 
-    /**
-     * Because we only know which LongNameHandler we wish to call after calling
-     * earlier MicroPropsGenerators in the chain, LongNameMultiplexer keeps the
-     * parent link, while the LongNameHandlers are given no parents.
-     */
-    private List<LongNameHandler> fLongNameHandlers;
-    private List<MixedUnitLongNameHandler> fMixedUnitHandlers;
-
-    // Unowned pointers to instances owned by MaybeStackVectors.
     private List<MicroPropsGenerator> fHandlers;
 
     // Each MeasureUnit corresponds to the same-index MicroPropsGenerator
@@ -48,21 +39,18 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
 
         result.fMeasureUnits = new ArrayList<>();
         result.fHandlers = new ArrayList<>();
-        result.fMixedUnitHandlers = new ArrayList<>();
-        result.fLongNameHandlers = new ArrayList<>();
+
 
         for (int i = 0; i < units.size(); i++) {
             MeasureUnit unit = units.get(i);
             result.fMeasureUnits.add(unit);
             if (unit.getComplexity() == MeasureUnit.Complexity.MIXED) {
                 MixedUnitLongNameHandler mlnh = MixedUnitLongNameHandler
-                        .forMeasureUnit(locale, unit, width, rules, null); /*TODO: why is null*/
-                result.fMixedUnitHandlers.add(mlnh);
+                        .forMeasureUnit(locale, unit, width, rules, null);
                 result.fHandlers.add(mlnh);
             } else {
                 LongNameHandler lnh = LongNameHandler
-                        .forMeasureUnit(locale, unit, NoUnit.BASE, width, rules, null ); /*TODO: why is null */
-                result.fLongNameHandlers.add(lnh);
+                        .forMeasureUnit(locale, unit, NoUnit.BASE, width, rules, null );
                 result.fHandlers.add(lnh);
             }
         }
@@ -85,6 +73,7 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
             if (fMeasureUnits.get(i).equals( micros.outputUnit)) {
                 return fHandlers.get(i).processQuantity(quantity);
             }
+
         }
 
         throw new AssertionError
