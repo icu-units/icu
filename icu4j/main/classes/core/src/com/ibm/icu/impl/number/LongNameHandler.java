@@ -22,7 +22,8 @@ import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.ULocale;
 import com.ibm.icu.util.UResourceBundle;
 
-public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
+public class LongNameHandler
+    implements MicroPropsGenerator, ModifierStore, LongNameMultiplexer.ParentlessMicroPropsGenerator {
 
     private static final int DNAM_INDEX = StandardPlural.COUNT;
     private static final int PER_INDEX = StandardPlural.COUNT + 1;

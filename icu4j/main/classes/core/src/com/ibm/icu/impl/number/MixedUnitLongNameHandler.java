@@ -17,7 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Similar to LongNameHandler, but only for MIXED units. */
-public class MixedUnitLongNameHandler implements MicroPropsGenerator, ModifierStore {
+public class MixedUnitLongNameHandler
+    implements MicroPropsGenerator, ModifierStore, LongNameMultiplexer.ParentlessMicroPropsGenerator {
     private final PluralRules rules;
     private final MicroPropsGenerator parent;
 
