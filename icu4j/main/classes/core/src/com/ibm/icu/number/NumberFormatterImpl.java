@@ -84,6 +84,7 @@ class NumberFormatterImpl {
     }
 
     private static final Currency DEFAULT_CURRENCY = Currency.getInstance("XXX");
+
     final MicroProps micros;
     final MicroPropsGenerator microPropsGenerator;
 
