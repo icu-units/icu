@@ -104,14 +104,15 @@ public class UsagePrefsHandler implements MicroPropsGenerator {
 
         assert micros.rounder != null;
 
-        // TODO(icu-units#94): use the user precision if the user already set precision.
-        if (precisionSkeleton != null && precisionSkeleton.length() > 0) {
-            micros.rounder = parseSkeletonToPrecision(precisionSkeleton);
-        } else {
-            // We use the same rounding mode as COMPACT notation: known to be a
-            // human-friendly rounding mode: integers, but add a decimal digit
-            // as needed to ensure we have at least 2 significant digits.
-            micros.rounder = Precision.integer().withMinDigits(2);
+        if (micros.rounder == Precision.BOGUS_PRECISION) {
+            if (precisionSkeleton != null && precisionSkeleton.length() > 0) {
+                micros.rounder = parseSkeletonToPrecision(precisionSkeleton);
+            } else {
+                // We use the same rounding mode as COMPACT notation: known to be a
+                // human-friendly rounding mode: integers, but add a decimal digit
+                // as needed to ensure we have at least 2 significant digits.
+                micros.rounder = Precision.integer().withMinDigits(2);
+            }
         }
 
         return micros;

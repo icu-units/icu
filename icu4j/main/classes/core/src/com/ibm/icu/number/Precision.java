@@ -366,6 +366,13 @@ public abstract class Precision {
     // PACKAGE-PRIVATE APIS //
     //////////////////////////
 
+    /**
+     * @internal
+     * @deprecated ICU internal only.
+     */
+    @Deprecated
+    public static final BogusRounder BOGUS_PRECISION = new BogusRounder();
+
     static final InfiniteRounderImpl NONE = new InfiniteRounderImpl();
 
     static final FractionRounderImpl FIXED_FRAC_0 = new FractionRounderImpl(0, 0);
@@ -544,6 +551,18 @@ public abstract class Precision {
     ///////////////
     // INTERNALS //
     ///////////////
+
+    static class BogusRounder extends Precision {
+        @Override
+        public void apply(DecimalQuantity value) {
+            // No-op
+        }
+
+        @Override
+        BogusRounder createCopy() {
+            return new BogusRounder();
+        }
+    }
 
     static class InfiniteRounderImpl extends Precision {
 
