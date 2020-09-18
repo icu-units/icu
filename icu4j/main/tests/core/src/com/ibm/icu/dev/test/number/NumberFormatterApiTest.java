@@ -1097,26 +1097,26 @@ public class NumberFormatterApiTest extends TestFmwk {
 
         assertFormatSingle(
                 "Rounding Mode propagates: rounding down",
-                "usage/road measure-unit/length-meter rounding-mode-floor",
-                "usage/road unit/meter rounding-mode-floor",
+                "usage/road measure-unit/length-centimeter rounding-mode-floor",
+                "usage/road unit/centimeter rounding-mode-floor",
                 NumberFormatter.with()
-                        .unit(MeasureUnit.METER)
+                        .unit(MeasureUnit.forIdentifier("centimeter"))
                         .usage("road")
                         .roundingMode(RoundingMode.FLOOR),
                 new ULocale("en-ZA"),
-                345,
+                34500,
                 "300 m");
 
         assertFormatSingle(
                 "Rounding Mode propagates: rounding up",
-                "usage/road measure-unit/length-meter rounding-mode-ceiling",
-                "usage/road unit/meter rounding-mode-ceiling",
+                "usage/road measure-unit/length-centimeter rounding-mode-ceiling",
+                "usage/road unit/centimeter rounding-mode-ceiling",
                 NumberFormatter.with()
-                        .unit(MeasureUnit.METER)
+                        .unit(MeasureUnit.forIdentifier("centimeter"))
                         .usage("road")
                         .roundingMode(RoundingMode.CEILING),
                 new ULocale("en-ZA"),
-                305,
+                30500,
                 "350 m");
 }
 
