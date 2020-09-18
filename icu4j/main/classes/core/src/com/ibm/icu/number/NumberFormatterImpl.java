@@ -210,10 +210,9 @@ class NumberFormatterImpl {
                 || !(isPercent || isPermille)
                 || isCompactNotation
             );
-
-        // TODO(icu-units#95): Add the logic in this file that sets the rounder to bogus/pass-through if isMixedUnit is true.
         boolean isMixedUnit = isCldrUnit && macros.unit.getType() == null &&
-                macros.unit.getComplexity() == MeasureUnit.Complexity.MIXED;
+                              macros.unit.getComplexity() == MeasureUnit.Complexity.MIXED;
+
         PluralRules rules = macros.rules;
 
         // Select the numbering system.
@@ -290,6 +289,9 @@ class NumberFormatterImpl {
             micros.rounder = Precision.COMPACT_STRATEGY;
         } else if (isCurrency) {
             micros.rounder = Precision.MONETARY_STANDARD;
+        } else if (macros.usage != null) {
+            // Bogus Precision - it will get set in the UsagePrefsHandler instead
+            micros.rounder = Precision.BOGUS_PRECISION;
         } else {
             micros.rounder = Precision.DEFAULT_MAX_FRAC_6;
         }
