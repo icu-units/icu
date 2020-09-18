@@ -1140,26 +1140,26 @@ void NumberFormatterApiTest::unitUsage() {
 
     assertFormatSingle(
             u"Rounding Mode propagates: rounding down",
-            u"usage/road measure-unit/length-meter rounding-mode-floor",
-            u"usage/road unit/meter rounding-mode-floor",
+            u"usage/road measure-unit/length-centimeter rounding-mode-floor",
+            u"usage/road unit/centimeter rounding-mode-floor",
             NumberFormatter::with()
-                .unit(MeasureUnit::getMeter())
+                .unit(MeasureUnit::forIdentifier("centimeter", status))
                 .usage("road")
                 .roundingMode(UNUM_ROUND_FLOOR),
             Locale("en-ZA"),
-            345,
+            34500,
             u"300 m");
 
     assertFormatSingle(
             u"Rounding Mode propagates: rounding up",
-            u"usage/road measure-unit/length-meter rounding-mode-ceiling",
-            u"usage/road unit/meter rounding-mode-ceiling",
+            u"usage/road measure-unit/length-centimeter rounding-mode-ceiling",
+            u"usage/road unit/centimeter rounding-mode-ceiling",
             NumberFormatter::with()
-                .unit(MeasureUnit::getMeter())
+                .unit(MeasureUnit::forIdentifier("centimeter", status))
                 .usage("road")
                 .roundingMode(UNUM_ROUND_CEILING),
             Locale("en-ZA"),
-            305,
+            30500,
             u"350 m");
 }
 

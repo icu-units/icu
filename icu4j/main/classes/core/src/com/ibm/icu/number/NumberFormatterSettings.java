@@ -542,7 +542,7 @@ public abstract class NumberFormatterSettings<T extends NumberFormatterSettings<
      * @param usage A usage parameter from the units resource.
      * @return The fluent chain
      * @throws IllegalArgumentException in case of Setting a usage string but not a correct input unit.
-     * @draft ICU 67
+     * @draft ICU 68
      * @provisional This API might change or be removed in a future release.
      */
     public T usage(String usage) {
