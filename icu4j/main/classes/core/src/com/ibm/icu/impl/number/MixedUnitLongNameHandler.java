@@ -110,6 +110,9 @@ public class MixedUnitLongNameHandler
      * Produces a plural-appropriate Modifier for a mixed unit: `quantity` is
      * taken as the final smallest unit, while the larger unit values must be
      * provided via `micros.mixedMeasures`.
+     *
+     * Does not call parent.processQuantity, so cannot get a MicroProps instance
+     * that way. Instead, the instance is passed in as a parameter.
      */
     public MicroProps processQuantityWithMicros(DecimalQuantity quantity, MicroProps micros) {
         assert (fMixedUnitData.size() > 1);
