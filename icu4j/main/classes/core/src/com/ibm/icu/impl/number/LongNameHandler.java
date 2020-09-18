@@ -27,7 +27,7 @@ public class LongNameHandler
 
     private static final int DNAM_INDEX = StandardPlural.COUNT;
     private static final int PER_INDEX = StandardPlural.COUNT + 1;
-    protected static final int ARRAY_LENGTH = StandardPlural.COUNT + 2;
+    static final int ARRAY_LENGTH = StandardPlural.COUNT + 2;
 
     private static int getIndex(String pluralKeyword) {
         // pluralKeyword can also be "dnam" or "per"
@@ -40,7 +40,7 @@ public class LongNameHandler
         }
     }
 
-    protected static String getWithPlural(String[] strings, StandardPlural plural) {
+    static String getWithPlural(String[] strings, StandardPlural plural) {
         String result = strings[plural.ordinal()];
         if (result == null) {
             result = strings[StandardPlural.OTHER.ordinal()];
@@ -80,7 +80,7 @@ public class LongNameHandler
 
     // NOTE: outArray MUST have at least ARRAY_LENGTH entries. No bounds checking is performed.
 
-    protected static void getMeasureData(
+    static void getMeasureData(
             ULocale locale,
             MeasureUnit unit,
             UnitWidth width,
