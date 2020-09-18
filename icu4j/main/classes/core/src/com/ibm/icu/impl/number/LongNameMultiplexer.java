@@ -6,7 +6,6 @@ package com.ibm.icu.impl.number;
 
 import com.ibm.icu.number.NumberFormatter;
 import com.ibm.icu.text.PluralRules;
-import com.ibm.icu.util.ICUException;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.NoUnit;
 import com.ibm.icu.util.ULocale;
@@ -15,9 +14,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LongNameMultiplexer implements MicroPropsGenerator {
+    /**
+     * LongNameMultiplexer calls the parent MicroPropsGenerator itself,
+     * receiving the MicroProps instance in use for this formatting pipeline.
+     * Next it multiplexes between name handlers (fHandlers) which are not given
+     * access to a parent. Consequently LongNameMultiplexer must give these
+     * handlers the MicroProps instance.
+     */
+    public static interface ParentlessMicroPropsGenerator {
+        public MicroProps processQuantityWithMicros(DecimalQuantity quantity, MicroProps micros);
+    }
+
     private final MicroPropsGenerator fParent;
 
-    private List<MicroPropsGenerator> fHandlers;
+    private List<ParentlessMicroPropsGenerator> fHandlers;
 
     // Each MeasureUnit corresponds to the same-index MicroPropsGenerator
     // pointed to in fHandlers.
@@ -63,7 +73,6 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
     // one of the units provided to the factory function.
     @Override
     public MicroProps processQuantity(DecimalQuantity quantity) {
-
         // We call parent->processQuantity() from the Multiplexer, instead of
         // letting LongNameHandler handle it: we don't know which LongNameHandler to
         // call until we've called the parent!
@@ -72,21 +81,10 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
         // Call the correct LongNameHandler based on outputUnit
         for (int i = 0; i < this.fHandlers.size(); i++) {
             if (fMeasureUnits.get(i).equals(micros.outputUnit)) {
-                MicroPropsGenerator handler = fHandlers.get(i);
-
-                if (handler instanceof MixedUnitLongNameHandler) {
-                    return ((MixedUnitLongNameHandler) handler).processQuantityWithMicros(quantity, micros);
-                }
-
-                if (handler instanceof LongNameHandler) {
-                    return ((LongNameHandler) handler).processQuantityWithMicros(quantity, micros);
-                }
-
-                throw new ICUException("FIXME(exception) - BAD HANDLER");
+                ParentlessMicroPropsGenerator handler = fHandlers.get(i);
+                return handler.processQuantityWithMicros(quantity, micros);
             }
-
         }
-
         throw new AssertionError
                 (" We shouldn't receive any outputUnit for which we haven't already got a LongNameHandler");
     }
