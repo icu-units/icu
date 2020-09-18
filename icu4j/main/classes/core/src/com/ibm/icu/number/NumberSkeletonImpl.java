@@ -2,6 +2,10 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.number;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Set;
+
 import com.ibm.icu.impl.CacheBase;
 import com.ibm.icu.impl.PatternProps;
 import com.ibm.icu.impl.SoftCache;
@@ -22,10 +26,6 @@ import com.ibm.icu.util.Currency.CurrencyUsage;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.NoUnit;
 import com.ibm.icu.util.StringTrieBuilder;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Set;
 
 /**
  * @author sffc

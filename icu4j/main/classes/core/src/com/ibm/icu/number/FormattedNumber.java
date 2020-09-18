@@ -12,7 +12,6 @@ import com.ibm.icu.impl.number.DecimalQuantity;
 import com.ibm.icu.text.ConstrainedFieldPosition;
 import com.ibm.icu.text.FormattedValue;
 import com.ibm.icu.text.PluralRules.IFixedDecimal;
-import com.ibm.icu.util.Measure;
 import com.ibm.icu.util.MeasureUnit;
 
 /**
@@ -121,7 +120,7 @@ public class FormattedNumber implements FormattedValue {
     /**
      * Gets the resolved output unit.
      * <p>
- * The output unit is dependent upon the localized preferences for the usage
+     * The output unit is dependent upon the localized preferences for the usage
      * specified via NumberFormatterSettings.usage(), and may be a unit with
      * MeasureUnit.Complexity.MIXED unit complexity (MeasureUnit.getComplexity()), such
      * as "foot-and-inch" or "hour-and-minute-and-second".
