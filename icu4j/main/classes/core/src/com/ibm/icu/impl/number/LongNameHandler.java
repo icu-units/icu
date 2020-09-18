@@ -1,8 +1,10 @@
 // © 2017 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
-
-
 package com.ibm.icu.impl.number;
+
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.MissingResourceException;
 
 import com.ibm.icu.impl.CurrencyData;
 import com.ibm.icu.impl.ICUData;
@@ -20,31 +22,11 @@ import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.ULocale;
 import com.ibm.icu.util.UResourceBundle;
 
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.MissingResourceException;
-
 public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
 
     protected static final int DNAM_INDEX = StandardPlural.COUNT;
     protected static final int PER_INDEX = StandardPlural.COUNT + 1;
     protected static final int ARRAY_LENGTH = StandardPlural.COUNT + 2;
-    private final Map<StandardPlural, SimpleModifier> modifiers;
-    private final PluralRules rules;
-
-
-    private final MicroPropsGenerator parent;
-
-    // NOTE: outArray MUST have at least ARRAY_LENGTH entries. No bounds checking is performed.
-
-    private LongNameHandler(
-            Map<StandardPlural, SimpleModifier> modifiers,
-            PluralRules rules,
-            MicroPropsGenerator parent) {
-        this.modifiers = modifiers;
-        this.rules = rules;
-        this.parent = parent;
-    }
 
     private static int getIndex(String pluralKeyword) {
         // pluralKeyword can also be "dnam" or "per"
@@ -72,6 +54,30 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
     //////////////////////////
     /// BEGIN DATA LOADING ///
     //////////////////////////
+
+    private static final class PluralTableSink extends UResource.Sink {
+
+        String[] outArray;
+
+        public PluralTableSink(String[] outArray) {
+            this.outArray = outArray;
+        }
+
+        @Override
+        public void put(UResource.Key key, UResource.Value value, boolean noFallback) {
+            UResource.Table pluralsTable = value.getTable();
+            for (int i = 0; pluralsTable.getKeyAndValue(i, key, value); ++i) {
+                int index = getIndex(key.toString());
+                if (outArray[index] != null) {
+                    continue;
+                }
+                String formatString = value.getString();
+                outArray[index] = formatString;
+            }
+        }
+    }
+
+    // NOTE: outArray MUST have at least ARRAY_LENGTH entries. No bounds checking is performed.
 
     protected static void getMeasureData(
             ULocale locale,
@@ -147,15 +153,28 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
         }
     }
 
+    ////////////////////////
+    /// END DATA LOADING ///
+    ////////////////////////
+
+    private final Map<StandardPlural, SimpleModifier> modifiers;
+    private final PluralRules rules;
+    private final MicroPropsGenerator parent;
+
+    private LongNameHandler(
+            Map<StandardPlural, SimpleModifier> modifiers,
+            PluralRules rules,
+            MicroPropsGenerator parent) {
+        this.modifiers = modifiers;
+        this.rules = rules;
+        this.parent = parent;
+    }
+
     public static String getUnitDisplayName(ULocale locale, MeasureUnit unit, UnitWidth width) {
         String[] measureData = new String[ARRAY_LENGTH];
         getMeasureData(locale, unit, width, measureData);
         return measureData[DNAM_INDEX];
     }
-
-    ////////////////////////
-    /// END DATA LOADING ///
-    ////////////////////////
 
     public static LongNameHandler forCurrencyLongNames(
             ULocale locale,
@@ -299,27 +318,5 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
     public Modifier getModifier(Signum signum, StandardPlural plural) {
         // Signum ignored
         return modifiers.get(plural);
-    }
-
-    private static final class PluralTableSink extends UResource.Sink {
-
-        String[] outArray;
-
-        public PluralTableSink(String[] outArray) {
-            this.outArray = outArray;
-        }
-
-        @Override
-        public void put(UResource.Key key, UResource.Value value, boolean noFallback) {
-            UResource.Table pluralsTable = value.getTable();
-            for (int i = 0; pluralsTable.getKeyAndValue(i, key, value); ++i) {
-                int index = getIndex(key.toString());
-                if (outArray[index] != null) {
-                    continue;
-                }
-                String formatString = value.getString();
-                outArray[index] = formatString;
-            }
-        }
     }
 }

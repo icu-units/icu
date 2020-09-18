@@ -2,6 +2,9 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.number;
 
+import java.math.BigDecimal;
+import java.text.AttributedCharacterIterator;
+
 import com.ibm.icu.impl.FormattedStringBuilder;
 import com.ibm.icu.impl.FormattedValueStringBuilderImpl;
 import com.ibm.icu.impl.Utility;
@@ -11,9 +14,6 @@ import com.ibm.icu.text.FormattedValue;
 import com.ibm.icu.text.PluralRules.IFixedDecimal;
 import com.ibm.icu.util.Measure;
 import com.ibm.icu.util.MeasureUnit;
-
-import java.math.BigDecimal;
-import java.text.AttributedCharacterIterator;
 
 /**
  * The result of a number formatting operation. This class allows the result to be exported in several

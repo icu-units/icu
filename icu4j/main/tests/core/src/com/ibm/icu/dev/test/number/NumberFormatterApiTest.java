@@ -1,8 +1,22 @@
 // © 2017 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
-
-
 package com.ibm.icu.dev.test.number;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.FieldPosition;
+import java.text.Format;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import com.ibm.icu.dev.test.TestFmwk;
 import com.ibm.icu.dev.test.format.FormattedValueTest;
@@ -40,23 +54,8 @@ import com.ibm.icu.util.Measure;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.NoUnit;
 import com.ibm.icu.util.ULocale;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.FieldPosition;
-import java.text.Format;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-public class NumberFormatterApiTest  extends TestFmwk {
+public class NumberFormatterApiTest extends TestFmwk {
 
     private static final Currency USD = Currency.getInstance("USD");
     private static final Currency GBP = Currency.getInstance("GBP");
@@ -1458,7 +1457,6 @@ public class NumberFormatterApiTest  extends TestFmwk {
                 123.12,
                 "123,12 CN¥");
     }
-
 
     @Test
     public void unitPercent() {
@@ -3726,7 +3724,6 @@ public class NumberFormatterApiTest  extends TestFmwk {
             // Pass
         }
     }
-
 
     static void assertFormatDescending(
             String message,
