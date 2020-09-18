@@ -84,6 +84,7 @@ class NumberFormatterImpl {
     }
 
     private static final Currency DEFAULT_CURRENCY = Currency.getInstance("XXX");
+
     final MicroProps micros;
     final MicroPropsGenerator microPropsGenerator;
 
@@ -272,7 +273,6 @@ class NumberFormatterImpl {
                 throw new IllegalIcuArgumentException(
                         "We only support \"usage\" when the input unit is specified, and is a CLDR Unit.");
             }
-
             chain = usagePrefsHandler = new UsagePrefsHandler(macros.loc, macros.unit, macros.usage, chain);
         } else if (isMixedUnit) {
             chain = new UnitConversionHandler(macros.unit, chain);
