@@ -21,7 +21,16 @@ public class UnitConversionHandler implements MicroPropsGenerator {
     private MeasureUnit fOutputUnit;
     private ComplexUnitsConverter fComplexUnitConverter;
 
+    /**
+     * Constructor.
+     *
+     * @param outputUnit Specifies both the input and output MeasureUnit: if it is a
+     *     MIXED unit, the input MeasureUnit will be just the biggest unit of
+     *     the sequence.
+     * @param parent The parent MicroPropsGenerator.
+     */
     public UnitConversionHandler(MeasureUnit outputUnit, MicroPropsGenerator parent) {
+        // TODO: port C++ changes from commit c84ded050a (PR #1322) to Java
         this.fOutputUnit = outputUnit;
         this.fParent = parent;
 
@@ -31,7 +40,7 @@ public class UnitConversionHandler implements MicroPropsGenerator {
         assert singleUnits.size() > 1;
 
         MeasureUnitImpl outputUnitImpl = MeasureUnitImpl.forIdentifier(outputUnit.getIdentifier());
-       // TODO(icu-units#97): The input unit should be the largest unit, not the first unit, in the identifier.
+        // TODO(icu-units#97): The input unit should be the largest unit, not the first unit, in the identifier.
         this.fComplexUnitConverter =
                 new ComplexUnitsConverter(
                         new MeasureUnitImpl(outputUnitImpl.getSingleUnits().get(0)),
@@ -50,7 +59,6 @@ public class UnitConversionHandler implements MicroPropsGenerator {
         List<Measure> measures = this.fComplexUnitConverter.convert(quantity.toBigDecimal());
 
         result.outputUnit = this.fOutputUnit;
-        result.mixedMeasures = new ArrayList<>();
         UsagePrefsHandler.mixedMeasuresToMicros(measures, quantity, result);
 
         return result;
