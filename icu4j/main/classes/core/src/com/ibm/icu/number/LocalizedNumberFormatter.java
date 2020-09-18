@@ -2,6 +2,11 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.number;
 
+import java.math.BigInteger;
+import java.text.Format;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+
 import com.ibm.icu.impl.FormattedStringBuilder;
 import com.ibm.icu.impl.StandardPlural;
 import com.ibm.icu.impl.number.DecimalQuantity;
@@ -13,11 +18,6 @@ import com.ibm.icu.math.BigDecimal;
 import com.ibm.icu.util.CurrencyAmount;
 import com.ibm.icu.util.Measure;
 import com.ibm.icu.util.MeasureUnit;
-
-import java.math.BigInteger;
-import java.text.Format;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 /**
  * A NumberFormatter that has a locale associated with it; this means .format() methods are available.

@@ -46,7 +46,6 @@ public class UnitsRouter {
     private ArrayList<MeasureUnit> outputUnits_ = new ArrayList<>();
     private ArrayList<ConverterPreference> converterPreferences_ = new ArrayList<>();
 
-
     public UnitsRouter(MeasureUnitImpl inputUnitImpl, String region, String usage) {
         // TODO: do we want to pass in ConversionRates and UnitPreferences instead?
         // of loading in each UnitsRouter instance? (Or make global?)

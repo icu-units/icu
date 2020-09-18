@@ -1,7 +1,5 @@
 // © 2017 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
-
-
 package com.ibm.icu.number;
 
 import com.ibm.icu.impl.FormattedStringBuilder;
@@ -73,7 +71,7 @@ class NumberFormatterImpl {
      * Prints only the prefix and suffix; used for DecimalFormat getters.
      *
      * @return The index into the output at which the prefix ends and the suffix starts; in other words,
-     * the prefix length.
+     *         the prefix length.
      */
     public static int getPrefixSuffixStatic(
             MacroProps macros,
@@ -204,11 +202,11 @@ class NumberFormatterImpl {
         // compact notation overrides the middle modifier (micros.modMiddle)
         // normally used for the percent pattern.
         boolean isCldrUnit = !isCurrency
-                && !isBaseUnit
-                && (unitWidth == UnitWidth.FULL_NAME
+            && !isBaseUnit
+            && (unitWidth == UnitWidth.FULL_NAME
                 || !(isPercent || isPermille)
                 || isCompactNotation
-        );
+            );
 
         // TODO: Add the logic in this file that sets the rounder to bogus/pass-through if isMixedUnit is true.
         boolean isMixedUnit = isCldrUnit && macros.unit.getType() == null &&
