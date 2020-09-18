@@ -321,7 +321,14 @@ public class LongNameHandler
         return micros;
     }
 
-    // FIXME: consider name, style, etc
+    /**
+     * Produces a plural-appropriate Modifier for a unit: `quantity` is taken as
+     * the final smallest unit, while the larger unit values must be provided
+     * via `micros.mixedMeasures`.
+     *
+     * Does not call parent.processQuantity, so cannot get a MicroProps instance
+     * that way. Instead, the instance is passed in as a parameter.
+     */
     public MicroProps processQuantityWithMicros(DecimalQuantity quantity, MicroProps micros) {
         StandardPlural pluralForm = RoundingUtils.getPluralSafe(micros.rounder, rules, quantity);
         micros.modOuter = modifiers.get(pluralForm);
