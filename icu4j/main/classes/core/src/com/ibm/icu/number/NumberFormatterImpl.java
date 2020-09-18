@@ -176,7 +176,7 @@ class NumberFormatterImpl {
                 || isCompactNotation
             );
 
-        // TODO: Add the logic in this file that sets the rounder to bogus/pass-through if isMixedUnit is true.
+        // TODO(icu-units#95): Add the logic in this file that sets the rounder to bogus/pass-through if isMixedUnit is true.
         boolean isMixedUnit = isCldrUnit && macros.unit.getType() == null &&
                 macros.unit.getComplexity() == MeasureUnit.Complexity.MIXED;
         PluralRules rules = macros.rules;
@@ -374,12 +374,7 @@ class NumberFormatterImpl {
                 // Lazily create PluralRules
                 rules = PluralRules.forLocale(macros.loc);
             }
-
-            chain = LongNameHandler.forCurrencyLongNames(
-                    macros.loc,
-                    currency,
-                    rules,
-                    chain);
+            chain = LongNameHandler.forCurrencyLongNames(macros.loc, currency, rules, chain);
         } else {
             // No outer modifier required
             micros.modOuter = ConstantAffixModifier.EMPTY;
@@ -393,7 +388,7 @@ class NumberFormatterImpl {
             }
             CompactType compactType = (macros.unit instanceof Currency
                     && macros.unitWidth != UnitWidth.FULL_NAME) ? CompactType.CURRENCY
-                    : CompactType.DECIMAL;
+                            : CompactType.DECIMAL;
             chain = ((CompactNotation) macros.notation).withLocaleData(macros.loc,
                     micros.nsName,
                     compactType,

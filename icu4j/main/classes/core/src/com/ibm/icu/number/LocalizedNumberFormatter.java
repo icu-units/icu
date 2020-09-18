@@ -151,7 +151,6 @@ public class LocalizedNumberFormatter extends NumberFormatterSettings<LocalizedN
         if (computeCompiled()) {
             return compiled.format(fq, string);
         }
-
         return NumberFormatterImpl.formatStatic(resolve(), fq, string);
     }
 
@@ -175,7 +174,6 @@ public class LocalizedNumberFormatter extends NumberFormatterSettings<LocalizedN
             withUnit = new LocalizedNumberFormatter(this, KEY_UNIT, unit);
             savedWithUnit = withUnit;
         }
-
         return withUnit.formatImpl(fq, string);
     }
 

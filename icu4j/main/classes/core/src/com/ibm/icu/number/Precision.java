@@ -353,7 +353,7 @@ public abstract class Precision {
     }
 
     /** Package-private clone method */
-    public abstract Precision createCopy();
+    abstract Precision createCopy();
 
     /**
      * @internal
@@ -557,7 +557,7 @@ public abstract class Precision {
         }
 
         @Override
-        public InfiniteRounderImpl createCopy() {
+        InfiniteRounderImpl createCopy() {
             InfiniteRounderImpl copy = new InfiniteRounderImpl();
             copy.mathContext = mathContext;
             return copy;
@@ -568,7 +568,7 @@ public abstract class Precision {
         final int minFrac;
         final int maxFrac;
 
-        public FractionRounderImpl(int minFrac, int maxFrac) {
+        FractionRounderImpl(int minFrac, int maxFrac) {
             this.minFrac = minFrac;
             this.maxFrac = maxFrac;
         }
@@ -580,7 +580,7 @@ public abstract class Precision {
         }
 
         @Override
-        public FractionRounderImpl createCopy() {
+        FractionRounderImpl createCopy() {
             FractionRounderImpl copy = new FractionRounderImpl(minFrac, maxFrac);
             copy.mathContext = mathContext;
             return copy;
@@ -591,7 +591,7 @@ public abstract class Precision {
         final int minSig;
         final int maxSig;
 
-        public SignificantRounderImpl(int minSig, int maxSig) {
+        SignificantRounderImpl(int minSig, int maxSig) {
             this.minSig = minSig;
             this.maxSig = maxSig;
         }
@@ -629,7 +629,7 @@ public abstract class Precision {
         final int minSig;
         final int maxSig;
 
-        public FracSigRounderImpl(int minFrac, int maxFrac, int minSig, int maxSig) {
+        FracSigRounderImpl(int minFrac, int maxFrac, int minSig, int maxSig) {
             this.minFrac = minFrac;
             this.maxFrac = maxFrac;
             this.minSig = minSig;
@@ -654,7 +654,7 @@ public abstract class Precision {
         }
 
         @Override
-        public FracSigRounderImpl createCopy() {
+        FracSigRounderImpl createCopy() {
             FracSigRounderImpl copy = new FracSigRounderImpl(minFrac, maxFrac, minSig, maxSig);
             copy.mathContext = mathContext;
             return copy;

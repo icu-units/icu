@@ -24,8 +24,8 @@ import com.ibm.icu.util.UResourceBundle;
 
 public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
 
-    protected static final int DNAM_INDEX = StandardPlural.COUNT;
-    protected static final int PER_INDEX = StandardPlural.COUNT + 1;
+    private static final int DNAM_INDEX = StandardPlural.COUNT;
+    private static final int PER_INDEX = StandardPlural.COUNT + 1;
     protected static final int ARRAY_LENGTH = StandardPlural.COUNT + 2;
 
     private static int getIndex(String pluralKeyword) {
@@ -39,7 +39,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
         }
     }
 
-    static String getWithPlural(String[] strings, StandardPlural plural) {
+    protected static String getWithPlural(String[] strings, StandardPlural plural) {
         String result = strings[plural.ordinal()];
         if (result == null) {
             result = strings[StandardPlural.OTHER.ordinal()];
