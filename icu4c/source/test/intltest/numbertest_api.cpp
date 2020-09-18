@@ -1118,25 +1118,49 @@ void NumberFormatterApiTest::unitUsage() {
             u"0 pounds, 0 ounces");
 
     assertFormatDescendingBig(
-        u"Scientific notation with Usage: possible when using a reasonable Precision",
-        u"scientific @### usage/default measure-unit/area-square-meter unit-width-full-name",
-        u"scientific @### usage/default unit/square-meter unit-width-full-name",
-        NumberFormatter::with()
-            .unit(SQUARE_METER)
-            .usage("default")
-            .notation(Notation::scientific())
-            .precision(Precision::minMaxSignificantDigits(1, 4))
-            .unitWidth(UNumberUnitWidth::UNUM_UNIT_WIDTH_FULL_NAME),
-        Locale("en-ZA"),
-        u"8,765E1 square kilometres",
-        u"8,765E0 square kilometres",
-        u"8,765E1 hectares",
-        u"8,765E0 hectares",
-        u"8,765E3 square metres",
-        u"8,765E2 square metres",
-        u"8,765E1 square metres",
-        u"8,765E0 square metres",
-        u"0E0 square centimetres");
+            u"Scientific notation with Usage: possible when using a reasonable Precision",
+            u"scientific @### usage/default measure-unit/area-square-meter unit-width-full-name",
+            u"scientific @### usage/default unit/square-meter unit-width-full-name",
+            NumberFormatter::with()
+                    .unit(SQUARE_METER)
+                    .usage("default")
+                    .notation(Notation::scientific())
+                    .precision(Precision::minMaxSignificantDigits(1, 4))
+                    .unitWidth(UNumberUnitWidth::UNUM_UNIT_WIDTH_FULL_NAME),
+            Locale("en-ZA"),
+            u"8,765E1 square kilometres",
+            u"8,765E0 square kilometres",
+            u"8,765E1 hectares",
+            u"8,765E0 hectares",
+            u"8,765E3 square metres",
+            u"8,765E2 square metres",
+            u"8,765E1 square metres",
+            u"8,765E0 square metres",
+            u"0E0 square centimetres");
+
+    assertFormatSingle(
+            u"Rounding Mode propagates: rounding down",
+            u"usage/road measure-unit/length-meter rounding-mode-floor",
+            u"usage/road unit/meter rounding-mode-floor",
+            NumberFormatter::with()
+                .unit(MeasureUnit::getMeter())
+                .usage("road")
+                .roundingMode(UNUM_ROUND_FLOOR),
+            Locale("en-ZA"),
+            345,
+            u"300 m");
+
+    assertFormatSingle(
+            u"Rounding Mode propagates: rounding up",
+            u"usage/road measure-unit/length-meter rounding-mode-ceiling",
+            u"usage/road unit/meter rounding-mode-ceiling",
+            NumberFormatter::with()
+                .unit(MeasureUnit::getMeter())
+                .usage("road")
+                .roundingMode(UNUM_ROUND_CEILING),
+            Locale("en-ZA"),
+            305,
+            u"350 m");
 }
 
 void NumberFormatterApiTest::unitUsageErrorCodes() {

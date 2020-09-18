@@ -1094,7 +1094,31 @@ public class NumberFormatterApiTest extends TestFmwk {
                "8,765E1 square metres",
                "8,765E0 square metres",
                "0E0 square centimetres");
-    }
+
+        assertFormatSingle(
+                "Rounding Mode propagates: rounding down",
+                "usage/road measure-unit/length-meter rounding-mode-floor",
+                "usage/road unit/meter rounding-mode-floor",
+                NumberFormatter.with()
+                        .unit(MeasureUnit.METER)
+                        .usage("road")
+                        .roundingMode(RoundingMode.FLOOR),
+                new ULocale("en-ZA"),
+                345,
+                "300 m");
+
+        assertFormatSingle(
+                "Rounding Mode propagates: rounding up",
+                "usage/road measure-unit/length-meter rounding-mode-ceiling",
+                "usage/road unit/meter rounding-mode-ceiling",
+                NumberFormatter.with()
+                        .unit(MeasureUnit.METER)
+                        .usage("road")
+                        .roundingMode(RoundingMode.CEILING),
+                new ULocale("en-ZA"),
+                305,
+                "350 m");
+}
 
 
     @Test
