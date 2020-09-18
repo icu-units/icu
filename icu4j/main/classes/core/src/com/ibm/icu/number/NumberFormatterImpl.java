@@ -274,7 +274,9 @@ class NumberFormatterImpl {
             }
             chain = usagePrefsHandler = new UsagePrefsHandler(macros.loc, macros.unit, macros.usage, chain);
         } else if (isMixedUnit) {
-            chain = new UnitConversionHandler(macros.unit, chain);
+            // TODO(icu-units#97): The input unit should be the largest unit, not the first unit, in the identifier.
+            MeasureUnit inputUnit = macros.unit.splitToSingleUnits().get(0);
+            chain = new UnitConversionHandler(inputUnit, macros.unit, chain);
         }
 
         // Multiplier
