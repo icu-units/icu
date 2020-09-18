@@ -71,18 +71,18 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
 
         // Call the correct LongNameHandler based on outputUnit
         for (int i = 0; i < this.fHandlers.size(); i++) {
-            if (fMeasureUnits.get(i).equals( micros.outputUnit)) {
-                // FIXME: ugly workaround
-                MicroPropsGenerator h = fHandlers.get(i);
-                if (MixedUnitLongNameHandler.class.isInstance(h)) {
-                    MixedUnitLongNameHandler hh = MixedUnitLongNameHandler.class.cast(h);
-                    return hh.processQuantityWithMicros(quantity, micros);
-                } else if (LongNameHandler.class.isInstance(h)) {
-                    LongNameHandler hh = LongNameHandler.class.cast(h);
-                    return hh.processQuantityWithMicros(quantity, micros);
-                } else {
-                    throw new ICUException("FIXME(exception) - BAD HANDLER");
+            if (fMeasureUnits.get(i).equals(micros.outputUnit)) {
+                MicroPropsGenerator handler = fHandlers.get(i);
+
+                if (handler instanceof MixedUnitLongNameHandler) {
+                    return ((MixedUnitLongNameHandler) handler).processQuantityWithMicros(quantity, micros);
                 }
+
+                if (handler instanceof LongNameHandler) {
+                    return ((LongNameHandler) handler).processQuantityWithMicros(quantity, micros);
+                }
+
+                throw new ICUException("FIXME(exception) - BAD HANDLER");
             }
 
         }
