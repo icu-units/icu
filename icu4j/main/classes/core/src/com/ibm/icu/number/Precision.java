@@ -20,7 +20,6 @@ import com.ibm.icu.util.Currency.CurrencyUsage;
  *
  * @stable ICU 62
  * @see NumberFormatter
- * @internal
  */
 public abstract class Precision {
 
@@ -552,15 +551,29 @@ public abstract class Precision {
     // INTERNALS //
     ///////////////
 
-    static class BogusRounder extends Precision {
+    public static class BogusRounder extends Precision {
         @Override
         public void apply(DecimalQuantity value) {
-            // No-op
+            throw new AssertionError("BogusRounder must not be applied");
         }
 
         @Override
         BogusRounder createCopy() {
-            return new BogusRounder();
+            BogusRounder copy = new BogusRounder();
+            copy.mathContext = mathContext;
+            return copy;
+        }
+
+        /**
+         * Copies the BogusRounder's MathContext into precision.
+         *
+         * @internal
+         * @deprecated This API is ICU internal only.
+         */
+        @Deprecated
+        public Precision into(Precision precision) {
+            precision.mathContext = mathContext;
+            return precision;
         }
     }
 

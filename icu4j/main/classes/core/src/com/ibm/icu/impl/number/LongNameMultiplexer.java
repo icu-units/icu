@@ -65,7 +65,7 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
                 result.fHandlers.add(mlnh);
             } else {
                 LongNameHandler lnh = LongNameHandler
-                        .forMeasureUnit(locale, unit, NoUnit.BASE, width, rules, null );
+                        .forMeasureUnit(locale, unit, NoUnit.BASE, width, rules, null);
                 result.fHandlers.add(lnh);
             }
         }
