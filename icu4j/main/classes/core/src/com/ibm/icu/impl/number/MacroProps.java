@@ -30,7 +30,7 @@ public class MacroProps implements Cloneable {
     public SignDisplay sign;
     public DecimalSeparatorDisplay decimal;
     public Scale scale;
-    public String usage; // = null;  (no usage)
+    public String usage;
     public AffixPatternProvider affixProvider; // not in API; for JDK compatibility mode only
     public PluralRules rules; // not in API; could be made public in the future
     public Long threshold; // not in API; controls internal self-regulation threshold

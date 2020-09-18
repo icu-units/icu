@@ -47,10 +47,11 @@ package com.ibm.icu.impl.number;
  */
 public interface MicroPropsGenerator {
     /**
-     * Considers the given {@link DecimalQuantity}, optionally mutates it, and
-     * populates a {@link MicroProps} instance.
+     * Considers the given {@link DecimalQuantity}, optionally mutates it, and returns a
+     * {@link MicroProps}.
      *
-     * @param quantity The quantity for consideration and optional mutation.
+     * @param quantity
+     *            The quantity for consideration and optional mutation.
      * @return A MicroProps instance resolved for the quantity.
      */
     public MicroProps processQuantity(DecimalQuantity quantity);
