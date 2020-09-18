@@ -33,7 +33,7 @@ public class MicroProps implements Cloneable, MicroPropsGenerator {
 
     // A Modifier provided by LongNameHandler, used for currency long names and
     // units. If there is no LongNameHandler needed, this should be an
-    // EmptyModifier. (This is typically the third modifier applied.)
+    // null. (This is typically the third modifier applied.)
     public Modifier modOuter;
 
     // A Modifier for short currencies and compact notation. (This is typically

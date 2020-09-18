@@ -32,6 +32,7 @@ public class UnitConversionHandler implements MicroPropsGenerator {
         assert singleUnits.size() > 1;
 
         MeasureUnitImpl outputUnitImpl = MeasureUnitImpl.forIdentifier(outputUnit.getIdentifier());
+       // TODO(icu-units#97): The input unit should be the largest unit, not the first unit, in the identifier.
         this.fComplexUnitConverter =
                 new ComplexUnitsConverter(
                         new MeasureUnitImpl(outputUnitImpl.getSingleUnits().get(0)),

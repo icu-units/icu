@@ -664,7 +664,7 @@ public class NumberFormatterApiTest  extends TestFmwk {
                 NumberFormatter.with()
                         .unit(MeasureUnit.forIdentifier("yard-and-foot-and-inch"))
                         .notation(Notation.scientific()),
-        new ULocale("en-US"),
+                new ULocale("en-US"),
                 3.65,
                 "3 yd, 1 ft, 1.14E1 in");
 

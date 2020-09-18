@@ -17,15 +17,6 @@ import java.util.List;
 public class LongNameMultiplexer implements MicroPropsGenerator {
     private final MicroPropsGenerator fParent;
 
-    /**
-     * Because we only know which LongNameHandler we wish to call after calling
-     * earlier MicroPropsGenerators in the chain, LongNameMultiplexer keeps the
-     * parent link, while the LongNameHandlers are given no parents.
-     */
-    private List<LongNameHandler> fLongNameHandlers;
-    private List<MixedUnitLongNameHandler> fMixedUnitHandlers;
-
-    // Unowned pointers to instances owned by MaybeStackVectors.
     private List<MicroPropsGenerator> fHandlers;
 
     // Each MeasureUnit corresponds to the same-index MicroPropsGenerator
@@ -49,21 +40,18 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
 
         result.fMeasureUnits = new ArrayList<>();
         result.fHandlers = new ArrayList<>();
-        result.fMixedUnitHandlers = new ArrayList<>();
-        result.fLongNameHandlers = new ArrayList<>();
+
 
         for (int i = 0; i < units.size(); i++) {
             MeasureUnit unit = units.get(i);
             result.fMeasureUnits.add(unit);
             if (unit.getComplexity() == MeasureUnit.Complexity.MIXED) {
                 MixedUnitLongNameHandler mlnh = MixedUnitLongNameHandler
-                        .forMeasureUnit(locale, unit, width, rules, null); /*TODO: why is null*/
-                result.fMixedUnitHandlers.add(mlnh);
+                        .forMeasureUnit(locale, unit, width, rules, null);
                 result.fHandlers.add(mlnh);
             } else {
                 LongNameHandler lnh = LongNameHandler
-                        .forMeasureUnit(locale, unit, NoUnit.BASE, width, rules, null ); /*TODO: why is null */
-                result.fLongNameHandlers.add(lnh);
+                        .forMeasureUnit(locale, unit, NoUnit.BASE, width, rules, null );
                 result.fHandlers.add(lnh);
             }
         }
@@ -83,19 +71,20 @@ public class LongNameMultiplexer implements MicroPropsGenerator {
 
         // Call the correct LongNameHandler based on outputUnit
         for (int i = 0; i < this.fHandlers.size(); i++) {
-            if (fMeasureUnits.get(i).equals( micros.outputUnit)) {
-                // FIXME: ugly workaround
-                MicroPropsGenerator h = fHandlers.get(i);
-                if (MixedUnitLongNameHandler.class.isInstance(h)) {
-                    MixedUnitLongNameHandler hh = MixedUnitLongNameHandler.class.cast(h);
-                    return hh.processQuantityWithMicros(quantity, micros);
-                } else if (LongNameHandler.class.isInstance(h)) {
-                    LongNameHandler hh = LongNameHandler.class.cast(h);
-                    return hh.processQuantityWithMicros(quantity, micros);
-                } else {
-                    throw new ICUException("FIXME(exception) - BAD HANDLER");
+            if (fMeasureUnits.get(i).equals(micros.outputUnit)) {
+                MicroPropsGenerator handler = fHandlers.get(i);
+
+                if (handler instanceof MixedUnitLongNameHandler) {
+                    return ((MixedUnitLongNameHandler) handler).processQuantityWithMicros(quantity, micros);
                 }
+
+                if (handler instanceof LongNameHandler) {
+                    return ((LongNameHandler) handler).processQuantityWithMicros(quantity, micros);
+                }
+
+                throw new ICUException("FIXME(exception) - BAD HANDLER");
             }
+
         }
 
         throw new AssertionError

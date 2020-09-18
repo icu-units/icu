@@ -32,9 +32,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
     private final Map<StandardPlural, SimpleModifier> modifiers;
     private final PluralRules rules;
 
-    //////////////////////////
-    /// BEGIN DATA LOADING ///
-    //////////////////////////
+
     private final MicroPropsGenerator parent;
 
     // NOTE: outArray MUST have at least ARRAY_LENGTH entries. No bounds checking is performed.
@@ -71,9 +69,9 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
         return result;
     }
 
-    ////////////////////////
-    /// END DATA LOADING ///
-    ////////////////////////
+    //////////////////////////
+    /// BEGIN DATA LOADING ///
+    //////////////////////////
 
     protected static void getMeasureData(
             ULocale locale,
@@ -154,6 +152,10 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
         getMeasureData(locale, unit, width, measureData);
         return measureData[DNAM_INDEX];
     }
+
+    ////////////////////////
+    /// END DATA LOADING ///
+    ////////////////////////
 
     public static LongNameHandler forCurrencyLongNames(
             ULocale locale,
@@ -293,7 +295,7 @@ public class LongNameHandler implements MicroPropsGenerator, ModifierStore {
 
     @Override
     public MicroProps processQuantity(DecimalQuantity quantity) {
-        MicroProps micros = parent.processQuantity(quantity); /* TOOD: question: shall we check if parent is null or not*/
+        MicroProps micros = parent.processQuantity(quantity);
         StandardPlural pluralForm = RoundingUtils.getPluralSafe(micros.rounder, rules, quantity);
         micros.modOuter = modifiers.get(pluralForm);
         return micros;
