@@ -568,7 +568,7 @@ public abstract class Precision {
         final int minFrac;
         final int maxFrac;
 
-        FractionRounderImpl(int minFrac, int maxFrac) {
+        public FractionRounderImpl(int minFrac, int maxFrac) {
             this.minFrac = minFrac;
             this.maxFrac = maxFrac;
         }
@@ -591,7 +591,7 @@ public abstract class Precision {
         final int minSig;
         final int maxSig;
 
-        SignificantRounderImpl(int minSig, int maxSig) {
+        public SignificantRounderImpl(int minSig, int maxSig) {
             this.minSig = minSig;
             this.maxSig = maxSig;
         }
@@ -616,7 +616,7 @@ public abstract class Precision {
         }
 
         @Override
-        public SignificantRounderImpl createCopy() {
+        SignificantRounderImpl createCopy() {
             SignificantRounderImpl copy = new SignificantRounderImpl(minSig, maxSig);
             copy.mathContext = mathContext;
             return copy;
@@ -629,7 +629,7 @@ public abstract class Precision {
         final int minSig;
         final int maxSig;
 
-        FracSigRounderImpl(int minFrac, int maxFrac, int minSig, int maxSig) {
+        public FracSigRounderImpl(int minFrac, int maxFrac, int minSig, int maxSig) {
             this.minFrac = minFrac;
             this.maxFrac = maxFrac;
             this.minSig = minSig;
@@ -678,7 +678,7 @@ public abstract class Precision {
         }
 
         @Override
-        public IncrementRounderImpl createCopy() {
+        IncrementRounderImpl createCopy() {
             IncrementRounderImpl copy = new IncrementRounderImpl(increment);
             copy.mathContext = mathContext;
             return copy;
@@ -707,7 +707,7 @@ public abstract class Precision {
         }
 
         @Override
-        public IncrementOneRounderImpl createCopy() {
+        IncrementOneRounderImpl createCopy() {
             IncrementOneRounderImpl copy = new IncrementOneRounderImpl(increment, minFrac, maxFrac);
             copy.mathContext = mathContext;
             return copy;
@@ -734,7 +734,7 @@ public abstract class Precision {
         }
 
         @Override
-        public IncrementFiveRounderImpl createCopy() {
+        IncrementFiveRounderImpl createCopy() {
             IncrementFiveRounderImpl copy = new IncrementFiveRounderImpl(increment, minFrac, maxFrac);
             copy.mathContext = mathContext;
             return copy;
@@ -755,7 +755,7 @@ public abstract class Precision {
         }
 
         @Override
-        public CurrencyRounderImpl createCopy() {
+        CurrencyRounderImpl createCopy() {
             CurrencyRounderImpl copy = new CurrencyRounderImpl(usage);
             copy.mathContext = mathContext;
             return copy;

@@ -169,11 +169,13 @@ class NumberFormatterImpl {
      * encoded into the MicroPropsGenerator, except for the quantity itself, which is left abstract and
      * must be provided to the returned MicroPropsGenerator instance.
      *
-     * @param macros The {@link MacroProps} to consume. This method does not mutate the MacroProps instance.
-     * @param safe   If true, the returned MicroPropsGenerator will be thread-safe. If false, the returned
-     *               value will <em>not</em> be thread-safe, intended for a single "one-shot" use only.
-     *               Building the thread-safe object is more expensive.
      * @see MicroPropsGenerator
+     * @param macros
+     *            The {@link MacroProps} to consume. This method does not mutate the MacroProps instance.
+     * @param safe
+     *            If true, the returned MicroPropsGenerator will be thread-safe. If false, the returned
+     *            value will <em>not</em> be thread-safe, intended for a single "one-shot" use only.
+     *            Building the thread-safe object is more expensive.
      */
     private static MicroPropsGenerator macrosToMicroGenerator(MacroProps macros, MicroProps micros, boolean safe) {
         MicroPropsGenerator chain = micros;
