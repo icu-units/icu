@@ -551,6 +551,13 @@ public abstract class Precision {
     // INTERNALS //
     ///////////////
 
+    /**
+     * An BogusRounder's MathContext into precision.
+     *
+     * @internal
+     * @deprecated This API is ICU internal only.
+     */
+    @Deprecated
     public static class BogusRounder extends Precision {
         @Override
         public void apply(DecimalQuantity value) {
@@ -572,8 +579,9 @@ public abstract class Precision {
          */
         @Deprecated
         public Precision into(Precision precision) {
-            precision.mathContext = mathContext;
-            return precision;
+            Precision copy = precision.createCopy();
+            copy.mathContext = mathContext;
+            return copy;
         }
     }
 
