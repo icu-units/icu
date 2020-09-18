@@ -1,7 +1,5 @@
 // © 2020 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
-
-
 package com.ibm.icu.impl.number;
 
 import com.ibm.icu.number.NumberFormatter;
@@ -13,6 +11,12 @@ import com.ibm.icu.util.ULocale;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A MicroPropsGenerator that multiplexes between different LongNameHandlers,
+ * depending on the outputUnit.
+ *
+ * See processQuantity() for the input requirements.
+ */
 public class LongNameMultiplexer implements MicroPropsGenerator {
     /**
      * LongNameMultiplexer calls the parent MicroPropsGenerator itself,
