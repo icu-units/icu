@@ -492,7 +492,7 @@ public abstract class NumberFormatterSettings<T extends NumberFormatterSettings<
         return create(KEY_SCALE, scale);
     }
 
-   /**
+    /**
      * Specifies the usage for which numbers will be formatted ("person-height",
      * "road", "rainfall", etc.)
      *
@@ -529,6 +529,10 @@ public abstract class NumberFormatterSettings<T extends NumberFormatterSettings<
      * <p>
      * Setting usage to an empty string clears the usage (disables usage-based
      * localized formatting).
+     *
+     * <p>
+     * Setting a usage string but not a correct input unit will result in an
+     * U_ILLEGAL_ARGUMENT_ERROR.
      *
      * <p>
      * When using usage, specifying rounding or precision is unnecessary.

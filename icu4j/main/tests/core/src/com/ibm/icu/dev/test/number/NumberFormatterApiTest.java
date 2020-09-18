@@ -21,6 +21,7 @@ import org.junit.Test;
 import com.ibm.icu.dev.test.TestFmwk;
 import com.ibm.icu.dev.test.format.FormattedValueTest;
 import com.ibm.icu.dev.test.serializable.SerializableTestUtility;
+import com.ibm.icu.impl.IllegalIcuArgumentException;
 import com.ibm.icu.impl.number.Grouper;
 import com.ibm.icu.impl.number.LocalizedNumberFormatterAsFormat;
 import com.ibm.icu.impl.number.MacroProps;
@@ -866,6 +867,13 @@ public class NumberFormatterApiTest extends TestFmwk {
         LocalizedNumberFormatter formatter;
         FormattedNumber formattedNum;
         String uTestCase;
+
+        try {
+            NumberFormatter.with().usage("road").locale(ULocale.ENGLISH).format(1);
+            fail("should give an error, usage() without unit() is invalid");
+        } catch (IllegalIcuArgumentException e) {
+            // Pass
+        }
 
         unloc_formatter = NumberFormatter.with().usage("road").unit(MeasureUnit.METER);
 

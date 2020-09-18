@@ -906,6 +906,11 @@ void NumberFormatterApiTest::unitUsage() {
     FormattedNumber formattedNum;
     UnicodeString uTestCase;
 
+    status.assertSuccess();
+    formattedNum =
+        NumberFormatter::with().usage("road").locale(Locale::getEnglish()).formatInt(1, status);
+    status.expectErrorAndReset(U_ILLEGAL_ARGUMENT_ERROR);
+
     unloc_formatter = NumberFormatter::with().usage("road").unit(MeasureUnit::getMeter());
 
     uTestCase = u"unitUsage() en-ZA road";
