@@ -144,7 +144,7 @@ class U_I18N_API UnitConverter : public UMemory {
                   const ConversionRates &ratesInfo, UErrorCode &status);
 
     /**
-     * Compares two single units and returns and returns 1 if the first one is greater, -1 if the second
+     * Compares two single units and returns 1 if the first one is greater, -1 if the second
      * one is greater and 0 if they are equal.
      *
      * NOTE:

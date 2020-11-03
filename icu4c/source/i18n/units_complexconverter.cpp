@@ -45,7 +45,6 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
         const auto *leftPointer = static_cast<const MeasureUnitImpl *const *>(left);
         const auto *rightPointer = static_cast<const MeasureUnitImpl *const *>(right);
 
-        // Return -ve the result because we are sorting in descending order.
         return -1 * UnitConverter::compareTwoUnits(**leftPointer,                                  //
                                                    **rightPointer,                                 //
                                                    *static_cast<const ConversionRates *>(context), //
