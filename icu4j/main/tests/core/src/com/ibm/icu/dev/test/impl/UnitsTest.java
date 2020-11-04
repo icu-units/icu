@@ -144,32 +144,6 @@ public class UnitsTest {
             }
         }
 
-        input = MeasureUnit.LIGHT_YEAR;
-        output = MeasureUnit.forIdentifier("light-year-and-meter");
-        final MeasureUnitImpl inputImpl3 = MeasureUnitImpl.forIdentifier(input.getIdentifier());
-        final MeasureUnitImpl outputImpl3 = MeasureUnitImpl.forIdentifier(output.getIdentifier());
-        ComplexUnitsConverter converter3 = new ComplexUnitsConverter(inputImpl3, outputImpl3, rates);
-
-        // TODO(icu-units#108): the test below is simply broken. Dates back to
-        // the first version of this test case. "1.0 + 2e-17" cannot be
-        // represented by an IEEE 754 double, because 2e-17 is smaller than
-        // 2^-53. (There are 53 bits in the significand.) And the comment still
-        // says "2e-16". Fix as part of #108 and fold into the "cases" above.
-        //
-        // 2e-16 light years is 1.892146 meters. We consider this in the noise,
-        // and thus expect a 0. (This test fails when 2e-16 is increased to
-        // 4e-16.)
-        assertEquals("FIXME: demonstrating brokenness", 1.0 + 2e-17, 1.0, 0);
-        List<Measure> measures5 = converter3.convert(BigDecimal.valueOf(1.0 + 2e-17), null);
-        assertEquals("measures length", 2, measures5.size());
-        assertEquals("light-year test: measures[0] value", BigDecimal.ONE, measures5.get(0).getNumber());
-        assertEquals("light-year test: measures[0] unit", MeasureUnit.LIGHT_YEAR.getIdentifier(),
-                measures5.get(0).getUnit().getIdentifier());
-        assertEquals("light-year test: measures[1] value", BigDecimal.valueOf(0.0),
-                measures5.get(1).getNumber());
-        assertEquals("light-year test: measures[1] unit", MeasureUnit.METER.getIdentifier(),
-                measures5.get(1).getUnit().getIdentifier());
-
         // TODO(icu-units#63): test negative numbers!
     }
 

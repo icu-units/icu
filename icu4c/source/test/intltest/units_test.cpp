@@ -525,63 +525,7 @@ void UnitsTest::testComplexUnitsConverter() {
     }
     status.assertSuccess();
 
-    input = MeasureUnit::getLightYear();
-    output = MeasureUnit::forIdentifier("light-year-and-meter", status);
-    const MeasureUnitImpl &inputImpl3 = MeasureUnitImpl::forMeasureUnit(input, tempInput, status);
-    const MeasureUnitImpl &outputImpl3 = MeasureUnitImpl::forMeasureUnit(output, tempOutput, status);
-    auto converter = ComplexUnitsConverter(inputImpl3, outputImpl3, rates, status);
-    status.assertSuccess();
-
-    // 1e-15 light years is 9.46073 meters (calculated using "bc" and the CLDR
-    // conversion factor). With double-precision maths, we get 10.5. In this
-    // case, we're off by a bit more than 1 meter.
-    measures = converter.convert((1.0 + 1e-15), nullptr, status);
-    assertEquals("measures length", 2, measures.length());
-    if (2 == measures.length()) {
-        assertEquals("light-year test: measures[0] value", 1.0,
-                     measures[0]->getNumber().getDouble(status));
-        assertEquals("light-year test: measures[0] unit", MeasureUnit::getLightYear().getIdentifier(),
-                     measures[0]->getUnit().getIdentifier());
-        assertEqualsNear("light-year test: measures[1] value", 9.46073,
-                         measures[1]->getNumber().getDouble(status), 1.5);
-        assertEquals("light-year test: measures[1] unit", MeasureUnit::getMeter().getIdentifier(),
-                     measures[1]->getUnit().getIdentifier());
-    }
-
     // TODO(icu-units#63): test negative numbers!
-
-    // Below 1.0, precision is 0.5 DBL_EPSILON. Above 1.0, precision is DBL_EPSILON.
-    assertEquals("double accuracy test, 1-3eps/2", 0.99999999999999972, 1.0 - 1.5 * DBL_EPSILON);
-    assertEquals("double accuracy test, 1-eps  ", 0.99999999999999973, 1.0 - DBL_EPSILON);
-    assertEquals("double accuracy test, 1-eps  ", 0.99999999999999978, 1.0 - DBL_EPSILON); // nominal
-    assertEquals("double accuracy test, 1-eps  ", 0.99999999999999983, 1.0 - DBL_EPSILON);
-    assertEquals("double accuracy test, 1-eps/2", 0.99999999999999984, 1.0 - 0.5 * DBL_EPSILON);
-    assertEquals("double accuracy test, 1-eps/2", 0.99999999999999992, 1.0 - 0.5 * DBL_EPSILON);
-    assertEquals("double accuracy test, 1    ", 0.99999999999999995, 1.0);
-    assertEquals("double accuracy test, 1    ", 1.00000000000000011, 1.0);
-    assertEquals("double accuracy test, 1+eps", 1.00000000000000012, 1.0 + DBL_EPSILON);
-    assertEquals("double accuracy test, 1+eps", 1.00000000000000020, 1.0 + DBL_EPSILON); // nominal
-    assertEquals("double accuracy test, 1+eps", 1.00000000000000033, 1.0 + DBL_EPSILON);
-    assertEquals("double accuracy test, 1+2eps", 1.00000000000000034, 1.0 + 2 * DBL_EPSILON);
-
-    // Below 2.0, precision is DBL_EPSILON. Above 2.0, precision is 2*DBL_EPSILON. 2+eps = 2.
-    assertEquals("double accuracy test, 2-2eps", 1.9999999999999996, 2.0 - 2 * DBL_EPSILON);
-    assertEquals("double accuracy test, 2-eps", 1.9999999999999997, 2.0 - DBL_EPSILON);
-    assertEquals("double accuracy test, 2-eps", 1.9999999999999998, 2.0 - DBL_EPSILON);
-    assertEquals("double accuracy test, 2+eps", 1.9999999999999999, 2.0 + DBL_EPSILON);
-    assertEquals("double accuracy test, 2+eps", 2.0000000000000000, 2.0 + DBL_EPSILON);
-    assertEquals("double accuracy test, 2    ", 2.0000000000000001, 2.0);
-    assertEquals("double accuracy test, 2    ", 2.0000000000000002, 2.0);
-    assertEquals("double accuracy test, 2+2eps", 2.0000000000000003, 2.0 + 2 * DBL_EPSILON);
-    assertEquals("double accuracy test, 2+2eps", 2.0000000000000004, 2.0 + 2 * DBL_EPSILON);
-
-    // Around 3.0, precision is 2*DBL_EPSILON.
-    assertEquals("double accuracy test, 3-2eps", 2.9999999999999997, 3.0 - 2 * DBL_EPSILON);
-    assertEquals("double accuracy test, 3+eps", 2.9999999999999998, 3.0 + DBL_EPSILON);
-    assertEquals("double accuracy test, 3+eps", 2.9999999999999999, 3.0 + DBL_EPSILON);
-    assertEquals("double accuracy test, 3-eps", 3.0000000000000001, 3.0 - DBL_EPSILON);
-    assertEquals("double accuracy test, 3-eps", 3.0000000000000002, 3.0 - DBL_EPSILON);
-    assertEquals("double accuracy test, 3+2eps", 3.0000000000000003, 3.0 + 2 * DBL_EPSILON);
 }
 
 void UnitsTest::testComplexUnitConverterSorting() {
