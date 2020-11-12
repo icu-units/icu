@@ -530,15 +530,15 @@ int32_t UnitConverter::compareTwoUnits(const MeasureUnitImpl &firstUnit, const M
     double secondUnitToBaseConversionRate = secondUnitToBase.factorNum / secondUnitToBase.factorDen;
 
     double diff = firstUnitToBaseConversionRate - secondUnitToBaseConversionRate;
-    if (std::abs(diff) <= DBL_EPSILON) {
-        return 0;
-    }
-
-    if (diff > 0) {
+    if (diff > 0 ) {
         return 1;
     }
 
-    return -1;
+    if (diff < 0) {
+        return -1;
+    }
+
+    return 0;
 }
 
 double UnitConverter::convert(double inputValue) const {
