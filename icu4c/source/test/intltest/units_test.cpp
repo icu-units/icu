@@ -489,6 +489,22 @@ void UnitsTest::testComplexUnitsConverter() {
           Measure(0, MeasureUnit::createMeter(status), status)},
          2,
          0},
+        {"Mixed Units test 1",
+         "meter",
+         "foot-and-inch",
+         3.0,
+         {Measure(9, MeasureUnit::createFoot(status), status),
+          Measure(10.110236220472423, MeasureUnit::createInch(status), status)},
+         2,
+         0},
+        {"Mixed Units test 1",
+         "meter",
+         "inch-and-foot",
+         3.0,
+         {Measure(10.110236220472423, MeasureUnit::createInch(status), status),
+          Measure(9, MeasureUnit::createFoot(status), status)},
+         2,
+         0},
     };
     status.assertSuccess();
 

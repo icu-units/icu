@@ -32,11 +32,6 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
 
     U_ASSERT(units_.length() != 0);
 
-    // Save the desired order of output units before we sort units_
-    for (int32_t i = 0; i < units_.length(); i++) {
-        outputUnits_.emplaceBackAndCheckErrorCode(status, units_[i]->copy(status).build(status));
-    }
-
     // Sorts units in descending order. Therefore, we return -1 if
     // the left is bigger than right and so on.
     auto descendingCompareUnits = [](const void *context, const void *left, const void *right) {
@@ -232,13 +227,13 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
        return diff > 0? 1 : -1;
     };
 
-    uprv_sortArray(unordered_result.getAlias(), //
-                   unordered_result.length(),   //
-                   sizeof unordered_result[0],  //
-                   ascendingOrderByIndexComparator,      //
-                   nullptr,                     //
-                   false,                       //
-                   &status                      //
+    uprv_sortArray(unordered_result.getAlias(),     //
+                   unordered_result.length(),       //
+                   sizeof unordered_result[0],      //
+                   ascendingOrderByIndexComparator, //
+                   nullptr,                         //
+                   false,                           //
+                   &status                          //
     );
 
     for(int32_t i = 0, n = unordered_result.length(); i < n; ++i) {
