@@ -32,9 +32,13 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
 
     U_ASSERT(units_.length() != 0);
 
-    // NOTE:
-    //  This comparator is used to sort the units in a descending order. Therefore, we return -1 if
-    //  the left is bigger than right and so on.
+    // Save the desired order of output units before we sort units_
+    for (int32_t i = 0; i < units_.length(); i++) {
+        outputUnits_.emplaceBackAndCheckErrorCode(status, units_[i]->copy(status).build(status));
+    }
+
+    // Sorts units in descending order. Therefore, we return -1 if
+    // the left is bigger than right and so on.
     auto descendingCompareUnits = [](const void *context, const void *left, const void *right) {
         UErrorCode status = U_ZERO_ERROR;
 
