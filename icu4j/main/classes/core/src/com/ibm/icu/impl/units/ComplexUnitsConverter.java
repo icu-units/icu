@@ -2,16 +2,17 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.impl.units;
 
+import com.ibm.icu.impl.Pair;
+import com.ibm.icu.impl.number.DecimalQuantity;
+import com.ibm.icu.impl.number.DecimalQuantity_DualStorageBCD;
+import com.ibm.icu.number.Precision;
+import com.ibm.icu.util.Measure;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.ibm.icu.impl.number.DecimalQuantity;
-import com.ibm.icu.impl.number.DecimalQuantity_DualStorageBCD;
-import com.ibm.icu.number.Precision;
-import com.ibm.icu.util.Measure;
 
 /**
  * Converts from single or compound unit to single, compound or mixed units.
@@ -27,7 +28,7 @@ public class ComplexUnitsConverter {
     public static final BigDecimal EPSILON_MULTIPLIER = BigDecimal.valueOf(1).add(EPSILON);
     private ArrayList<UnitConverter> unitConverters_;
     // Individual units of mixed units, sorted big to small
-    private List<MeasureUnitImpl> units_;
+    private List<Pair<Integer, MeasureUnitImpl>> units_;
     private MeasureUnitImpl inputUnit_;
 
     /**
@@ -44,14 +45,19 @@ public class ComplexUnitsConverter {
      * @param inputUnit represents the input unit. could be any type. (single, compound or mixed).
      */
     public ComplexUnitsConverter(MeasureUnitImpl inputUnit, ConversionRates conversionRates) {
-        this.units_ = inputUnit.extractIndividualUnitsWithIndex();
-        // Sort the units in a descending order.
-        Collections.sort(
-                this.units_,
-                Collections.reverseOrder(new MeasureUnitImpl.MeasureUnitImplComparator(conversionRates)));
+        this.units_ = inputUnit.extractIndividualUnitsWithIndices();
         assert (!this.units_.isEmpty());
 
-        this.inputUnit_ = this.units_.get(0);
+        // Assign the biggest unit to inputUnit_.
+        this.inputUnit_ = this.units_.get(0).second;
+        MeasureUnitImpl.MeasureUnitImplComparator comparator = new MeasureUnitImpl.MeasureUnitImplComparator(conversionRates);
+        for (Pair<Integer, MeasureUnitImpl> unitWithIndex:
+             this.units_) {
+            if (comparator.compare(unitWithIndex.second, this.inputUnit_) > 0) {
+                this.inputUnit_ = unitWithIndex.second;
+            }
+        }
+
         this.init(conversionRates);
     }
 
@@ -67,18 +73,17 @@ public class ComplexUnitsConverter {
     public ComplexUnitsConverter(MeasureUnitImpl inputUnit, MeasureUnitImpl outputUnits,
                                  ConversionRates conversionRates) {
         this.inputUnit_ = inputUnit;
-        this.units_ = outputUnits.extractIndividualUnitsWithIndex();
+        this.units_ = outputUnits.extractIndividualUnitsWithIndices();
         assert (!this.units_.isEmpty());
-
-        // Sort the units in a descending order.
-        Collections.sort(
-                this.units_,
-                Collections.reverseOrder(new MeasureUnitImpl.MeasureUnitImplComparator(conversionRates)));
 
         this.init(conversionRates);
     }
 
     private void init(ConversionRates conversionRates) {
+        // Sort the units in a descending order.
+        Collections.sort(
+                this.units_,
+                Collections.reverseOrder(new MeasureUnitImpl.MeasureUnitImplWithIndexComparator(conversionRates)));
 
         // If the `outputUnits` is `UMEASURE_UNIT_MIXED` such as `foot+inch`. Thus means there is more than one unit
         //  and In this case we need more converters to convert from the `inputUnit` to the first unit in the
@@ -97,9 +102,9 @@ public class ComplexUnitsConverter {
         unitConverters_ = new ArrayList<>();
         for (int i = 0, n = units_.size(); i < n; i++) {
             if (i == 0) { // first element
-                unitConverters_.add(new UnitConverter(this.inputUnit_, units_.get(i), conversionRates));
+                unitConverters_.add(new UnitConverter(this.inputUnit_, units_.get(i).second, conversionRates));
             } else {
-                unitConverters_.add(new UnitConverter(units_.get(i - 1), units_.get(i), conversionRates));
+                unitConverters_.add(new UnitConverter(units_.get(i - 1).second, units_.get(i).second, conversionRates));
             }
         }
     }
@@ -213,9 +218,9 @@ public class ComplexUnitsConverter {
         // Package values into Measure instances in result:
         for (int i = 0, n = unitConverters_.size(); i < n; ++i) {
             if (i < n - 1) {
-                result.set (units_.get(i).index , new Measure(intValues.get(i).multiply(sign), units_.get(i).build()));
+                result.set(units_.get(i).first, new Measure(intValues.get(i).multiply(sign), units_.get(i).second.build()));
             } else {
-                result.set (units_.get(i).index , new Measure(quantity.multiply(sign), units_.get(i).build()));
+                result.set(units_.get(i).first, new Measure(quantity.multiply(sign), units_.get(i).second.build()));
             }
         }
 

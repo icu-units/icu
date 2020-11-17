@@ -280,7 +280,6 @@ class NumberFormatterImpl {
             chain = usagePrefsHandler = new UsagePrefsHandler(macros.loc, macros.unit, macros.usage, chain);
         } else if (isMixedUnit) {
             // In case of MixedUnit,
-            List<MeasureUnit> singleUnits = macros.unit.splitToSingleUnits();
             chain = new UnitConversionHandler(macros.unit, chain);
         }
 

@@ -21,6 +21,34 @@
 
 U_NAMESPACE_BEGIN
 namespace units {
+ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
+                                             const ConversionRates &ratesInfo, UErrorCode &status): units_(inputUnit.extractIndividualUnitsWithIndecies(status)) {
+    
+        if (U_FAILURE(status)) {
+            return;
+        }
+
+            U_ASSERT(units_.length() != 0);
+
+    auto singleUnits = inputUnit.extractIndividualUnits(status);
+    if (U_FAILURE(status)) {
+        return;
+    }
+
+    auto *biggestUnit = singleUnits[0];
+    for (int32_t i = 1; i < singleUnits.length(); i++) {
+        if (UnitConverter::compareTwoUnits(*singleUnits[i], *biggestUnit, ratesInfo, status) > 0 &&
+            U_SUCCESS(status)) {
+            biggestUnit = singleUnits[i];
+        }
+
+        if (U_FAILURE(status)) {
+            return;
+        }
+    }
+
+  this->init(*biggestUnit, ratesInfo, status);
+}
 
 ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
                                              const MeasureUnitImpl &outputUnits,
@@ -32,6 +60,11 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
 
     U_ASSERT(units_.length() != 0);
 
+    this->init(inputUnit, ratesInfo, status);
+}
+
+void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo,
+                                 UErrorCode &status) {
     // Sorts units in descending order. Therefore, we return -1 if
     // the left is bigger than right and so on.
     auto descendingCompareUnits = [](const void *context, const void *left, const void *right) {

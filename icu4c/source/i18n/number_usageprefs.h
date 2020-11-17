@@ -97,13 +97,13 @@ class U_I18N_API UnitConversionHandler : public MicroPropsGenerator, public UMem
     /**
      * Constructor.
      *
-     * @param inputUnit Specifies the input MeasureUnit. Mixed units are not
-     *     supported as input (because input is just a single decimal quantity).
-     * @param outputUnit Specifies the output MeasureUnit.
+     * @param inputUnit Specifies the input MeasureUnit. In case of Mixed unit, the input unit will be
+     * the biggest unit in the Mixed unit and the output will be the input unit. Otherwise, the input
+     * unit will be the output unit.
      * @param parent The parent MicroPropsGenerator.
      * @param status Receives status.
      */
-    UnitConversionHandler(const MeasureUnit &inputUnit, const MeasureUnit &outputUnit,
+    UnitConversionHandler(const MeasureUnit &inputUnit,
                           const MicroPropsGenerator *parent, UErrorCode &status);
 
     /**

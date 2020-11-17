@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import com.ibm.icu.impl.Pair;
 import com.ibm.icu.util.BytesTrie;
 import com.ibm.icu.util.CharsTrie;
 import com.ibm.icu.util.CharsTrieBuilder;
@@ -118,6 +119,23 @@ public class MeasureUnitImpl {
 
         result.add(this.copy());
         return result;
+    }
+
+    public ArrayList<Pair<Integer, MeasureUnitImpl>> extractIndividualUnitsWithIndices() {
+            ArrayList<Pair<Integer, MeasureUnitImpl>> result = new ArrayList<>();
+            if (this.getComplexity() == MeasureUnit.Complexity.MIXED) {
+            // In case of mixed units, each single unit can be considered as a stand alone MeasureUnitImpl.
+                Integer i = 0;
+                for (SingleUnitImpl singleUnit :
+                    this.getSingleUnits()) {
+                result.add(Pair.of( i++,  new MeasureUnitImpl(singleUnit)));
+            }
+
+            return result;
+        }
+
+            result.add(Pair.of(0, this.copy()));
+            return  result;
     }
 
     /**
@@ -761,19 +779,16 @@ public class MeasureUnitImpl {
         }
     }
 
-    public static class MeasureUnitComparator implements Comparator<MeasureUnit> {
+    static class MeasureUnitImplWithIndexComparator implements Comparator<Pair<Integer, MeasureUnitImpl>> {
         private MeasureUnitImplComparator measureUnitImplComparator;
 
-        public MeasureUnitComparator(ConversionRates conversionRates) {
+        public MeasureUnitImplWithIndexComparator(ConversionRates conversionRates) {
             this.measureUnitImplComparator = new MeasureUnitImplComparator(conversionRates);
         }
 
         @Override
-        public int compare(MeasureUnit o1, MeasureUnit o2) {
-            MeasureUnitImpl o1Impl = MeasureUnitImpl.forIdentifier(o1.getIdentifier());
-            MeasureUnitImpl o2Impl = MeasureUnitImpl.forIdentifier(o2.getIdentifier());
-
-            return this.measureUnitImplComparator.compare(o1Impl, o2Impl);
+        public int compare(Pair<Integer, MeasureUnitImpl> o1, Pair<Integer, MeasureUnitImpl> o2) {
+            return this.measureUnitImplComparator.compare(o1.second, o2.second);
         }
     }
 

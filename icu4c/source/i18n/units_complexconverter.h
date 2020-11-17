@@ -48,6 +48,15 @@ namespace units {
  */
 class U_I18N_API ComplexUnitsConverter : public UMemory {
   public:
+      /**
+     * Constructor of `ComplexUnitsConverter`.
+     *
+     * TODO: illustrate ...
+     * @param inputUnit represents the source unit. (should be single or compound unit).
+     * @param status
+     */
+    ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
+                          const ConversionRates &ratesInfo, UErrorCode &status);
     /**
      * Constructor of `ComplexUnitsConverter`.
      * NOTE:
@@ -82,6 +91,8 @@ class U_I18N_API ComplexUnitsConverter : public UMemory {
 
     // Individual units of mixed units attached with there indices, sorted big to small according to the units.
     MaybeStackVector<std::pair<int32_t, const MeasureUnitImpl*>> units_;
+
+    void init(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo, UErrorCode &status);
 };
 
 } // namespace units

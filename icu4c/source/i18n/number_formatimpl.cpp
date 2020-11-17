@@ -250,10 +250,8 @@ NumberFormatterImpl::macrosToMicroGenerator(const MacroProps& macros, bool safe,
         fUsagePrefsHandler.adoptInsteadAndCheckErrorCode(usagePrefsHandler, status);
         chain = fUsagePrefsHandler.getAlias();
     } else if (isMixedUnit) {
-        MeasureUnitImpl temp;
-        const MeasureUnitImpl &outputUnit = MeasureUnitImpl::forMeasureUnit(macros.unit, temp, status);
         auto unitConversionHandler =
-            new UnitConversionHandler(outputUnit.units[0]->build(status), macros.unit, chain, status);
+            new UnitConversionHandler(macros.unit, chain, status);
         fUnitConversionHandler.adoptInsteadAndCheckErrorCode(unitConversionHandler, status);
         chain = fUnitConversionHandler.getAlias();
     }
