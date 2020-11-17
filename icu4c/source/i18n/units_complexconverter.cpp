@@ -22,13 +22,12 @@
 U_NAMESPACE_BEGIN
 namespace units {
 ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
-                                             const ConversionRates &ratesInfo, UErrorCode &status): units_(inputUnit.extractIndividualUnitsWithIndecies(status)) {
-    
-        if (U_FAILURE(status)) {
-            return;
-        }
-
-            U_ASSERT(units_.length() != 0);
+                                             const ConversionRates &ratesInfo, UErrorCode &status)
+    : units_(inputUnit.extractIndividualUnitsWithIndecies(status)) {
+    if (U_FAILURE(status)) {
+        return;
+    }
+    U_ASSERT(units_.length() != 0);
 
     auto singleUnits = inputUnit.extractIndividualUnits(status);
     if (U_FAILURE(status)) {
@@ -47,7 +46,7 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
         }
     }
 
-  this->init(*biggestUnit, ratesInfo, status);
+    this->init(*biggestUnit, ratesInfo, status);
 }
 
 ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
