@@ -48,15 +48,22 @@ namespace units {
  */
 class U_I18N_API ComplexUnitsConverter : public UMemory {
   public:
-      /**
-     * Constructor of `ComplexUnitsConverter`.
+    /**
+     * Constructs `ComplexUnitsConverter` for an `inputUnit` that could be Single, Compound or Mixed.
+     * In case of:
+     * 1- Single and Compound units,
+     * the conversion will not perform anything, the input will be equal to the output.
+     * 2- Mixed Unit
+     * the conversion will consider the input in the biggest unit. and will convert it to be spread throw
+     * the input units. For example: if input unit is "inch-and-foot", and the input is 2.5. The
+     * converter will consider the input value in "foot", because foot is the biggest unit. Then, it will
+     * convert 2.5 feet to "inch-and-foot".
      *
-     * TODO: illustrate ...
-     * @param inputUnit represents the source unit. (should be single or compound unit).
+     * @param inputUnit represents the input unit. could be any type. (single, compound or mixed).     *
      * @param status
      */
-    ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
-                          const ConversionRates &ratesInfo, UErrorCode &status);
+    ComplexUnitsConverter(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo,
+                          UErrorCode &status);
     /**
      * Constructor of `ComplexUnitsConverter`.
      * NOTE:
