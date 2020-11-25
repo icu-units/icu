@@ -69,14 +69,12 @@ void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit, const Convers
     auto descendingCompareUnits = [](const void *context, const void *left, const void *right) {
         UErrorCode status = U_ZERO_ERROR;
 
-        const auto *leftPointer =
-            static_cast<const std::pair<int32_t, MeasureUnitImpl *> *const *>(left);
-        const auto *rightPointer =
-            static_cast<const std::pair<int32_t, MeasureUnitImpl *> *const *>(right);
+        const auto *leftPointer = static_cast<const MeasureUnitImplWithIndex *const *>(left);
+        const auto *rightPointer = static_cast<const MeasureUnitImplWithIndex *const *>(right);
 
         // Return -ve the result because we are sorting in descending order.
-        return -1 * UnitConverter::compareTwoUnits(*((**leftPointer).second) /* left unit*/,       //
-                                                   *((**rightPointer).second) /* right unit */,    //
+        return -1 * UnitConverter::compareTwoUnits(*((**leftPointer).unitImpl) /* left unit*/,     //
+                                                   *((**rightPointer).unitImpl) /* right unit */,  //
                                                    *static_cast<const ConversionRates *>(context), //
                                                    status);
     };
@@ -106,11 +104,11 @@ void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit, const Convers
     //              3. then, the final result will be (6 feet and 6.74016 inches)
     for (int i = 0, n = units_.length(); i < n; i++) {
         if (i == 0) { // first element
-            unitConverters_.emplaceBackAndCheckErrorCode(status, inputUnit, *(units_[i]->second), ratesInfo,
-                                                         status);
+            unitConverters_.emplaceBackAndCheckErrorCode(status, inputUnit, *(units_[i]->unitImpl),
+                                                         ratesInfo, status);
         } else {
-            unitConverters_.emplaceBackAndCheckErrorCode(status, *(units_[i - 1]->second), *(units_[i]->second), ratesInfo,
-                                                         status);
+            unitConverters_.emplaceBackAndCheckErrorCode(status, *(units_[i - 1]->unitImpl),
+                                                         *(units_[i]->unitImpl), ratesInfo, status);
         }
 
         if (U_FAILURE(status)) {
@@ -217,9 +215,10 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
         if (i < n - 1) {
             Formattable formattableQuantity(intValues[i] * sign);
             // Measure takes ownership of the MeasureUnit*
-            MeasureUnit *type = new MeasureUnit(units_[i]->second->copy(status).build(status));
-            if (unordered_result.emplaceBackAndCheckErrorCode(status, std::make_pair(units_[i]->first,  Measure(formattableQuantity, type, status))) ==
-                nullptr) {
+            MeasureUnit *type = new MeasureUnit(units_[i]->unitImpl->copy(status).build(status));
+            if (unordered_result.emplaceBackAndCheckErrorCode(
+                    status, std::make_pair(units_[i]->index,
+                                           Measure(formattableQuantity, type, status))) == nullptr) {
                 // Ownership wasn't taken
                 U_ASSERT(U_FAILURE(status));
                 delete type;
@@ -231,9 +230,10 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
             // Add the last element, not an integer:
             Formattable formattableQuantity(quantity * sign);
             // Measure takes ownership of the MeasureUnit*
-            MeasureUnit *type = new MeasureUnit((units_[i])->second->copy(status).build(status));
-            if (unordered_result.emplaceBackAndCheckErrorCode(status, std::make_pair(units_[i]->first, Measure( formattableQuantity, type, status))) ==
-                nullptr) {
+            MeasureUnit *type = new MeasureUnit((units_[i])->unitImpl->copy(status).build(status));
+            if (unordered_result.emplaceBackAndCheckErrorCode(
+                    status, std::make_pair(units_[i]->index,
+                                           Measure(formattableQuantity, type, status))) == nullptr) {
                 // Ownership wasn't taken
                 U_ASSERT(U_FAILURE(status));
                 delete type;

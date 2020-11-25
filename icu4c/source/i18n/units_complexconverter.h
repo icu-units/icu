@@ -98,7 +98,7 @@ class U_I18N_API ComplexUnitsConverter : public UMemory {
 
     // Individual units of mixed units attached with there indices, sorted big to small according to the
     // units.
-    MaybeStackVector<std::pair<int32_t, const LocalPointer<MeasureUnitImpl>>> units_;
+    MaybeStackVector<MeasureUnitImplWithIndex> units_;
 
     void init(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo, UErrorCode &status);
 };

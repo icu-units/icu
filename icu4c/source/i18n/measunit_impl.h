@@ -18,6 +18,12 @@ U_NAMESPACE_BEGIN
 static const char16_t kDefaultCurrency[] = u"XXX";
 static const char kDefaultCurrency8[] = "XXX";
 
+struct U_I18N_API MeasureUnitImplWithIndex : public UMemory {
+    int32_t index;
+    LocalPointer<MeasureUnitImpl> unitImpl;
+    MeasureUnitImplWithIndex(int32_t index, MeasureUnitImpl *unitImpl)
+        : index(index), unitImpl(unitImpl) {}
+};
 
 /**
  * A struct representing a single unit (optional SI prefix and dimensionality).
@@ -142,7 +148,7 @@ struct U_I18N_API MeasureUnitImpl : public UMemory {
     MeasureUnitImpl &operator=(MeasureUnitImpl &&other) noexcept = default;
 
     /** Extract the MeasureUnitImpl from a MeasureUnit. */
-    static inline const MeasureUnitImpl* get(const MeasureUnit& measureUnit) {
+    static inline const MeasureUnitImpl *get(const MeasureUnit &measureUnit) {
         return measureUnit.fImpl;
     }
 
@@ -214,7 +220,7 @@ struct U_I18N_API MeasureUnitImpl : public UMemory {
      *          -   if the `MeasureUnitImpl` is `foot-and-inch` 
      *                  it will return a list of 2 { (0, `foot`), (1, `inch`)}
      */
-    MaybeStackVector<std::pair<int32_t, const LocalPointer< MeasureUnitImpl >>>
+    MaybeStackVector<MeasureUnitImplWithIndex>
     extractIndividualUnitsWithIndecies(UErrorCode &status) const;
 
     /** Mutates this MeasureUnitImpl to take the reciprocal. */

@@ -2,11 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.impl.units;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
 import com.ibm.icu.impl.Pair;
 import com.ibm.icu.util.BytesTrie;
 import com.ibm.icu.util.CharsTrie;
@@ -15,18 +10,21 @@ import com.ibm.icu.util.ICUCloneNotSupportedException;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.StringTrieBuilder;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
 public class MeasureUnitImpl {
 
     /**
      * The full unit identifier.  Null if not computed.
      */
     private String identifier = null;
-
     /**
      * The complexity, either SINGLE, COMPOUND, or MIXED.
      */
     private MeasureUnit.Complexity complexity = MeasureUnit.Complexity.SINGLE;
-
     /**
      * The list of simple units. These may be summed or multiplied, based on the
      * value of the complexity field.
@@ -121,21 +119,21 @@ public class MeasureUnitImpl {
         return result;
     }
 
-    public ArrayList<Pair<Integer, MeasureUnitImpl>> extractIndividualUnitsWithIndices() {
-            ArrayList<Pair<Integer, MeasureUnitImpl>> result = new ArrayList<>();
-            if (this.getComplexity() == MeasureUnit.Complexity.MIXED) {
+    public ArrayList<MeasureUnitImplWithIndex> extractIndividualUnitsWithIndices() {
+        ArrayList<MeasureUnitImplWithIndex> result = new ArrayList<>();
+        if (this.getComplexity() == MeasureUnit.Complexity.MIXED) {
             // In case of mixed units, each single unit can be considered as a stand alone MeasureUnitImpl.
-                Integer i = 0;
-                for (SingleUnitImpl singleUnit :
+            int i = 0;
+            for (SingleUnitImpl singleUnit :
                     this.getSingleUnits()) {
-                result.add(Pair.of( i++,  new MeasureUnitImpl(singleUnit)));
+                result.add(new MeasureUnitImplWithIndex(i++, new MeasureUnitImpl(singleUnit)));
             }
 
             return result;
         }
 
-            result.add(Pair.of(0, this.copy()));
-            return  result;
+        result.add(new MeasureUnitImplWithIndex(0, this.copy()));
+        return result;
     }
 
     /**
@@ -217,7 +215,6 @@ public class MeasureUnitImpl {
         throw new UnsupportedOperationException();
     }
 
-
     /**
      * Returns the CLDR unit identifier and null if not computed.
      */
@@ -282,6 +279,11 @@ public class MeasureUnitImpl {
         }
 
         this.identifier = result.toString();
+    }
+
+    @Override
+    public String toString() {
+        return "MeasureUnitImpl [" + build().getIdentifier() + "]";
     }
 
     public enum CompoundPart {
@@ -385,6 +387,16 @@ public class MeasureUnitImpl {
             return index;
         }
 
+    }
+
+    public static class MeasureUnitImplWithIndex {
+        int index;
+        MeasureUnitImpl unitImpl;
+
+        MeasureUnitImplWithIndex(int index, MeasureUnitImpl unitImpl) {
+            this.index = index;
+            this.unitImpl = unitImpl;
+        }
     }
 
     public static class UnitsParser {
@@ -779,7 +791,7 @@ public class MeasureUnitImpl {
         }
     }
 
-    static class MeasureUnitImplWithIndexComparator implements Comparator<Pair<Integer, MeasureUnitImpl>> {
+    static class MeasureUnitImplWithIndexComparator implements Comparator<MeasureUnitImplWithIndex> {
         private MeasureUnitImplComparator measureUnitImplComparator;
 
         public MeasureUnitImplWithIndexComparator(ConversionRates conversionRates) {
@@ -787,8 +799,8 @@ public class MeasureUnitImpl {
         }
 
         @Override
-        public int compare(Pair<Integer, MeasureUnitImpl> o1, Pair<Integer, MeasureUnitImpl> o2) {
-            return this.measureUnitImplComparator.compare(o1.second, o2.second);
+        public int compare(MeasureUnitImplWithIndex o1, MeasureUnitImplWithIndex o2) {
+            return this.measureUnitImplComparator.compare(o1.unitImpl, o2.unitImpl);
         }
     }
 
@@ -797,10 +809,5 @@ public class MeasureUnitImpl {
         public int compare(SingleUnitImpl o1, SingleUnitImpl o2) {
             return o1.compareTo(o2);
         }
-    }
-
-    @Override
-    public String toString() {
-        return "MeasureUnitImpl [" + build().getIdentifier() + "]";
     }
 }

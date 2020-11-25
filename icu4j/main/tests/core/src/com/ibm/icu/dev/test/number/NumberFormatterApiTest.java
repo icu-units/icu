@@ -726,22 +726,6 @@ public class NumberFormatterApiTest extends TestFmwk {
                 4.28571,
                 "4 metric tons, 285 kilograms, 710 grams");
 
-//     // TODO(icu-units#73): deal with this "1 foot 12 inches" problem.
-//     // At the time of writing, this test would pass, but is commented out
-//     // because it reflects undesired behaviour:
-//     assertFormatSingle(
-//             u"Demonstrating the \"1 foot 12 inches\" problem",
-//             nullptr,
-//             u"unit/foot-and-inch",
-//             NumberFormatter::with()
-//                 .unit(MeasureUnit::forIdentifier("foot-and-inch"))
-//                 .precision(Precision::maxSignificantDigits(4))
-//                 .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME),
-//             Locale("en-US"),
-//             1.9999,
-//             // This is undesireable but current behaviour:
-//             u"1 foot, 12 inches");
-
         assertFormatSingle(
                 "Mixed Unit (Not Sorted)",
                 null,

@@ -2,7 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.impl.units;
 
-import com.ibm.icu.impl.Pair;
 import com.ibm.icu.impl.number.DecimalQuantity;
 import com.ibm.icu.impl.number.DecimalQuantity_DualStorageBCD;
 import com.ibm.icu.number.Precision;
@@ -28,7 +27,7 @@ public class ComplexUnitsConverter {
     public static final BigDecimal EPSILON_MULTIPLIER = BigDecimal.valueOf(1).add(EPSILON);
     private ArrayList<UnitConverter> unitConverters_;
     // Individual units of mixed units, sorted big to small
-    private List<Pair<Integer, MeasureUnitImpl>> units_;
+    private List< MeasureUnitImpl.MeasureUnitImplWithIndex> units_;
     private MeasureUnitImpl inputUnit_;
 
     /**
@@ -49,12 +48,12 @@ public class ComplexUnitsConverter {
         assert (!this.units_.isEmpty());
 
         // Assign the biggest unit to inputUnit_.
-        this.inputUnit_ = this.units_.get(0).second;
+        this.inputUnit_ = this.units_.get(0).unitImpl;
         MeasureUnitImpl.MeasureUnitImplComparator comparator = new MeasureUnitImpl.MeasureUnitImplComparator(conversionRates);
-        for (Pair<Integer, MeasureUnitImpl> unitWithIndex:
+        for (MeasureUnitImpl.MeasureUnitImplWithIndex unitWithIndex:
              this.units_) {
-            if (comparator.compare(unitWithIndex.second, this.inputUnit_) > 0) {
-                this.inputUnit_ = unitWithIndex.second;
+            if (comparator.compare(unitWithIndex.unitImpl, this.inputUnit_) > 0) {
+                this.inputUnit_ = unitWithIndex.unitImpl;
             }
         }
 
@@ -102,9 +101,9 @@ public class ComplexUnitsConverter {
         unitConverters_ = new ArrayList<>();
         for (int i = 0, n = units_.size(); i < n; i++) {
             if (i == 0) { // first element
-                unitConverters_.add(new UnitConverter(this.inputUnit_, units_.get(i).second, conversionRates));
+                unitConverters_.add(new UnitConverter(this.inputUnit_, units_.get(i).unitImpl, conversionRates));
             } else {
-                unitConverters_.add(new UnitConverter(units_.get(i - 1).second, units_.get(i).second, conversionRates));
+                unitConverters_.add(new UnitConverter(units_.get(i - 1).unitImpl, units_.get(i).unitImpl, conversionRates));
             }
         }
     }
@@ -218,9 +217,9 @@ public class ComplexUnitsConverter {
         // Package values into Measure instances in result:
         for (int i = 0, n = unitConverters_.size(); i < n; ++i) {
             if (i < n - 1) {
-                result.set(units_.get(i).first, new Measure(intValues.get(i).multiply(sign), units_.get(i).second.build()));
+                result.set(units_.get(i).index, new Measure(intValues.get(i).multiply(sign), units_.get(i).unitImpl.build()));
             } else {
-                result.set(units_.get(i).first, new Measure(quantity.multiply(sign), units_.get(i).second.build()));
+                result.set(units_.get(i).index, new Measure(quantity.multiply(sign), units_.get(i).unitImpl.build()));
             }
         }
 
