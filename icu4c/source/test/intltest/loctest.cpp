@@ -4154,7 +4154,7 @@ LocaleTest::TestSetKeywordValue(void) {
         { "calendar", "buddhist" }
     };
 
-    UErrorCode status = U_ZERO_ERROR;
+    IcuTestErrorCode status(*this, "TestSetKeywordValue()");
 
     int32_t i = 0;
     int32_t resultLen = 0;
@@ -4175,6 +4175,24 @@ LocaleTest::TestSetKeywordValue(void) {
             err("Expected to extract \"%s\" for keyword \"%s\". Got \"%s\" instead\n",
                 testCases[i].value, testCases[i].keyword, buffer);
         }
+    }
+
+    // Test long locale
+    {
+        status.errIfFailureAndReset();
+        const char* input =
+            "de__POSIX@colnormalization=no;colstrength=primary;currency=eur;"
+            "em=default;kv=space;lb=strict;lw=normal;measure=metric;"
+            "numbers=latn;rg=atzzzz;sd=atat1";
+        const char* expected =
+            "de__POSIX@colnormalization=no;colstrength=primary;currency=eur;"
+            "em=default;kv=space;lb=strict;lw=normal;measure=metric;"
+            "numbers=latn;rg=atzzzz;sd=atat1;ss=none";
+        // Bug ICU-21385
+        Locale l2(input);
+        l2.setKeywordValue("ss", "none", status);
+        assertEquals("", expected, l2.getName());
+        status.errIfFailureAndReset();
     }
 }
 
@@ -4894,6 +4912,28 @@ void LocaleTest::TestCanonicalize(void)
         { "ja-Latn-hepburn-heploc", "ja-Latn-alalc97"},
 
         { "aaa-Fooo-SU", "aaa-Fooo-RU"},
+
+        // ICU-21344
+        { "ku-Arab-NT", "ku-Arab-IQ"},
+
+        // ICU-21402
+        { "und-u-rg-no23", "und-u-rg-no50"},
+        { "und-u-rg-cn11", "und-u-rg-cnbj"},
+        { "und-u-rg-cz10a", "und-u-rg-cz110"},
+        { "und-u-rg-fra", "und-u-rg-frges"},
+        { "und-u-rg-frg", "und-u-rg-frges"},
+        { "und-u-rg-lud", "und-u-rg-lucl"},
+
+        { "und-NO-u-sd-no23", "und-NO-u-sd-no50"},
+        { "und-CN-u-sd-cn11", "und-CN-u-sd-cnbj"},
+        { "und-CZ-u-sd-cz10a", "und-CZ-u-sd-cz110"},
+        { "und-FR-u-sd-fra", "und-FR-u-sd-frges"},
+        { "und-FR-u-sd-frg", "und-FR-u-sd-frges"},
+        { "und-LU-u-sd-lud", "und-LU-u-sd-lucl"},
+
+        // ICU-21401
+        { "cel-gaulish", "xtg"},
+
     };
     int32_t i;
     for (i=0; i < UPRV_LENGTHOF(testCases); i++) {
