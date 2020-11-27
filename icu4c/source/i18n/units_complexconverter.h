@@ -33,6 +33,7 @@ template class U_I18N_API MaybeStackVector<MeasureUnitImpl, 8>;
 template class U_I18N_API MaybeStackArray<MeasureUnit*, 8>;
 template class U_I18N_API MemoryPool<MeasureUnit, 8>;
 template class U_I18N_API MaybeStackVector<MeasureUnit, 8>;
+template class U_I18N_API LocalPointer<MeasureUnitImpl>;
 #endif
 
 namespace units {
