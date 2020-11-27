@@ -80,19 +80,19 @@ public class ComplexUnitsConverter {
                 Collections.reverseOrder(new MeasureUnitImpl.MeasureUnitImplWithIndexComparator(conversionRates)));
 
         // If the `outputUnits` is `UMEASURE_UNIT_MIXED` such as `foot+inch`. Thus means there is more than one unit
-        // and In this case we need more converters to convert from the `inputUnit` to the first unit in the
-        // `outputUnits`. Then, a converter from the first unit in the `outputUnits` to the second unit and so on.
-        // For Example:
-        // - inputUnit is `meter`
-        // - outputUnits is `foot+inch`
-        // - Therefore, we need to have two converters:
-        // 1. a converter from `meter` to `foot`
-        // 2. a converter from `foot` to `inch`
-        // - Therefore, if the input is `2 meter`:
-        // 1. convert `meter` to `foot` --> 2 meter to 6.56168 feet
-        // 2. convert the residual of 6.56168 feet (0.56168) to inches, which will be (6.74016
-        // inches)
-        // 3. then, the final result will be (6 feet and 6.74016 inches)
+        //  and In this case we need more converters to convert from the `inputUnit` to the first unit in the
+        //  `outputUnits`. Then, a converter from the first unit in the `outputUnits` to the second unit and so on.
+        //      For Example:
+        //          - inputUnit is `meter`
+        //          - outputUnits is `foot+inch`
+        //              - Therefore, we need to have two converters:
+        //                      1. a converter from `meter` to `foot`
+        //                      2. a converter from `foot` to `inch`
+        //          - Therefore, if the input is `2 meter`:
+        //              1. convert `meter` to `foot` --> 2 meter to 6.56168 feet
+        //              2. convert the residual of 6.56168 feet (0.56168) to inches, which will be (6.74016
+        //              inches)
+        //              3. then, the final result will be (6 feet and 6.74016 inches)
         unitConverters_ = new ArrayList<>();
         for (int i = 0, n = units_.size(); i < n; i++) {
             if (i == 0) { // first element
