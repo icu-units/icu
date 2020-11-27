@@ -170,12 +170,12 @@ void UsagePrefsHandler::processQuantity(DecimalQuantity &quantity, MicroProps &m
     mixedMeasuresToMicros(routedMeasures, &quantity, &micros, status);
 }
 
-UnitConversionHandler::UnitConversionHandler(const MeasureUnit &inputUnit,
+UnitConversionHandler::UnitConversionHandler(const MeasureUnit &targetUnit,
                                              const MicroPropsGenerator *parent, UErrorCode &status)
-    : fOutputUnit(inputUnit), fParent(parent) {
+    : fOutputUnit(targetUnit), fParent(parent) {
     MeasureUnitImpl tempInput, tempOutput;
     const MeasureUnitImpl &inputUnitImpl =
-        MeasureUnitImpl::forMeasureUnit(inputUnit, tempOutput, status);
+        MeasureUnitImpl::forMeasureUnit(targetUnit, tempOutput, status);
 
     // TODO: this should become an initOnce thing? Review with other
     // ConversionRates usages.

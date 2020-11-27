@@ -21,15 +21,15 @@
 
 U_NAMESPACE_BEGIN
 namespace units {
-ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
+ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
                                              const ConversionRates &ratesInfo, UErrorCode &status)
-    : units_(inputUnit.extractIndividualUnitsWithIndecies(status)) {
+    : units_(targetUnit.extractIndividualUnitsWithIndecies(status)) {
     if (U_FAILURE(status)) {
         return;
     }
     U_ASSERT(units_.length() != 0);
 
-    auto singleUnits = inputUnit.extractIndividualUnits(status);
+    auto singleUnits = targetUnit.extractIndividualUnits(status);
     if (U_FAILURE(status)) {
         return;
     }
@@ -49,7 +49,7 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
     this->init(*biggestUnit, ratesInfo, status);
 }
 
-ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
+ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
                                              const MeasureUnitImpl &outputUnits,
                                              const ConversionRates &ratesInfo, UErrorCode &status)
     : units_(outputUnits.extractIndividualUnitsWithIndecies(status)) {
@@ -59,7 +59,7 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
 
     U_ASSERT(units_.length() != 0);
 
-    this->init(inputUnit, ratesInfo, status);
+    this->init(targetUnit, ratesInfo, status);
 }
 
 void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo,
@@ -69,14 +69,12 @@ void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit, const Convers
     auto descendingCompareUnits = [](const void *context, const void *left, const void *right) {
         UErrorCode status = U_ZERO_ERROR;
 
-        const auto *leftPointer =
-            static_cast<const std::pair<int32_t, MeasureUnitImpl *> *const *>(left);
-        const auto *rightPointer =
-            static_cast<const std::pair<int32_t, MeasureUnitImpl *> *const *>(right);
+        const auto *leftPointer = static_cast<const MeasureUnitImplWithIndex *const *>(left);
+        const auto *rightPointer = static_cast<const MeasureUnitImplWithIndex *const *>(right);
 
         // Return -ve the result because we are sorting in descending order.
-        return -1 * UnitConverter::compareTwoUnits(*((**leftPointer).second) /* left unit*/,       //
-                                                   *((**rightPointer).second) /* right unit */,    //
+        return -1 * UnitConverter::compareTwoUnits(*((**leftPointer).unitImpl) /* left unit*/,     //
+                                                   *((**rightPointer).unitImpl) /* right unit */,  //
                                                    *static_cast<const ConversionRates *>(context), //
                                                    status);
     };
@@ -106,11 +104,11 @@ void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit, const Convers
     //              3. then, the final result will be (6 feet and 6.74016 inches)
     for (int i = 0, n = units_.length(); i < n; i++) {
         if (i == 0) { // first element
-            unitConverters_.emplaceBackAndCheckErrorCode(status, inputUnit, *(units_[i]->second), ratesInfo,
-                                                         status);
+            unitConverters_.emplaceBackAndCheckErrorCode(status, inputUnit, *(units_[i]->unitImpl),
+                                                         ratesInfo, status);
         } else {
-            unitConverters_.emplaceBackAndCheckErrorCode(status, *(units_[i - 1]->second), *(units_[i]->second), ratesInfo,
-                                                         status);
+            unitConverters_.emplaceBackAndCheckErrorCode(status, *(units_[i - 1]->unitImpl),
+                                                         *(units_[i]->unitImpl), ratesInfo, status);
         }
 
         if (U_FAILURE(status)) {
@@ -152,24 +150,20 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
     for (int i = 0, n = unitConverters_.length(); i < n; ++i) {
         quantity = (*unitConverters_[i]).convert(quantity);
         if (i < n - 1) {
-            // The double type has 15 decimal digits of precision. For choosing
-            // whether to use the current unit or the next smaller unit, we
-            // therefore nudge up the number with which the thresholding
-            // decision is made. However after the thresholding, we use the
-            // original values to ensure unbiased accuracy (to the extent of
-            // double's capabilities).
-            int64_t roundedQuantity = floor(quantity * (1 + DBL_EPSILON));
-            intValues[i] = roundedQuantity;
+            // If quantity is at the limits of double's precision from an
+            // integer value, we take that integer value.
+            int64_t flooredQuantity = floor(quantity * (1 + DBL_EPSILON));
+            intValues[i] = flooredQuantity;
 
             // Keep the residual of the quantity.
             //   For example: `3.6 feet`, keep only `0.6 feet`
-            //
-            // When the calculation is near enough +/- DBL_EPSILON, we round to
-            // zero. (We also ensure no negative values here.)
-            if ((quantity - roundedQuantity) / quantity < DBL_EPSILON) {
+            double remainder = quantity - flooredQuantity;
+            if (remainder < 0) {
+                // Because we nudged flooredQuantity up by eps, remainder may be
+                // negative: we must treat such a remainder as zero.
                 quantity = 0;
             } else {
-                quantity -= roundedQuantity;
+                quantity = remainder;
             }
         } else { // LAST ELEMENT
             if (rounder == nullptr) {
@@ -211,15 +205,21 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
         }
     }
 
+    struct MeasureWithIndex {
+        const int32_t index;
+        const Measure measure;
+        MeasureWithIndex(int32_t index,const Measure &measure) : index(index), measure(measure) {}
+    };
+
     // Package values into Measure instances in unordered_result:
-    MaybeStackVector<std::pair<int32_t, Measure> > unordered_result;
+    MaybeStackVector<MeasureWithIndex> unordered_result;
     for (int i = 0, n = units_.length(); i < n; ++i) {
         if (i < n - 1) {
             Formattable formattableQuantity(intValues[i] * sign);
             // Measure takes ownership of the MeasureUnit*
-            MeasureUnit *type = new MeasureUnit(units_[i]->second->copy(status).build(status));
-            if (unordered_result.emplaceBackAndCheckErrorCode(status, std::make_pair(units_[i]->first,  Measure(formattableQuantity, type, status))) ==
-                nullptr) {
+            MeasureUnit *type = new MeasureUnit(units_[i]->unitImpl->copy(status).build(status));
+            if (unordered_result.emplaceBackAndCheckErrorCode(
+                    status, units_[i]->index, Measure(formattableQuantity, type, status)) == nullptr) {
                 // Ownership wasn't taken
                 U_ASSERT(U_FAILURE(status));
                 delete type;
@@ -231,9 +231,9 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
             // Add the last element, not an integer:
             Formattable formattableQuantity(quantity * sign);
             // Measure takes ownership of the MeasureUnit*
-            MeasureUnit *type = new MeasureUnit((units_[i])->second->copy(status).build(status));
-            if (unordered_result.emplaceBackAndCheckErrorCode(status, std::make_pair(units_[i]->first, Measure( formattableQuantity, type, status))) ==
-                nullptr) {
+            MeasureUnit *type = new MeasureUnit((units_[i])->unitImpl->copy(status).build(status));
+            if (unordered_result.emplaceBackAndCheckErrorCode(
+                    status, units_[i]->index, Measure(formattableQuantity, type, status)) == nullptr) {
                 // Ownership wasn't taken
                 U_ASSERT(U_FAILURE(status));
                 delete type;
@@ -249,14 +249,17 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
     // Sort the unordered_result
     
     // NOTE:
-    //  This comparator is used to sort the units in ascending order according to their indices. 
+    //  This comparator is used to sort the units in ascending order according to their indices.
     auto ascendingOrderByIndexComparator = [](const void *, const void *left, const void *right) {
-        const auto *leftPointer = static_cast<const std::pair<int32_t, MeasureUnitImpl> *const *>(left);
-        const auto *rightPointer = static_cast<const std::pair<int32_t, MeasureUnitImpl> *const *>(right);
+        const auto *leftPointer = static_cast<const MeasureWithIndex *const *>(left);
+        const auto *rightPointer = static_cast<const MeasureWithIndex *const *>(right);
 
-       int32_t diff = (*leftPointer)->first -(*rightPointer)->first;
-       if (diff == 0) { return 0;}
-       return diff > 0? 1 : -1;
+         int32_t diff = (*leftPointer)->index -  (*rightPointer)->index;
+         if (diff == 0) {
+           
+            return 0;
+        }
+        return diff > 0 ? 1 : -1;
     };
 
     uprv_sortArray(unordered_result.getAlias(),     //
@@ -269,7 +272,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
     );
 
     for(int32_t i = 0, n = unordered_result.length(); i < n; ++i) {
-        result.emplaceBackAndCheckErrorCode(status, std::move( unordered_result[i]->second));
+        result.emplaceBackAndCheckErrorCode(status, std::move(unordered_result[i]->measure));
         if(U_FAILURE(status)) {
             return result;
         }

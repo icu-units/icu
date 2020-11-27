@@ -49,7 +49,7 @@ namespace units {
 class U_I18N_API ComplexUnitsConverter : public UMemory {
   public:
     /**
-     * Constructs `ComplexUnitsConverter` for an `inputUnit` that could be Single, Compound or Mixed.
+     * Constructs `ComplexUnitsConverter` for an `targetUnit` that could be Single, Compound or Mixed.
      * In case of:
      * 1- Single and Compound units,
      * the conversion will not perform anything, the input will be equal to the output.
@@ -59,22 +59,22 @@ class U_I18N_API ComplexUnitsConverter : public UMemory {
      * converter will consider the input value in "foot", because foot is the biggest unit. Then, it will
      * convert 2.5 feet to "inch-and-foot".
      *
-     * @param inputUnit represents the input unit. could be any type. (single, compound or mixed).     *
+     * @param targetUnit represents the input unit. could be any type. (single, compound or mixed).     *
      * @param status
      */
-    ComplexUnitsConverter(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo,
+    ComplexUnitsConverter(const MeasureUnitImpl &targetUnit, const ConversionRates &ratesInfo,
                           UErrorCode &status);
     /**
      * Constructor of `ComplexUnitsConverter`.
      * NOTE:
-     *   - inputUnit and outputUnits must be under the same category
+     *   - targetUnit and outputUnits must be under the same category
      *      - e.g. meter to feet and inches --> all of them are length units.
      *
-     * @param inputUnit represents the source unit. (should be single or compound unit).
+     * @param targetUnit represents the source unit. (should be single or compound unit).
      * @param outputUnits represents the output unit. could be any type. (single, compound or mixed).
      * @param status
      */
-    ComplexUnitsConverter(const MeasureUnitImpl &inputUnit, const MeasureUnitImpl &outputUnits,
+    ComplexUnitsConverter(const MeasureUnitImpl &targetUnit, const MeasureUnitImpl &outputUnits,
                           const ConversionRates &ratesInfo, UErrorCode &status);
 
     // Returns true if the specified `quantity` of the `inputUnit`, expressed in terms of the biggest
@@ -98,7 +98,7 @@ class U_I18N_API ComplexUnitsConverter : public UMemory {
 
     // Individual units of mixed units attached with there indices, sorted big to small according to the
     // units.
-    MaybeStackVector<std::pair<int32_t, const LocalPointer<MeasureUnitImpl>>> units_;
+    MaybeStackVector<MeasureUnitImplWithIndex> units_;
 
     void init(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo, UErrorCode &status);
 };

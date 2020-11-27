@@ -2,6 +2,22 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.dev.test.number;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.FieldPosition;
+import java.text.Format;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import com.ibm.icu.dev.test.TestFmwk;
 import com.ibm.icu.dev.test.format.FormattedValueTest;
 import com.ibm.icu.dev.test.serializable.SerializableTestUtility;
@@ -39,21 +55,6 @@ import com.ibm.icu.util.Measure;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.NoUnit;
 import com.ibm.icu.util.ULocale;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.FieldPosition;
-import java.text.Format;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 public class NumberFormatterApiTest extends TestFmwk {
 
@@ -725,22 +726,6 @@ public class NumberFormatterApiTest extends TestFmwk {
                 new ULocale("en-US"),
                 4.28571,
                 "4 metric tons, 285 kilograms, 710 grams");
-
-//     // TODO(icu-units#73): deal with this "1 foot 12 inches" problem.
-//     // At the time of writing, this test would pass, but is commented out
-//     // because it reflects undesired behaviour:
-//     assertFormatSingle(
-//             u"Demonstrating the \"1 foot 12 inches\" problem",
-//             nullptr,
-//             u"unit/foot-and-inch",
-//             NumberFormatter::with()
-//                 .unit(MeasureUnit::forIdentifier("foot-and-inch"))
-//                 .precision(Precision::maxSignificantDigits(4))
-//                 .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME),
-//             Locale("en-US"),
-//             1.9999,
-//             // This is undesireable but current behaviour:
-//             u"1 foot, 12 inches");
 
         assertFormatSingle(
                 "Mixed Unit (Not Sorted)",

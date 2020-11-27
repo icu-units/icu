@@ -129,7 +129,6 @@ static const char* const LEGACY[] = {
     // Legacy tags with no preferred value in the IANA
     // registry. Kept for now for the backward compatibility
     // because ICU has mapped them this way.
-    "cel-gaulish",  "xtg-x-cel-gaulish",
     "i-default",    "en-x-i-default",
     "i-enochian",   "und-x-i-enochian",
     "i-mingo",      "see-x-i-mingo",
@@ -671,9 +670,13 @@ _isTransformedExtensionSubtag(int32_t& state, const char* s, int32_t len)
     const int32_t kGotTKey = -1;    // Got tkey, wait for tvalue. ERROR if stop here.
     const int32_t kGotTValue = 6;   // Got tvalue, wait for tkey, tvalue or end
 
+
+    if (len < 0) {
+        len = (int32_t)uprv_strlen(s);
+    }
     switch (state) {
         case kStart:
-            if (ultag_isLanguageSubtag(s, len)) {
+            if (ultag_isLanguageSubtag(s, len) && len != 4) {
                 state = kGotLanguage;
                 return TRUE;
             }
