@@ -19,8 +19,8 @@ static const char16_t kDefaultCurrency[] = u"XXX";
 static const char kDefaultCurrency8[] = "XXX";
 
 struct U_I18N_API MeasureUnitImplWithIndex : public UMemory {
-    int32_t index;
-    LocalPointer<MeasureUnitImpl> unitImpl;
+    const int32_t index;
+    const LocalPointer<MeasureUnitImpl> unitImpl;
     MeasureUnitImplWithIndex(int32_t index, MeasureUnitImpl *unitImpl)
         : index(index), unitImpl(unitImpl) {}
 };

@@ -205,16 +205,21 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
         }
     }
 
+    struct MeasureWithIndex {
+        const int32_t index;
+        const Measure measure;
+        MeasureWithIndex(int32_t index,const Measure &measure) : index(index), measure(measure) {}
+    };
+
     // Package values into Measure instances in unordered_result:
-    MaybeStackVector<std::pair<int32_t, Measure> > unordered_result;
+    MaybeStackVector<MeasureWithIndex> unordered_result;
     for (int i = 0, n = units_.length(); i < n; ++i) {
         if (i < n - 1) {
             Formattable formattableQuantity(intValues[i] * sign);
             // Measure takes ownership of the MeasureUnit*
             MeasureUnit *type = new MeasureUnit(units_[i]->unitImpl->copy(status).build(status));
             if (unordered_result.emplaceBackAndCheckErrorCode(
-                    status, std::make_pair(units_[i]->index,
-                                           Measure(formattableQuantity, type, status))) == nullptr) {
+                    status, units_[i]->index, Measure(formattableQuantity, type, status)) == nullptr) {
                 // Ownership wasn't taken
                 U_ASSERT(U_FAILURE(status));
                 delete type;
@@ -228,8 +233,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
             // Measure takes ownership of the MeasureUnit*
             MeasureUnit *type = new MeasureUnit((units_[i])->unitImpl->copy(status).build(status));
             if (unordered_result.emplaceBackAndCheckErrorCode(
-                    status, std::make_pair(units_[i]->index,
-                                           Measure(formattableQuantity, type, status))) == nullptr) {
+                    status, units_[i]->index, Measure(formattableQuantity, type, status)) == nullptr) {
                 // Ownership wasn't taken
                 U_ASSERT(U_FAILURE(status));
                 delete type;
@@ -245,14 +249,17 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
     // Sort the unordered_result
     
     // NOTE:
-    //  This comparator is used to sort the units in ascending order according to their indices. 
+    //  This comparator is used to sort the units in ascending order according to their indices.
     auto ascendingOrderByIndexComparator = [](const void *, const void *left, const void *right) {
-        const auto *leftPointer = static_cast<const std::pair<int32_t, MeasureUnitImpl> *const *>(left);
-        const auto *rightPointer = static_cast<const std::pair<int32_t, MeasureUnitImpl> *const *>(right);
+        const auto *leftPointer = static_cast<const MeasureWithIndex *const *>(left);
+        const auto *rightPointer = static_cast<const MeasureWithIndex *const *>(right);
 
-       int32_t diff = (*leftPointer)->first -(*rightPointer)->first;
-       if (diff == 0) { return 0;}
-       return diff > 0? 1 : -1;
+         int32_t diff = (*leftPointer)->index -  (*rightPointer)->index;
+         if (diff == 0) {
+           
+            return 0;
+        }
+        return diff > 0 ? 1 : -1;
     };
 
     uprv_sortArray(unordered_result.getAlias(),     //
@@ -265,7 +272,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
     );
 
     for(int32_t i = 0, n = unordered_result.length(); i < n; ++i) {
-        result.emplaceBackAndCheckErrorCode(status, std::move( unordered_result[i]->second));
+        result.emplaceBackAndCheckErrorCode(status, std::move(unordered_result[i]->measure));
         if(U_FAILURE(status)) {
             return result;
         }
