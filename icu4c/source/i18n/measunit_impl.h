@@ -16,6 +16,7 @@ U_NAMESPACE_BEGIN
 
 #if U_PF_WINDOWS <= U_PLATFORM && U_PLATFORM <= U_PF_CYGWIN
 template class U_I18N_API LocalPointer<MeasureUnitImpl>;
+template class U_I18N_API LocalPointerBase<MeasureUnitImpl>;
 #endif
 
 static const char16_t kDefaultCurrency[] = u"XXX";
