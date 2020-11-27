@@ -2,7 +2,11 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.impl.units;
 
-import com.ibm.icu.impl.Pair;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
 import com.ibm.icu.util.BytesTrie;
 import com.ibm.icu.util.CharsTrie;
 import com.ibm.icu.util.CharsTrieBuilder;
@@ -10,15 +14,10 @@ import com.ibm.icu.util.ICUCloneNotSupportedException;
 import com.ibm.icu.util.MeasureUnit;
 import com.ibm.icu.util.StringTrieBuilder;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
 public class MeasureUnitImpl {
 
     /**
-     * The full unit identifier.  Null if not computed.
+     * The full unit identifier. Null if not computed.
      */
     private String identifier = null;
     /**
@@ -26,11 +25,9 @@ public class MeasureUnitImpl {
      */
     private MeasureUnit.Complexity complexity = MeasureUnit.Complexity.SINGLE;
     /**
-     * The list of simple units. These may be summed or multiplied, based on the
-     * value of the complexity field.
+     * The list of simple units. These may be summed or multiplied, based on the value of the complexity field.
      * <p>
-     * The "dimensionless" unit (SingleUnitImpl default constructor) must not be
-     * added to this list.
+     * The "dimensionless" unit (SingleUnitImpl default constructor) must not be added to this list.
      * <p>
      * The "dimensionless" <code>MeasureUnitImpl</code> has an empty <code>singleUnits</code>.
      */

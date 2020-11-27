@@ -2,56 +2,52 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 package com.ibm.icu.impl.units;
 
-import com.ibm.icu.impl.number.DecimalQuantity;
-import com.ibm.icu.impl.number.DecimalQuantity_DualStorageBCD;
-import com.ibm.icu.number.Precision;
-import com.ibm.icu.util.Measure;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.ibm.icu.impl.number.DecimalQuantity;
+import com.ibm.icu.impl.number.DecimalQuantity_DualStorageBCD;
+import com.ibm.icu.number.Precision;
+import com.ibm.icu.util.Measure;
+
 /**
- * Converts from single or compound unit to single, compound or mixed units.
- * For example, from `meter` to `foot+inch`.
+ * Converts from single or compound unit to single, compound or mixed units. For example, from `meter` to `foot+inch`.
  * <p>
- * DESIGN:
- * This class uses `UnitConverter` in order to perform the single converter (i.e. converters from a
- * single unit to another single unit). Therefore, `ComplexUnitsConverter` class contains multiple
- * instances of the `UnitConverter` to perform the conversion.
+ * DESIGN: This class uses `UnitConverter` in order to perform the single converter (i.e. converters from a single unit
+ * to another single unit). Therefore, `ComplexUnitsConverter` class contains multiple instances of the `UnitConverter`
+ * to perform the conversion.
  */
 public class ComplexUnitsConverter {
     public static final BigDecimal EPSILON = BigDecimal.valueOf(Math.ulp(1.0));
     public static final BigDecimal EPSILON_MULTIPLIER = BigDecimal.valueOf(1).add(EPSILON);
     private ArrayList<UnitConverter> unitConverters_;
     // Individual units of mixed units, sorted big to small
-    private List< MeasureUnitImpl.MeasureUnitImplWithIndex> units_;
+    private List<MeasureUnitImpl.MeasureUnitImplWithIndex> units_;
     private MeasureUnitImpl inputUnit_;
 
     /**
-     * Constructs <code>ComplexUnitsConverter</code> for an <code>inputUnit</code> that could be Single, Compound or Mixed.
-     * In case of:
-     * 1- Single and Compound units,
-     * the conversion will not perform anything, the input will be equal to the output.
-     * 2- Mixed Unit
-     * the conversion will consider the input in the biggest unit. and will convert it to be spread throw
-     * the input units. For example: if input unit is "inch-and-foot", and the input is 2.5. The converter
-     * will consider the input value in "foot", because foot is the biggest unit. Then, it will convert
-     * 2.5 feet to "inch-and-foot".
+     * Constructs <code>ComplexUnitsConverter</code> for an <code>inputUnit</code> that could be Single, Compound or
+     * Mixed. In case of: 1- Single and Compound units, the conversion will not perform anything, the input will be
+     * equal to the output. 2- Mixed Unit the conversion will consider the input in the biggest unit. and will convert
+     * it to be spread throw the input units. For example: if input unit is "inch-and-foot", and the input is 2.5. The
+     * converter will consider the input value in "foot", because foot is the biggest unit. Then, it will convert 2.5
+     * feet to "inch-and-foot".
      *
-     * @param inputUnit represents the input unit. could be any type. (single, compound or mixed).
+     * @param targetUnit
+     *            represents the input unit. could be any type. (single, compound or mixed).
      */
-    public ComplexUnitsConverter(MeasureUnitImpl inputUnit, ConversionRates conversionRates) {
-        this.units_ = inputUnit.extractIndividualUnitsWithIndices();
+    public ComplexUnitsConverter(MeasureUnitImpl targetUnit, ConversionRates conversionRates) {
+        this.units_ = targetUnit.extractIndividualUnitsWithIndices();
         assert (!this.units_.isEmpty());
 
         // Assign the biggest unit to inputUnit_.
         this.inputUnit_ = this.units_.get(0).unitImpl;
-        MeasureUnitImpl.MeasureUnitImplComparator comparator = new MeasureUnitImpl.MeasureUnitImplComparator(conversionRates);
-        for (MeasureUnitImpl.MeasureUnitImplWithIndex unitWithIndex:
-             this.units_) {
+        MeasureUnitImpl.MeasureUnitImplComparator comparator = new MeasureUnitImpl.MeasureUnitImplComparator(
+                conversionRates);
+        for (MeasureUnitImpl.MeasureUnitImplWithIndex unitWithIndex : this.units_) {
             if (comparator.compare(unitWithIndex.unitImpl, this.inputUnit_) > 0) {
                 this.inputUnit_ = unitWithIndex.unitImpl;
             }
@@ -61,17 +57,17 @@ public class ComplexUnitsConverter {
     }
 
     /**
-     * Constructs <code>ComplexUnitsConverter</code>
-     * NOTE:
-     * - inputUnit and outputUnits must be under the same category
-     * - e.g. meter to feet and inches --> all of them are length units.
+     * Constructs <code>ComplexUnitsConverter</code> NOTE: - inputUnit and outputUnits must be under the same category -
+     * e.g. meter to feet and inches --> all of them are length units.
      *
-     * @param inputUnit   represents the source unit. (should be single or compound unit).
-     * @param outputUnits represents the output unit. could be any type. (single, compound or mixed).
+     * @param targetUnit
+     *            represents the source unit. (should be single or compound unit).
+     * @param outputUnits
+     *            represents the output unit. could be any type. (single, compound or mixed).
      */
-    public ComplexUnitsConverter(MeasureUnitImpl inputUnit, MeasureUnitImpl outputUnits,
-                                 ConversionRates conversionRates) {
-        this.inputUnit_ = inputUnit;
+    public ComplexUnitsConverter(MeasureUnitImpl targetUnit, MeasureUnitImpl outputUnits,
+            ConversionRates conversionRates) {
+        this.inputUnit_ = targetUnit;
         this.units_ = outputUnits.extractIndividualUnitsWithIndices();
         assert (!this.units_.isEmpty());
 
@@ -80,41 +76,40 @@ public class ComplexUnitsConverter {
 
     private void init(ConversionRates conversionRates) {
         // Sort the units in a descending order.
-        Collections.sort(
-                this.units_,
+        Collections.sort(this.units_,
                 Collections.reverseOrder(new MeasureUnitImpl.MeasureUnitImplWithIndexComparator(conversionRates)));
 
         // If the `outputUnits` is `UMEASURE_UNIT_MIXED` such as `foot+inch`. Thus means there is more than one unit
-        //  and In this case we need more converters to convert from the `inputUnit` to the first unit in the
-        //  `outputUnits`. Then, a converter from the first unit in the `outputUnits` to the second unit and so on.
-        //      For Example:
-        //          - inputUnit is `meter`
-        //          - outputUnits is `foot+inch`
-        //              - Therefore, we need to have two converters:
-        //                      1. a converter from `meter` to `foot`
-        //                      2. a converter from `foot` to `inch`
-        //          - Therefore, if the input is `2 meter`:
-        //              1. convert `meter` to `foot` --> 2 meter to 6.56168 feet
-        //              2. convert the residual of 6.56168 feet (0.56168) to inches, which will be (6.74016
-        //              inches)
-        //              3. then, the final result will be (6 feet and 6.74016 inches)
+        // and In this case we need more converters to convert from the `inputUnit` to the first unit in the
+        // `outputUnits`. Then, a converter from the first unit in the `outputUnits` to the second unit and so on.
+        // For Example:
+        // - inputUnit is `meter`
+        // - outputUnits is `foot+inch`
+        // - Therefore, we need to have two converters:
+        // 1. a converter from `meter` to `foot`
+        // 2. a converter from `foot` to `inch`
+        // - Therefore, if the input is `2 meter`:
+        // 1. convert `meter` to `foot` --> 2 meter to 6.56168 feet
+        // 2. convert the residual of 6.56168 feet (0.56168) to inches, which will be (6.74016
+        // inches)
+        // 3. then, the final result will be (6 feet and 6.74016 inches)
         unitConverters_ = new ArrayList<>();
         for (int i = 0, n = units_.size(); i < n; i++) {
             if (i == 0) { // first element
                 unitConverters_.add(new UnitConverter(this.inputUnit_, units_.get(i).unitImpl, conversionRates));
             } else {
-                unitConverters_.add(new UnitConverter(units_.get(i - 1).unitImpl, units_.get(i).unitImpl, conversionRates));
+                unitConverters_
+                        .add(new UnitConverter(units_.get(i - 1).unitImpl, units_.get(i).unitImpl, conversionRates));
             }
         }
     }
 
     /**
-     * Returns true if the specified `quantity` of the `inputUnit`, expressed in terms of the biggest
-     * unit in the MeasureUnit `outputUnit`, is greater than or equal to `limit`.
+     * Returns true if the specified `quantity` of the `inputUnit`, expressed in terms of the biggest unit in the
+     * MeasureUnit `outputUnit`, is greater than or equal to `limit`.
      * <p>
-     * For example, if the input unit is `meter` and the target unit is `foot+inch`. Therefore, this
-     * function will convert the `quantity` from `meter` to `foot`, then, it will compare the value in
-     * `foot` with the `limit`.
+     * For example, if the input unit is `meter` and the target unit is `foot+inch`. Therefore, this function will
+     * convert the `quantity` from `meter` to `foot`, then, it will compare the value in `foot` with the `limit`.
      */
     public boolean greaterThanOrEqual(BigDecimal quantity, BigDecimal limit) {
         assert !units_.isEmpty();
@@ -156,12 +151,11 @@ public class ComplexUnitsConverter {
                 // decision is made. However after the thresholding, we use the
                 // original values to ensure unbiased accuracy (to the extent of
                 // double's capabilities).
-                BigDecimal flooredQuantity =
-                    quantity.multiply(EPSILON_MULTIPLIER).setScale(0, RoundingMode.FLOOR);
+                BigDecimal flooredQuantity = quantity.multiply(EPSILON_MULTIPLIER).setScale(0, RoundingMode.FLOOR);
                 intValues.add(flooredQuantity);
 
                 // Keep the residual of the quantity.
-                //   For example: `3.6 feet`, keep only `0.6 feet`
+                // For example: `3.6 feet`, keep only `0.6 feet`
                 BigDecimal remainder = quantity.subtract(flooredQuantity);
                 if (remainder.compareTo(BigDecimal.ZERO) == -1) {
                     quantity = BigDecimal.ZERO;
@@ -185,9 +179,7 @@ public class ComplexUnitsConverter {
                 }
 
                 // Check if there's a carry, and bubble it back up the resulting intValues.
-                BigDecimal carry = unitConverters_.get(i)
-                        .convertInverse(quantity)
-                        .multiply(EPSILON_MULTIPLIER)
+                BigDecimal carry = unitConverters_.get(i).convertInverse(quantity).multiply(EPSILON_MULTIPLIER)
                         .setScale(0, RoundingMode.FLOOR);
                 if (carry.compareTo(BigDecimal.ZERO) <= 0) { // carry is not greater than zero
                     break;
@@ -197,9 +189,7 @@ public class ComplexUnitsConverter {
 
                 // We don't use the first converter: that one is for the input unit
                 for (int j = i - 1; j > 0; j--) {
-                    carry = unitConverters_.get(j)
-                            .convertInverse(intValues.get(j))
-                            .multiply(EPSILON_MULTIPLIER)
+                    carry = unitConverters_.get(j).convertInverse(intValues.get(j)).multiply(EPSILON_MULTIPLIER)
                             .setScale(0, RoundingMode.FLOOR);
                     if (carry.compareTo(BigDecimal.ZERO) <= 0) { // carry is not greater than zero
                         break;
@@ -219,7 +209,8 @@ public class ComplexUnitsConverter {
         // Package values into Measure instances in result:
         for (int i = 0, n = unitConverters_.size(); i < n; ++i) {
             if (i < n - 1) {
-                result.set(units_.get(i).index, new Measure(intValues.get(i).multiply(sign), units_.get(i).unitImpl.build()));
+                result.set(units_.get(i).index,
+                        new Measure(intValues.get(i).multiply(sign), units_.get(i).unitImpl.build()));
             } else {
                 result.set(units_.get(i).index, new Measure(quantity.multiply(sign), units_.get(i).unitImpl.build()));
             }

@@ -21,15 +21,15 @@
 
 U_NAMESPACE_BEGIN
 namespace units {
-ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
+ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
                                              const ConversionRates &ratesInfo, UErrorCode &status)
-    : units_(inputUnit.extractIndividualUnitsWithIndecies(status)) {
+    : units_(targetUnit.extractIndividualUnitsWithIndecies(status)) {
     if (U_FAILURE(status)) {
         return;
     }
     U_ASSERT(units_.length() != 0);
 
-    auto singleUnits = inputUnit.extractIndividualUnits(status);
+    auto singleUnits = targetUnit.extractIndividualUnits(status);
     if (U_FAILURE(status)) {
         return;
     }
@@ -49,7 +49,7 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
     this->init(*biggestUnit, ratesInfo, status);
 }
 
-ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
+ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
                                              const MeasureUnitImpl &outputUnits,
                                              const ConversionRates &ratesInfo, UErrorCode &status)
     : units_(outputUnits.extractIndividualUnitsWithIndecies(status)) {
@@ -59,7 +59,7 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
 
     U_ASSERT(units_.length() != 0);
 
-    this->init(inputUnit, ratesInfo, status);
+    this->init(targetUnit, ratesInfo, status);
 }
 
 void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo,
