@@ -145,9 +145,12 @@ struct U_I18N_API SingleUnitImpl : public UMemory {
 // MaybeStackVector. This is required when building DLLs for Windows. (See
 // datefmt.h, collationiterator.h, erarules.h and others for similar examples.)
 #if U_PF_WINDOWS <= U_PLATFORM && U_PLATFORM <= U_PF_CYGWIN
-template class U_I18N_API MaybeStackArray<SingleUnitImpl*, 8>;
+template class U_I18N_API MaybeStackArray<SingleUnitImpl *, 8>;
 template class U_I18N_API MemoryPool<SingleUnitImpl, 8>;
 template class U_I18N_API MaybeStackVector<SingleUnitImpl, 8>;
+template class U_I18N_API MaybeStackArray<MeasureUnitImplWithIndex *, 8>;
+template class U_I18N_API MemoryPool<MeasureUnitImplWithIndex, 8>;
+template class U_I18N_API MaybeStackVector<MeasureUnitImplWithIndex, 8>;
 #endif
 
 /**
