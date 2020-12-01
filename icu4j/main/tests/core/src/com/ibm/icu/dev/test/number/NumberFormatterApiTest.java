@@ -729,7 +729,7 @@ public class NumberFormatterApiTest extends TestFmwk {
 
         assertFormatSingle(
                 "Mixed Unit (Not Sorted)",
-                null,
+                "unit/gram-and-kilogram unit-width-full-name",
                 "unit/gram-and-kilogram unit-width-full-name",
                 NumberFormatter.with()
                         .unit(MeasureUnit.forIdentifier("gram-and-kilogram"))
@@ -740,7 +740,7 @@ public class NumberFormatterApiTest extends TestFmwk {
 
         assertFormatSingle(
                 "Mixed Unit (Not Sorted)",
-                null,
+                "unit/inch-and-yard-and-foot unit-width-full-name",
                 "unit/inch-and-yard-and-foot unit-width-full-name",
                 NumberFormatter.with()
                         .unit(MeasureUnit.forIdentifier("inch-and-yard-and-foot"))
