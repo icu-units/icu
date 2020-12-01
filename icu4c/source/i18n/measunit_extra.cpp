@@ -862,8 +862,8 @@ MeasureUnitImpl::extractIndividualUnitsWithIndecies(UErrorCode &status) const {
         return result;
     }
 
-    for (int32_t i = 0; i < units.length(); ++i) {
-        result.emplaceBackAndCheckErrorCode(status, i, new MeasureUnitImpl(*units[i], status));
+    for (int32_t i = 0; i < singleUnits.length(); ++i) {
+        result.emplaceBackAndCheckErrorCode(status, i, new MeasureUnitImpl(*singleUnits[i], status));
         if (U_FAILURE(status)) {
             return result;
         }
