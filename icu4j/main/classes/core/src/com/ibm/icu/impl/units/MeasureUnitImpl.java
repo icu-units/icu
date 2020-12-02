@@ -91,33 +91,6 @@ public class MeasureUnitImpl {
         }
     }
 
-    // FIXME: unused - delete?
-    /**
-     * Extracts the list of all the individual units inside the `MeasureUnitImpl`.
-     * For example:
-     * -   if the <code>MeasureUnitImpl</code> is <code>foot-per-hour</code>
-     * it will return a list of 1 <code>{foot-per-hour}</code>
-     * -   if the <code>MeasureUnitImpl</code> is <code>foot-and-inch</code>
-     * it will return a list of 2 <code>{ foot, inch}</code>
-     *
-     * @return a list of <code>MeasureUnitImpl</code>
-     */
-    public ArrayList<MeasureUnitImpl> extractIndividualUnits() {
-        ArrayList<MeasureUnitImpl> result = new ArrayList<>();
-        if (this.getComplexity() == MeasureUnit.Complexity.MIXED) {
-            // In case of mixed units, each single unit can be considered as a stand alone MeasureUnitImpl.
-            for (SingleUnitImpl singleUnit :
-                    this.getSingleUnits()) {
-                result.add(new MeasureUnitImpl(singleUnit));
-            }
-
-            return result;
-        }
-
-        result.add(this.copy());
-        return result;
-    }
-
     public ArrayList<MeasureUnitImplWithIndex> extractIndividualUnitsWithIndices() {
         ArrayList<MeasureUnitImplWithIndex> result = new ArrayList<>();
         if (this.getComplexity() == MeasureUnit.Complexity.MIXED) {

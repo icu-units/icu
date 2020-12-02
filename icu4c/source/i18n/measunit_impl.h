@@ -222,16 +222,6 @@ struct U_I18N_API MeasureUnitImpl : public UMemory {
     MeasureUnitImpl copy(UErrorCode& status) const;
 
     /**
-     * Extracts the list of all the individual units inside the `MeasureUnitImpl`.
-     *      For example:    
-     *          -   if the `MeasureUnitImpl` is `foot-per-hour`
-     *                  it will return a list of 1 {`foot-per-hour`} 
-     *          -   if the `MeasureUnitImpl` is `foot-and-inch` 
-     *                  it will return a list of 2 { `foot`, `inch`}
-     */
-    MaybeStackVector<MeasureUnitImpl> extractIndividualUnits(UErrorCode &status) const;
-
-    /**
      * Extracts the list of all the individual units inside the `MeasureUnitImpl`. with their indices.
      *      For example:    
      *          -   if the `MeasureUnitImpl` is `foot-per-hour`
