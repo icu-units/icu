@@ -24,7 +24,10 @@ public class ComplexUnitsConverter {
     public static final BigDecimal EPSILON = BigDecimal.valueOf(Math.ulp(1.0));
     public static final BigDecimal EPSILON_MULTIPLIER = BigDecimal.valueOf(1).add(EPSILON);
     private ArrayList<UnitConverter> unitConverters_;
-    // Individual units of mixed units, sorted big to small
+    /**
+     * Individual units of mixed units, sorted big to small, with indices
+     * indicating the requested output mixed unit order.
+     */
     private List<MeasureUnitImpl.MeasureUnitImplWithIndex> units_;
     private MeasureUnitImpl inputUnit_;
 
@@ -74,6 +77,10 @@ public class ComplexUnitsConverter {
         this.init(conversionRates);
     }
 
+    /**
+     * Sorts units_, which must be populated before calling this, and populates
+     * unitConverters_.
+     */
     private void init(ConversionRates conversionRates) {
         // Sort the units in a descending order.
         Collections.sort(this.units_,

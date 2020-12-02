@@ -97,9 +97,10 @@ class U_I18N_API UnitConversionHandler : public MicroPropsGenerator, public UMem
     /**
      * Constructor.
      *
-     * @param targetUnit Specifies the input MeasureUnit. In case of Mixed unit, the input unit will be
-     * the biggest unit in the Mixed unit and the output will be the input unit. Otherwise, the input
-     * unit will be the output unit.
+     * @param targetUnit Specifies the output MeasureUnit. The input MeasureUnit
+     *     is derived from it: in case of a mixed unit, the biggest unit is
+     *     taken as the input unit. If not a mixed unit, the input unit will be
+     *     the same as the output unit and no unit conversion takes place.
      * @param parent The parent MicroPropsGenerator.
      * @param status Receives status.
      */

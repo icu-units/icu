@@ -838,6 +838,7 @@ bool MeasureUnitImpl::appendSingleUnit(const SingleUnitImpl &singleUnit, UErrorC
     return true;
 }
 
+// FIXME: now unused... remove?
 MaybeStackVector<MeasureUnitImpl> MeasureUnitImpl::extractIndividualUnits(UErrorCode &status) const {
     MaybeStackVector<MeasureUnitImpl> result;
 

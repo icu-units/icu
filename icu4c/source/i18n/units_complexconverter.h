@@ -96,10 +96,12 @@ class U_I18N_API ComplexUnitsConverter : public UMemory {
   private:
     MaybeStackVector<UnitConverter> unitConverters_;
 
-    // Individual units of mixed units attached with their indices, sorted big to small according to the
-    // units.
+    // Individual units of mixed units, sorted big to small, with indices
+    // indicating the requested output mixed unit order.
     MaybeStackVector<MeasureUnitImplWithIndex> units_;
 
+    // Sorts units_, which must be populated before calling this, and populates
+    // unitConverters_.
     void init(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo, UErrorCode &status);
 };
 

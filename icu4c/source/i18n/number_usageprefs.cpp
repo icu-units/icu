@@ -174,7 +174,7 @@ UnitConversionHandler::UnitConversionHandler(const MeasureUnit &targetUnit,
                                              const MicroPropsGenerator *parent, UErrorCode &status)
     : fOutputUnit(targetUnit), fParent(parent) {
     MeasureUnitImpl tempInput, tempOutput;
-    const MeasureUnitImpl &inputUnitImpl =
+    const MeasureUnitImpl &targetUnitImpl =
         MeasureUnitImpl::forMeasureUnit(targetUnit, tempOutput, status);
 
     // TODO: this should become an initOnce thing? Review with other
@@ -184,7 +184,7 @@ UnitConversionHandler::UnitConversionHandler(const MeasureUnit &targetUnit,
         return;
     }
     fUnitConverter.adoptInsteadAndCheckErrorCode(
-        new ComplexUnitsConverter(inputUnitImpl, conversionRates, status), status);
+        new ComplexUnitsConverter(targetUnitImpl, conversionRates, status), status);
 }
 
 void UnitConversionHandler::processQuantity(DecimalQuantity &quantity, MicroProps &micros,

@@ -29,27 +29,22 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
     }
     U_ASSERT(units_.length() != 0);
 
-    auto singleUnits = targetUnit.extractIndividualUnits(status);
-    if (U_FAILURE(status)) {
-        return;
-    }
-
-    auto *biggestUnit = singleUnits[0];
-    for (int32_t i = 1; i < singleUnits.length(); i++) {
-        if (UnitConverter::compareTwoUnits(*singleUnits[i], *biggestUnit, ratesInfo, status) > 0 &&
+    // Just borrowing a pointer to the instance
+    MeasureUnitImpl *biggestUnit = units_[0]->unitImpl.getAlias();
+    for (int32_t i = 1; i < units_.length(); i++) {
+        if (UnitConverter::compareTwoUnits(*units_[i]->unitImpl, *biggestUnit, ratesInfo, status) > 0 &&
             U_SUCCESS(status)) {
-            biggestUnit = singleUnits[i];
+            biggestUnit = units_[i]->unitImpl.getAlias();
         }
 
         if (U_FAILURE(status)) {
             return;
         }
     }
-
     this->init(*biggestUnit, ratesInfo, status);
 }
 
-ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
+ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &inputUnit,
                                              const MeasureUnitImpl &outputUnits,
                                              const ConversionRates &ratesInfo, UErrorCode &status)
     : units_(outputUnits.extractIndividualUnitsWithIndices(status)) {
@@ -59,10 +54,11 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
 
     U_ASSERT(units_.length() != 0);
 
-    this->init(targetUnit, ratesInfo, status);
+    this->init(inputUnit, ratesInfo, status);
 }
 
-void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit, const ConversionRates &ratesInfo,
+void ComplexUnitsConverter::init(const MeasureUnitImpl &inputUnit,
+                                 const ConversionRates &ratesInfo,
                                  UErrorCode &status) {
     // Sorts units in descending order. Therefore, we return -1 if
     // the left is bigger than right and so on.
