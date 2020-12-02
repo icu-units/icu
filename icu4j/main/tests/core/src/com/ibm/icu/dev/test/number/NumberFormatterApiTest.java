@@ -789,8 +789,6 @@ public class NumberFormatterApiTest extends TestFmwk {
                 "100");
     }
 
-
-
     @Test
     public void unitCompoundMeasure() {
         assertFormatDescending(

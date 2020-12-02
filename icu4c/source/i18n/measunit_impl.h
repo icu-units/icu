@@ -36,6 +36,7 @@ static const char kDefaultCurrency8[] = "XXX";
 struct U_I18N_API MeasureUnitImplWithIndex : public UMemory {
     const int32_t index;
     LocalPointer<MeasureUnitImpl> unitImpl;
+    // Takes ownership of unitImpl.
     MeasureUnitImplWithIndex(int32_t index, MeasureUnitImpl *unitImpl)
         : index(index), unitImpl(unitImpl) {}
 };
@@ -239,7 +240,7 @@ struct U_I18N_API MeasureUnitImpl : public UMemory {
      *                  it will return a list of 2 { (0, `foot`), (1, `inch`)}
      */
     MaybeStackVector<MeasureUnitImplWithIndex>
-    extractIndividualUnitsWithIndecies(UErrorCode &status) const;
+    extractIndividualUnitsWithIndices(UErrorCode &status) const;
 
     /** Mutates this MeasureUnitImpl to take the reciprocal. */
     void takeReciprocal(UErrorCode& status);

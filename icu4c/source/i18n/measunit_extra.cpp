@@ -854,7 +854,7 @@ MaybeStackVector<MeasureUnitImpl> MeasureUnitImpl::extractIndividualUnits(UError
 }
 
 MaybeStackVector<MeasureUnitImplWithIndex>
-MeasureUnitImpl::extractIndividualUnitsWithIndecies(UErrorCode &status) const {
+MeasureUnitImpl::extractIndividualUnitsWithIndices(UErrorCode &status) const {
     MaybeStackVector<MeasureUnitImplWithIndex> result;
 
     if (this->complexity != UMeasureUnitComplexity::UMEASURE_UNIT_MIXED) {

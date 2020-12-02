@@ -96,7 +96,7 @@ class U_I18N_API ComplexUnitsConverter : public UMemory {
   private:
     MaybeStackVector<UnitConverter> unitConverters_;
 
-    // Individual units of mixed units attached with there indices, sorted big to small according to the
+    // Individual units of mixed units attached with their indices, sorted big to small according to the
     // units.
     MaybeStackVector<MeasureUnitImplWithIndex> units_;
 

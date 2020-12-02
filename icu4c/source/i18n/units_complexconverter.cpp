@@ -23,7 +23,7 @@ U_NAMESPACE_BEGIN
 namespace units {
 ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
                                              const ConversionRates &ratesInfo, UErrorCode &status)
-    : units_(targetUnit.extractIndividualUnitsWithIndecies(status)) {
+    : units_(targetUnit.extractIndividualUnitsWithIndices(status)) {
     if (U_FAILURE(status)) {
         return;
     }
@@ -52,7 +52,7 @@ ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
 ComplexUnitsConverter::ComplexUnitsConverter(const MeasureUnitImpl &targetUnit,
                                              const MeasureUnitImpl &outputUnits,
                                              const ConversionRates &ratesInfo, UErrorCode &status)
-    : units_(outputUnits.extractIndividualUnitsWithIndecies(status)) {
+    : units_(outputUnits.extractIndividualUnitsWithIndices(status)) {
     if (U_FAILURE(status)) {
         return;
     }
