@@ -208,6 +208,10 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
     };
 
     // Package values into Measure instances in unordered_result:
+    // FIXME/optional: I'm wondering if unordered_result is necessary at all, when the
+    // result could perhaps be placed directly into the result variable - by
+    // first setting size and then populating directly? Not sure: I've not
+    // looked at whether the APIs permit easy modification in place.
     MaybeStackVector<MeasureWithIndex> unordered_result;
     for (int i = 0, n = units_.length(); i < n; ++i) {
         if (i < n - 1) {
@@ -243,7 +247,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
     }
 
     // Sort the unordered_result
-    
+
     // NOTE:
     //  This comparator is used to sort the units in ascending order according to their indices.
     auto ascendingOrderByIndexComparator = [](const void *, const void *left, const void *right) {
@@ -252,7 +256,6 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
 
          int32_t diff = (*leftPointer)->index -  (*rightPointer)->index;
          if (diff == 0) {
-           
             return 0;
         }
         return diff > 0 ? 1 : -1;
@@ -267,6 +270,11 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
                    &status                          //
     );
 
+    // FIXME: unordered_result is in the same order as units_, is it not? And
+    // here it looks like you're just adding items to result in the same order
+    // as unordered_result. Should unordered_result[X] not be moved into
+    // result[unorderd_result[X].index]? Is there a unit test for more
+    // complicated cases?
     for(int32_t i = 0, n = unordered_result.length(); i < n; ++i) {
         result.emplaceBackAndCheckErrorCode(status, std::move(unordered_result[i]->measure));
         if(U_FAILURE(status)) {
