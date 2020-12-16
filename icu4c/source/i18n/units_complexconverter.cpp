@@ -201,78 +201,40 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
         }
     }
 
-    struct MeasureWithIndex {
-        const int32_t index;
-        const Measure measure;
-        MeasureWithIndex(int32_t index,const Measure &measure) : index(index), measure(measure) {}
-    };
+    // Initialize empty result. We use a MaybeStackArray directly so we can
+    // assign nullptr - for this privilege we have to take care of cleanup.
+    MaybeStackArray<Measure *, 4> tmpResult(unitConverters_.length(), status);
+    if (U_FAILURE(status)) {
+        return result;
+    }
+    for (int i = 0; i < unitConverters_.length(); ++i) {
+        tmpResult[i] = nullptr;
+    }
 
-    // Package values into Measure instances in unordered_result:
-    MaybeStackVector<MeasureWithIndex> unordered_result;
-    for (int i = 0, n = units_.length(); i < n; ++i) {
+    // Package values into temporary Measure instances in tmpResult:
+    for (int i = 0, n = unitConverters_.length(); i < n; ++i) {
         if (i < n - 1) {
             Formattable formattableQuantity(intValues[i] * sign);
             // Measure takes ownership of the MeasureUnit*
             MeasureUnit *type = new MeasureUnit(units_[i]->unitImpl->copy(status).build(status));
-            if (unordered_result.emplaceBackAndCheckErrorCode(
-                    status, units_[i]->index, Measure(formattableQuantity, type, status)) == nullptr) {
-                // Ownership wasn't taken
-                U_ASSERT(U_FAILURE(status));
-                delete type;
-            }
-            if (U_FAILURE(status)) {
-                return result;
-            }
+            tmpResult[units_[i]->index] = new Measure(formattableQuantity, type, status);
         } else { // LAST ELEMENT
-            // Add the last element, not an integer:
             Formattable formattableQuantity(quantity * sign);
             // Measure takes ownership of the MeasureUnit*
-            MeasureUnit *type = new MeasureUnit((units_[i])->unitImpl->copy(status).build(status));
-            if (unordered_result.emplaceBackAndCheckErrorCode(
-                    status, units_[i]->index, Measure(formattableQuantity, type, status)) == nullptr) {
-                // Ownership wasn't taken
-                U_ASSERT(U_FAILURE(status));
-                delete type;
-            }
-            if (U_FAILURE(status)) {
-                return result;
-            }
-            U_ASSERT(unordered_result.length() == i + 1);
-            U_ASSERT(unordered_result[i] != nullptr);
+            MeasureUnit *type = new MeasureUnit(units_[i]->unitImpl->copy(status).build(status));
+            tmpResult[units_[i]->index] = new Measure(formattableQuantity, type, status);
         }
     }
-
-    // Sort the unordered_result
-
-    // NOTE:
-    //  This comparator is used to sort the units in ascending order according to their indices.
-    auto ascendingOrderByIndexComparator = [](const void *, const void *left, const void *right) {
-        const auto *leftPointer = static_cast<const MeasureWithIndex *const *>(left);
-        const auto *rightPointer = static_cast<const MeasureWithIndex *const *>(right);
-
-         int32_t diff = (*leftPointer)->index -  (*rightPointer)->index;
-         if (diff == 0) {
-            return 0;
+    // Transfer values into result and return:
+    for(int32_t i = 0, n = tmpResult.getCapacity(); i < n; ++i) {
+        if (tmpResult[i] == nullptr) {
+            continue;
         }
-        return diff > 0 ? 1 : -1;
-    };
-
-    uprv_sortArray(unordered_result.getAlias(),     //
-                   unordered_result.length(),       //
-                   sizeof unordered_result[0],      //
-                   ascendingOrderByIndexComparator, //
-                   nullptr,                         //
-                   false,                           //
-                   &status                          //
-    );
-
-    for(int32_t i = 0, n = unordered_result.length(); i < n; ++i) {
-        result.emplaceBackAndCheckErrorCode(status, std::move(unordered_result[i]->measure));
-        if(U_FAILURE(status)) {
-            return result;
+        if (U_SUCCESS(status)) {
+            result.emplaceBackAndCheckErrorCode(status, *tmpResult[i]);
         }
+        delete tmpResult[i];
     }
-
     return result;
 }
 
