@@ -741,7 +741,8 @@ public:
      * to the typename T constructor.
      *
      * @param args Arguments to be forwarded to the typename T constructor.
-     * @return A pointer to the newly created object, or nullptr on error.
+     * @return A pointer to the newly created object, or nullptr on error. If
+     * nullptr is returned, the typename T constructor has not been called.
      */
     template<typename... Args>
     T* create(Args&&... args) {
@@ -754,6 +755,8 @@ public:
         return fPool[fCount++] = new T(std::forward<Args>(args)...);
     }
 
+    // FIXME: If nullptr is returned, the typename T constructor has not been
+    // called.
     template <typename... Args>
     T* createAndCheckErrorCode(UErrorCode &status, Args &&... args) {
         if (U_FAILURE(status)) {
@@ -801,11 +804,15 @@ protected:
 template<typename T, int32_t stackCapacity = 8>
 class MaybeStackVector : protected MemoryPool<T, stackCapacity> {
 public:
+    // FIXME: If nullptr is returned, the typename T constructor has not been
+    // called.
     template<typename... Args>
     T* emplaceBack(Args&&... args) {
         return this->create(args...);
     }
 
+    // FIXME: If nullptr is returned, the typename T constructor has not been
+    // called.
     template <typename... Args>
     T *emplaceBackAndCheckErrorCode(UErrorCode &status, Args &&... args) {
         return this->createAndCheckErrorCode(status, args...);
