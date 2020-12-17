@@ -226,7 +226,7 @@ MaybeStackVector<Measure> ComplexUnitsConverter::convert(double quantity,
         }
     }
     // Transfer values into result and return:
-    for(int32_t i = 0, n = tmpResult.getCapacity(); i < n; ++i) {
+    for(int32_t i = 0, n = unitConverters_.length(); i < n; ++i) {
         if (tmpResult[i] == nullptr) {
             continue;
         }
