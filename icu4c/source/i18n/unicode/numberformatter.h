@@ -1131,30 +1131,30 @@ class U_I18N_API Scale : public UMemory {
 
 namespace impl {
 
-// Do not enclose entire Usage with #ifndef U_HIDE_INTERNAL_API, needed for a protected field
+// Do not enclose entire StringProp with #ifndef U_HIDE_INTERNAL_API, needed for a protected field
 /**
  * Manages NumberFormatterSettings::usage()'s char* instance on the heap.
  * @internal
  */
-class U_I18N_API Usage : public UMemory {
+class U_I18N_API StringProp : public UMemory {
 
 #ifndef U_HIDE_INTERNAL_API
 
   public:
     /** @internal */
-    Usage(const Usage& other);
+    StringProp(const StringProp& other);
 
     /** @internal */
-    Usage& operator=(const Usage& other);
+    StringProp& operator=(const StringProp& other);
 
     /** @internal */
-    Usage(Usage &&src) U_NOEXCEPT;
+    StringProp(StringProp &&src) U_NOEXCEPT;
 
     /** @internal */
-    Usage& operator=(Usage&& src) U_NOEXCEPT;
+    StringProp& operator=(StringProp&& src) U_NOEXCEPT;
 
     /** @internal */
-    ~Usage();
+    ~StringProp();
 
     /** @internal */
     int16_t length() const { return fLength; }
@@ -1170,11 +1170,11 @@ class U_I18N_API Usage : public UMemory {
 #endif // U_HIDE_INTERNAL_API
 
   private:
-    char *fUsage;
+    char *fValue;
     int16_t fLength;
     UErrorCode fError;
 
-    Usage() : fUsage(nullptr), fLength(0), fError(U_ZERO_ERROR) {}
+    StringProp() : fValue(nullptr), fLength(0), fError(U_ZERO_ERROR) {}
 
     /** @internal */
     UBool copyErrorTo(UErrorCode &status) const {
@@ -1185,7 +1185,7 @@ class U_I18N_API Usage : public UMemory {
         return false;
     }
 
-    // Allow NumberFormatterImpl to access fUsage.
+    // Allow NumberFormatterImpl to access fValue.
     friend class impl::NumberFormatterImpl;
 
     // Allow skeleton generation code to access private members.
@@ -1480,7 +1480,7 @@ struct U_I18N_API MacroProps : public UMemory {
     Scale scale;  // = Scale();  (benign value)
 
     /** @internal */
-    Usage usage;  // = Usage();  (no usage)
+    StringProp usage;  // = StringProp();  (no usage)
 
     /** @internal */
     const AffixPatternProvider* affixProvider = nullptr;  // no ownership

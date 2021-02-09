@@ -1512,7 +1512,7 @@ bool GeneratorHelpers::unit(const MacroProps& macros, UnicodeString& sb, UErrorC
 bool GeneratorHelpers::usage(const MacroProps& macros, UnicodeString& sb, UErrorCode& /* status */) {
     if (macros.usage.isSet()) {
         sb.append(u"usage/", -1);
-        sb.append(UnicodeString(macros.usage.fUsage, -1, US_INV));
+        sb.append(UnicodeString(macros.usage.fValue, -1, US_INV));
         return true;
     }
     return false;

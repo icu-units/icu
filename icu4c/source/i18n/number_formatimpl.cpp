@@ -246,7 +246,7 @@ NumberFormatterImpl::macrosToMicroGenerator(const MacroProps& macros, bool safe,
             return nullptr;
         }
         auto usagePrefsHandler =
-            new UsagePrefsHandler(macros.locale, macros.unit, macros.usage.fUsage, chain, status);
+            new UsagePrefsHandler(macros.locale, macros.unit, macros.usage.fValue, chain, status);
         fUsagePrefsHandler.adoptInsteadAndCheckErrorCode(usagePrefsHandler, status);
         chain = fUsagePrefsHandler.getAlias();
     } else if (isMixedUnit) {
