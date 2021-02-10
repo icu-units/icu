@@ -85,6 +85,8 @@ void NumberFormatterApiTest::runIndexedTest(int32_t index, UBool exec, const cha
         TESTCASE_AUTO(unitUsageErrorCodes);
         TESTCASE_AUTO(unitUsageSkeletons);
         TESTCASE_AUTO(unitCurrency);
+        TESTCASE_AUTO(unitInflections);
+        TESTCASE_AUTO(unitGender);
         TESTCASE_AUTO(unitPercent);
         if (!quick) {
             // Slow test: run in exhaustive mode only
@@ -1924,6 +1926,130 @@ void NumberFormatterApiTest::unitCurrency() {
             Locale("lu"),
             123.12,
             u"123,12 CN¥");
+}
+
+void NumberFormatterApiTest::unitInflections() {
+    IcuTestErrorCode status(*this, "unitInflections");
+
+    // FIXME: We decided to have a string setter .unitDisplayCase(case) on NumberFormatter as an @internal Technical Preview, as well as FormattedNumber getGender().
+
+    // TODO(icu-units#111)/FIXME(don't submit): inflection examples: in CLDR's
+    // grammaticalFeatures.xml I see the following:
+    //
+    // """
+    // For instance, in Russian "Уменьши яркость света до 10 процентов" ("dim
+    // the light to 10 percent"), the 'percent' unit must be expressed in plural
+    // and in the genitive case, whereas "1%" would be expressed in different
+    // cases depending on the context. The case usage is implicit in short form
+    // "10%", but the full form requires the grammatical variant marked by case
+    // and number to be expressed correctly.
+    // """
+    //
+    // Data for ru percent genitive:
+    //
+    //     genitive{
+    //         few{"{0} процентов"}
+    //         many{"{0} процентов"}
+    //         one{"{0} процента"}
+    //         other{"{0} процента"}
+    //     }
+    //
+    // Data for ru nominative:
+    //
+    //     few{"{0} процента"}
+    //     many{"{0} процентов"}
+    //     one{"{0} процент"}
+    //     other{"{0} процента"}
+    //
+    // The distinction exists for "one", for "few", and for "other", but not for
+    // "many".
+
+    UnlocalizedNumberFormatter unf =
+        NumberFormatter::with().unit(NoUnit::percent()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
+    const UChar *skeleton = u"percent unit-width-full-name";
+    const UChar *conciseSkeleton = u"% unit-width-full-name";
+
+    // Values in assertFormatDescending are all of plural forms "many" or
+    // "other", for which there is no difference to genitive.
+    assertFormatSingle(
+            u"Inflected percentage, nominal, few",
+            skeleton,
+            conciseSkeleton,
+            unf,
+            Locale("ru"),
+            10,
+            u"10 процентов"); // many?, FIXME: bad example in grammaticalFeatures.xml if this matches nominal
+    assertFormatSingle(
+            u"Inflected percentage, genitive, few",
+            nullptr,
+            nullptr,
+            unf.unitDisplayCase("genitive"),
+            Locale("ru"),
+            10,
+            u"10 процентов");  // many?, genitive
+
+    assertFormatSingle(
+            u"Inflected percentage, nominal, few",
+            skeleton,
+            conciseSkeleton,
+            unf,
+            Locale("ru"),
+            2,
+            u"2 процента"); // few
+    assertFormatSingle(
+            u"Inflected percentage, genitive, few",
+            nullptr,
+            nullptr,
+            unf.unitDisplayCase("genitive"),
+            Locale("ru"),
+            2,
+            u"2 процентов");  // few, genitive
+
+    assertFormatSingle(
+            u"Inflected percentage, nominal, one",
+            skeleton,
+            conciseSkeleton,
+            unf,
+            Locale("ru"),
+            1,
+            u"1 процент"); // one
+    assertFormatSingle(
+            u"Inflected percentage, genitive, one",
+            nullptr,
+            nullptr,
+            unf.unitDisplayCase("genitive"),
+            Locale("ru"),
+            1,
+            u"1 процента");  // one, genitive
+
+    // FIXME: add a usage case that selects between preferences with different
+    // genders (e.g. year, month, day, hour).
+}
+
+void NumberFormatterApiTest::unitGender() {
+    IcuTestErrorCode status(*this, "unitGender");
+    const char* masculine = "masculine";
+    const char* feminine = "feminine";
+    const char* neuter = "neuter";
+
+    // FIXME: turn this into an array of test cases:
+
+    LocalizedNumberFormatter formatter;
+    FormattedNumber fn;
+
+    formatter = NumberFormatter::with().unit(MeasureUnit::getMeter()).locale(Locale("de"));
+    fn = formatter.formatDouble(1.1, status);
+    assertEquals("Meter gender", masculine, fn.getGender(status));
+
+    formatter = NumberFormatter::with().unit(MeasureUnit::getHour()).locale(Locale("de"));
+    fn = formatter.formatDouble(1.1, status);
+    assertEquals("Hour gender", feminine, fn.getGender(status));
+
+    formatter = NumberFormatter::with().unit(MeasureUnit::getYear()).locale(Locale("de"));
+    fn = formatter.formatDouble(1.1, status);
+    assertEquals("Year gender", neuter, fn.getGender(status));
+
+    status.assertSuccess();
 }
 
 void NumberFormatterApiTest::unitPercent() {

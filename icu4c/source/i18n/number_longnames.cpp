@@ -46,6 +46,11 @@ constexpr int32_t GENDER_INDEX = StandardPlural::Form::COUNT + 2;
 // Number of keys in the array populated by PluralTableSink.
 constexpr int32_t ARRAY_LENGTH = StandardPlural::Form::COUNT + 3;
 
+// TODO(inflections): load this list from resources, after creating a "&set"
+// function for use in ldml2icu rules.
+const char *gGenders[] = {"animate",   "common", "feminine", "inanimate",
+                          "masculine", "neuter", "personal"};
+
 static int32_t getIndex(const char* pluralKeyword, UErrorCode& status) {
     // pluralKeyword can also be "dnam", "per", or "gender"
     switch (*pluralKeyword) {
@@ -159,6 +164,11 @@ void getMeasureData(const Locale &locale, const MeasureUnit &unit, const UNumber
 
     CharString key;
     key.append("units", status);
+    // // TODO/FIXME(review): do we also want gender with other widths? If so: we
+    // // need to explicitly grab it from units/
+    // if (width != UNUM_UNIT_WIDTH_FULL_NAME) {
+    //     // Fetch gender from units/, it isn't present in unitsNarrow/ and unitsShort/.
+    // }
     if (width == UNUM_UNIT_WIDTH_NARROW) {
         key.append("Narrow", status);
     } else if (width == UNUM_UNIT_WIDTH_SHORT) {
@@ -278,6 +288,9 @@ void LongNameHandler::forMeasureUnit(const Locale &loc, const MeasureUnit &unitR
     fillIn->parent = parent;
     fillIn->simpleFormatsToModifiers(simpleFormats, {UFIELD_CATEGORY_NUMBER, UNUM_MEASURE_UNIT_FIELD},
                                      status);
+    if (!simpleFormats[GENDER_INDEX].isBogus()) {
+        fillIn->gender.appendInvariantChars(simpleFormats[GENDER_INDEX], status);
+    }
 }
 
 void LongNameHandler::forCompoundUnit(const Locale &loc, const MeasureUnit &unit,
@@ -339,6 +352,7 @@ void LongNameHandler::forCompoundUnit(const Locale &loc, const MeasureUnit &unit
     fillIn->parent = parent;
     fillIn->multiSimpleFormatsToModifiers(primaryData, perUnitFormat,
                                           {UFIELD_CATEGORY_NUMBER, UNUM_MEASURE_UNIT_FIELD}, status);
+    // FIXME: calculate gender
 }
 
 UnicodeString LongNameHandler::getUnitDisplayName(
@@ -387,6 +401,7 @@ LongNameHandler* LongNameHandler::forCurrencyLongNames(const Locale &loc, const 
     getCurrencyLongNameData(loc, currency, simpleFormats, status);
     if (U_FAILURE(status)) { return nullptr; }
     result->simpleFormatsToModifiers(simpleFormats, {UFIELD_CATEGORY_NUMBER, UNUM_CURRENCY_FIELD}, status);
+    // TODO(inflections): currency gender?
     return result;
 }
 
@@ -426,6 +441,7 @@ void LongNameHandler::processQuantity(DecimalQuantity &quantity, MicroProps &mic
     }
     StandardPlural::Form pluralForm = utils::getPluralSafe(micros.rounder, rules, quantity, status);
     micros.modOuter = &fModifiers[pluralForm];
+    // FIXME: add a Modifier to the chain that sets gender.
 }
 
 const Modifier* LongNameHandler::getModifier(Signum /*signum*/, StandardPlural::Form plural) const {
@@ -464,6 +480,7 @@ void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc, const MeasureUn
     // We need a localised NumberFormatter for the numbers of the bigger units
     // (providing Arabic numerals, for example).
     fillIn->fNumberFormatter = NumberFormatter::withLocale(loc);
+    // FIXME: calculate gender
 }
 
 void MixedUnitLongNameHandler::processQuantity(DecimalQuantity &quantity, MicroProps &micros,
@@ -473,6 +490,7 @@ void MixedUnitLongNameHandler::processQuantity(DecimalQuantity &quantity, MicroP
         parent->processQuantity(quantity, micros, status);
     }
     micros.modOuter = getMixedUnitModifier(quantity, micros, status);
+    // FIXME: add a Modifier to the chain that sets gender.
 }
 
 const Modifier *MixedUnitLongNameHandler::getMixedUnitModifier(DecimalQuantity &quantity,
@@ -541,8 +559,6 @@ const Modifier *MixedUnitLongNameHandler::getMixedUnitModifier(DecimalQuantity &
         }
     }
 
-
-
     // Combine list into a "premixed" pattern
     UnicodeString premixedFormatPattern;
     fListFormatter->format(outputMeasuresList.getAlias(), fMixedUnitCount, premixedFormatPattern,
@@ -560,7 +576,7 @@ const Modifier *MixedUnitLongNameHandler::getMixedUnitModifier(DecimalQuantity &
 const Modifier *MixedUnitLongNameHandler::getModifier(Signum /*signum*/,
                                                       StandardPlural::Form /*plural*/) const {
     // TODO(units): investigate this method when investigating where
-    // LongNameHandler::getModifier() gets used. To be sure it remains
+    // ModifierStore::getModifier() gets used. To be sure it remains
     // unreachable:
     UPRV_UNREACHABLE;
     return nullptr;

@@ -1483,6 +1483,9 @@ struct U_I18N_API MacroProps : public UMemory {
     StringProp usage;  // = StringProp();  (no usage)
 
     /** @internal */
+    StringProp unitDisplayCase;  // = StringProp();  (nominative)
+
+    /** @internal */
     const AffixPatternProvider* affixProvider = nullptr;  // no ownership
 
     /** @internal */
@@ -1503,7 +1506,8 @@ struct U_I18N_API MacroProps : public UMemory {
     bool copyErrorTo(UErrorCode &status) const {
         return notation.copyErrorTo(status) || precision.copyErrorTo(status) ||
                padder.copyErrorTo(status) || integerWidth.copyErrorTo(status) ||
-               symbols.copyErrorTo(status) || scale.copyErrorTo(status) || usage.copyErrorTo(status);
+               symbols.copyErrorTo(status) || scale.copyErrorTo(status) || usage.copyErrorTo(status) ||
+               unitDisplayCase.copyErrorTo(status);
     }
 };
 
@@ -2169,6 +2173,21 @@ class U_I18N_API NumberFormatterSettings {
      * @draft ICU 68
      */
     Derived usage(StringPiece usage) &&;
+
+    /**
+     * Specifies the desired case for a unit formatter's output (e.g.
+     * accusative, dative, genitive).
+     *
+     * @internal ICU 69 technology preview
+     */
+    Derived unitDisplayCase(StringPiece unitDisplayCase) const &;
+
+    /**
+     * Overload of unitDisplayCase() for use on an rvalue reference.
+     *
+     * @internal ICU 69 technology preview
+     */
+    Derived unitDisplayCase(StringPiece unitDisplayCase) &&;
 #endif // U_HIDE_DRAFT_API
 
 #ifndef U_HIDE_INTERNAL_API
@@ -2658,6 +2677,13 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
      * @draft ICU 68
      */
     MeasureUnit getOutputUnit(UErrorCode& status) const;
+
+    /**
+     * The gender of the formatted output.
+     *
+     * @internal ICU 69 technology preview.
+     */
+    const char *getGender(UErrorCode& status) const;
 #endif // U_HIDE_DRAFT_API
 
 #ifndef U_HIDE_INTERNAL_API

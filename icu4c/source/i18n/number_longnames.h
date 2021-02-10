@@ -16,6 +16,8 @@
 U_NAMESPACE_BEGIN namespace number {
 namespace impl {
 
+// LongNameHandler takes care of formatting currency and measurement unit names,
+// as well as populating the gender of measure units.
 class LongNameHandler : public MicroPropsGenerator, public ModifierStore, public UMemory {
   public:
     static UnicodeString getUnitDisplayName(
@@ -63,10 +65,6 @@ class LongNameHandler : public MicroPropsGenerator, public ModifierStore, public
     void
     processQuantity(DecimalQuantity &quantity, MicroProps &micros, UErrorCode &status) const U_OVERRIDE;
 
-    // TODO(units): investigate whether we might run into Mixed Unit trouble
-    // with this. This override for ModifierStore::getModifier does not support
-    // mixed units: investigate under which circumstances it gets called (check
-    // both ImmutablePatternModifier and in NumberRangeFormatterImpl).
     const Modifier* getModifier(Signum signum, StandardPlural::Form plural) const U_OVERRIDE;
 
   private:
@@ -76,6 +74,9 @@ class LongNameHandler : public MicroPropsGenerator, public ModifierStore, public
     const PluralRules *rules;
     // Not owned
     const MicroPropsGenerator *parent;
+    // TODO(inflections_stopgap): we're copying strings at the moment. We'll do
+    // something more efficient in the future.
+    CharString gender;
 
     LongNameHandler(const PluralRules *rules, const MicroPropsGenerator *parent)
         : rules(rules), parent(parent) {
