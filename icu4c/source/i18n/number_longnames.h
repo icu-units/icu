@@ -84,9 +84,9 @@ class LongNameHandler : public MicroPropsGenerator, public ModifierStore, public
     const PluralRules *rules;
     // Not owned
     const MicroPropsGenerator *parent;
-    // TODO(inflections_stopgap): we're copying strings at the moment. We'll do
-    // something more efficient in the future.
-    CharString gender;
+    // Grammatical gender of the formatted result. Not owned: must point at
+    // static or global strings.
+    const char *gender = "";
 
     LongNameHandler(const PluralRules *rules, const MicroPropsGenerator *parent)
         : rules(rules), parent(parent) {

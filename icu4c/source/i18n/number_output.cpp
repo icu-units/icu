@@ -40,7 +40,7 @@ MeasureUnit FormattedNumber::getOutputUnit(UErrorCode& status) const {
 }
 
 const char *FormattedNumber::getGender(UErrorCode &status) const {
-    UPRV_FORMATTED_VALUE_METHOD_GUARD(nullptr)
+    UPRV_FORMATTED_VALUE_METHOD_GUARD("")
     return fData->gender;
 }
 

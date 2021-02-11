@@ -48,8 +48,31 @@ constexpr int32_t ARRAY_LENGTH = StandardPlural::Form::COUNT + 3;
 
 // TODO(inflections): load this list from resources, after creating a "&set"
 // function for use in ldml2icu rules.
-const char *gGenders[] = {"animate",   "common", "feminine", "inanimate",
-                          "masculine", "neuter", "personal"};
+const int32_t GENDER_COUNT = 7;
+const char *gGenders[GENDER_COUNT] = {"animate",   "common", "feminine", "inanimate",
+                                      "masculine", "neuter", "personal"};
+
+const char* getGenderString(UnicodeString uGender, UErrorCode status) {
+    CharString gender;
+    gender.appendInvariantChars(uGender, status);
+    if (U_FAILURE(status)) {
+        return "";
+    }
+    int32_t first = 0;
+    int32_t last = GENDER_COUNT;
+    while (first < last) {
+        int32_t mid = (first + last) / 2;
+        int32_t cmp = uprv_strcmp(gender.data(), gGenders[mid]);
+        if (cmp == 0) {
+            return gGenders[mid];
+        } else if (cmp > 0) {
+            first = mid+1;
+        } else if (cmp < 0) {
+            last = mid;
+        }
+    }
+    return "";
+}
 
 static int32_t getIndex(const char* pluralKeyword, UErrorCode& status) {
     // pluralKeyword can also be "dnam", "per", or "gender"
@@ -287,6 +310,9 @@ void LongNameHandler::forMeasureUnit(const Locale &loc,
         // "builtin-per-builtin".
         // TODO(ICU-20941): support more generic case than builtin-per-builtin.
         MeasureUnitImpl fullUnit = MeasureUnitImpl::forMeasureUnitMaybeCopy(unitRef, status);
+        if (U_FAILURE(status)) {
+            return;
+        }
         MeasureUnitImpl unit;
         MeasureUnitImpl perUnit;
         for (int32_t i = 0; i < fullUnit.singleUnits.length(); i++) {
@@ -313,7 +339,7 @@ void LongNameHandler::forMeasureUnit(const Locale &loc,
     fillIn->simpleFormatsToModifiers(simpleFormats, {UFIELD_CATEGORY_NUMBER, UNUM_MEASURE_UNIT_FIELD},
                                      status);
     if (!simpleFormats[GENDER_INDEX].isBogus()) {
-        fillIn->gender.appendInvariantChars(simpleFormats[GENDER_INDEX], status);
+        fillIn->gender = getGenderString(simpleFormats[GENDER_INDEX], status);
     }
 }
 
@@ -326,6 +352,9 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
                                       const MicroPropsGenerator *parent,
                                       LongNameHandler *fillIn,
                                       UErrorCode &status) {
+    if (U_FAILURE(status)) {
+        return;
+    }
     if (uprv_strcmp(unit.getType(), "") == 0 || uprv_strcmp(perUnit.getType(), "") == 0) {
         // TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Set an
         // error code. Once we support not-built-in units here, unitRef may be
@@ -472,7 +501,7 @@ void LongNameHandler::processQuantity(DecimalQuantity &quantity, MicroProps &mic
     }
     StandardPlural::Form pluralForm = utils::getPluralSafe(micros.rounder, rules, quantity, status);
     micros.modOuter = &fModifiers[pluralForm];
-    // FIXME: add a Modifier to the chain that sets gender.
+    micros.gender = gender;
 }
 
 const Modifier* LongNameHandler::getModifier(Signum /*signum*/, StandardPlural::Form plural) const {
@@ -501,6 +530,10 @@ void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc,
                        status);
     }
 
+    // TODO(icu-units#120): Make sure ICU doesn't output zero-valued
+    // high-magnitude fields
+    // * for mixed units count N, produce N listFormatters, one for each subset
+    //   that might be formatted.
     UListFormatterWidth listWidth = ULISTFMT_WIDTH_SHORT;
     if (width == UNUM_UNIT_WIDTH_NARROW) {
         listWidth = ULISTFMT_WIDTH_NARROW;
@@ -512,11 +545,11 @@ void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc,
         ListFormatter::createInstance(loc, ULISTFMT_TYPE_UNITS, listWidth, status), status);
     fillIn->rules = rules;
     fillIn->parent = parent;
+    // FIXME: grab gender of each unit; calculate gender associated with this list formatter.
 
     // We need a localised NumberFormatter for the numbers of the bigger units
     // (providing Arabic numerals, for example).
     fillIn->fNumberFormatter = NumberFormatter::withLocale(loc);
-    // FIXME: calculate gender
 }
 
 void MixedUnitLongNameHandler::processQuantity(DecimalQuantity &quantity, MicroProps &micros,
@@ -526,7 +559,6 @@ void MixedUnitLongNameHandler::processQuantity(DecimalQuantity &quantity, MicroP
         parent->processQuantity(quantity, micros, status);
     }
     micros.modOuter = getMixedUnitModifier(quantity, micros, status);
-    // FIXME: add a Modifier to the chain that sets gender.
 }
 
 const Modifier *MixedUnitLongNameHandler::getMixedUnitModifier(DecimalQuantity &quantity,
@@ -594,6 +626,10 @@ const Modifier *MixedUnitLongNameHandler::getMixedUnitModifier(DecimalQuantity &
             compiledFormatter.format(num, outputMeasuresList[i], status);
         }
     }
+
+    // FIXME: set micros.gender to the gender associated with the list formatter
+    // in use below. And document this appropriately? "getMixedUnitModifier"
+    // doesn't sound like it would do something like this.
 
     // Combine list into a "premixed" pattern
     UnicodeString premixedFormatPattern;

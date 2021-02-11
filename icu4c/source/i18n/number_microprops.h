@@ -82,6 +82,7 @@ struct MicroProps : public MicroPropsGenerator {
     UNumberDecimalSeparatorDisplay decimal;
     bool useCurrency;
     char nsName[9];
+    const char *gender;
 
     // Note: This struct has no direct ownership of the following pointers.
     const DecimalFormatSymbols* symbols;

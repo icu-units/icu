@@ -2028,28 +2028,32 @@ void NumberFormatterApiTest::unitInflections() {
 
 void NumberFormatterApiTest::unitGender() {
     IcuTestErrorCode status(*this, "unitGender");
-    const char* masculine = "masculine";
-    const char* feminine = "feminine";
-    const char* neuter = "neuter";
 
-    // FIXME: turn this into an array of test cases:
-
+    struct TestCase {
+        const char *locale;
+        const char *unitIdentifier;
+        const char *expectedGender;
+    } cases[] = {
+        {"de", "meter", "masculine"},
+        {"de", "hour", "feminine"},
+        {"de", "year", "neuter"},
+        // grammaticalFeatures deriveCompound "per" rule:
+        {"de", "meter-per-hour", "masculine"},
+    };
     LocalizedNumberFormatter formatter;
     FormattedNumber fn;
-
-    formatter = NumberFormatter::with().unit(MeasureUnit::getMeter()).locale(Locale("de"));
-    fn = formatter.formatDouble(1.1, status);
-    assertEquals("Meter gender", masculine, fn.getGender(status));
-
-    formatter = NumberFormatter::with().unit(MeasureUnit::getHour()).locale(Locale("de"));
-    fn = formatter.formatDouble(1.1, status);
-    assertEquals("Hour gender", feminine, fn.getGender(status));
-
-    formatter = NumberFormatter::with().unit(MeasureUnit::getYear()).locale(Locale("de"));
-    fn = formatter.formatDouble(1.1, status);
-    assertEquals("Year gender", neuter, fn.getGender(status));
-
-    status.assertSuccess();
+    for (const TestCase &t : cases) {
+        // FIXME: make this work for more than just UNUM_UNIT_WIDTH_FULL_NAME
+        formatter = NumberFormatter::with()
+                        .unit(MeasureUnit::forIdentifier(t.unitIdentifier, status))
+                        .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME)
+                        .locale(Locale(t.locale));
+        fn = formatter.formatDouble(1.1, status);
+        assertEquals(UnicodeString("Testing gender, unit: ") + t.unitIdentifier +
+                         ", locale: " + t.locale,
+                     t.expectedGender, fn.getGender(status));
+        status.assertSuccess();
+    }
 }
 
 void NumberFormatterApiTest::unitPercent() {
