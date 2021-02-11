@@ -370,10 +370,14 @@ NumberFormatterImpl::macrosToMicroGenerator(const MacroProps& macros, bool safe,
 
     // Outer modifier (CLDR units and currency long names)
     if (isCldrUnit) {
+        StringPiece unitDisplayCase("");
+        if (macros.unitDisplayCase.isSet()) {
+            unitDisplayCase = macros.unitDisplayCase.fValue;
+        }
         if (macros.usage.isSet()) {
             fLongNameMultiplexer.adoptInsteadAndCheckErrorCode(
                 LongNameMultiplexer::forMeasureUnits(
-                    macros.locale, *fUsagePrefsHandler->getOutputUnits(), unitWidth,
+                    macros.locale, *fUsagePrefsHandler->getOutputUnits(), unitWidth, unitDisplayCase,
                     resolvePluralRules(macros.rules, macros.locale, status), chain, status),
                 status);
             chain = fLongNameMultiplexer.getAlias();
@@ -381,7 +385,7 @@ NumberFormatterImpl::macrosToMicroGenerator(const MacroProps& macros, bool safe,
             fMixedUnitLongNameHandler.adoptInsteadAndCheckErrorCode(new MixedUnitLongNameHandler(),
                                                                     status);
             MixedUnitLongNameHandler::forMeasureUnit(
-                macros.locale, macros.unit, unitWidth,
+                macros.locale, macros.unit, unitWidth, unitDisplayCase,
                 resolvePluralRules(macros.rules, macros.locale, status), chain,
                 fMixedUnitLongNameHandler.getAlias(), status);
             chain = fMixedUnitLongNameHandler.getAlias();
@@ -391,7 +395,7 @@ NumberFormatterImpl::macrosToMicroGenerator(const MacroProps& macros, bool safe,
                 unit = unit.product(macros.perUnit.reciprocal(status), status);
             }
             fLongNameHandler.adoptInsteadAndCheckErrorCode(new LongNameHandler(), status);
-            LongNameHandler::forMeasureUnit(macros.locale, unit, unitWidth,
+            LongNameHandler::forMeasureUnit(macros.locale, unit, unitWidth, unitDisplayCase,
                                             resolvePluralRules(macros.rules, macros.locale, status),
                                             chain, fLongNameHandler.getAlias(), status);
             chain = fLongNameHandler.getAlias();

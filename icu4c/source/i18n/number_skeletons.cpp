@@ -890,6 +890,10 @@ void GeneratorHelpers::generateSkeleton(const MacroProps& macros, UnicodeString&
         status = U_UNSUPPORTED_ERROR;
         return;
     }
+    if (macros.unitDisplayCase.isSet()) {
+        status = U_UNSUPPORTED_ERROR;
+        return;
+    }
     if (macros.affixProvider != nullptr) {
         status = U_UNSUPPORTED_ERROR;
         return;

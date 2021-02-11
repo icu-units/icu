@@ -142,12 +142,19 @@ class PluralTableSink : public ResourceSink {
  * UNUM_UNIT_WIDTH_NARROW), or just *unitsShort* (for width
  * UNUM_UNIT_WIDTH_SHORT). For other widths, it reads just "units".
  *
- * @param unit must have a type and subtype (i.e. it must be a unit listed in
- *     gTypes and gSubTypes in measunit.cpp).
+ * @param unit must be a built-in unit, i.e. must have a type and subtype,
+ *     listed in gTypes and gSubTypes in measunit.cpp.
+ * @param unitDisplayCase the empty string and "nominative" are treated the
+ *     same. For other cases, strings for the requested case are used if found.
+ *     (For any missing case-specific data, we fall back to nominative.)
  * @param outArray must be of fixed length ARRAY_LENGTH.
  */
-void getMeasureData(const Locale &locale, const MeasureUnit &unit, const UNumberUnitWidth &width,
-                    UnicodeString *outArray, UErrorCode &status) {
+void getMeasureData(const Locale &locale,
+                    const MeasureUnit &unit,
+                    const UNumberUnitWidth &width,
+                    StringPiece unitDisplayCase,
+                    UnicodeString *outArray,
+                    UErrorCode &status) {
     PluralTableSink sink(outArray);
     LocalUResourceBundlePointer unitsBundle(ures_open(U_ICUDATA_UNIT, locale.getName(), &status));
     if (U_FAILURE(status)) { return; }
@@ -178,6 +185,19 @@ void getMeasureData(const Locale &locale, const MeasureUnit &unit, const UNumber
     key.append(unit.getType(), status);
     key.append("/", status);
     key.append(subtypeForResource, status);
+
+    if (width == UNUM_UNIT_WIDTH_FULL_NAME && !unitDisplayCase.empty() &&
+        // Grab desired case first, if available. Then grab nominative case to fill
+        // in the gaps.
+        unitDisplayCase.compare("nominative") != 0) {
+        CharString caseKey;
+        caseKey.append(key, status);
+        caseKey.append("/case/", status);
+        caseKey.append(unitDisplayCase, status);
+
+        UErrorCode localStatus = U_ZERO_ERROR;
+        ures_getAllItemsWithFallback(unitsBundle.getAlias(), caseKey.data(), sink, localStatus);
+    }
 
     UErrorCode localStatus = U_ZERO_ERROR;
     ures_getAllItemsWithFallback(unitsBundle.getAlias(), key.data(), sink, localStatus);
@@ -248,9 +268,13 @@ UnicodeString getPerUnitFormat(const Locale& locale, const UNumberUnitWidth &wid
 
 } // namespace
 
-void LongNameHandler::forMeasureUnit(const Locale &loc, const MeasureUnit &unitRef,
-                                     const UNumberUnitWidth &width, const PluralRules *rules,
-                                     const MicroPropsGenerator *parent, LongNameHandler *fillIn,
+void LongNameHandler::forMeasureUnit(const Locale &loc,
+                                     const MeasureUnit &unitRef,
+                                     const UNumberUnitWidth &width,
+                                     StringPiece unitDisplayCase,
+                                     const PluralRules *rules,
+                                     const MicroPropsGenerator *parent,
+                                     LongNameHandler *fillIn,
                                      UErrorCode &status) {
     // Not valid for mixed units that aren't built-in units, and there should
     // not be any built-in mixed units!
@@ -275,12 +299,12 @@ void LongNameHandler::forMeasureUnit(const Locale &loc, const MeasureUnit &unitR
             }
         }
         forCompoundUnit(loc, std::move(unit).build(status), std::move(perUnit).build(status), width,
-                        rules, parent, fillIn, status);
+                        unitDisplayCase, rules, parent, fillIn, status);
         return;
     }
 
     UnicodeString simpleFormats[ARRAY_LENGTH];
-    getMeasureData(loc, unitRef, width, simpleFormats, status);
+    getMeasureData(loc, unitRef, width, unitDisplayCase, simpleFormats, status);
     if (U_FAILURE(status)) {
         return;
     }
@@ -293,10 +317,15 @@ void LongNameHandler::forMeasureUnit(const Locale &loc, const MeasureUnit &unitR
     }
 }
 
-void LongNameHandler::forCompoundUnit(const Locale &loc, const MeasureUnit &unit,
-                                      const MeasureUnit &perUnit, const UNumberUnitWidth &width,
-                                      const PluralRules *rules, const MicroPropsGenerator *parent,
-                                      LongNameHandler *fillIn, UErrorCode &status) {
+void LongNameHandler::forCompoundUnit(const Locale &loc,
+                                      const MeasureUnit &unit,
+                                      const MeasureUnit &perUnit,
+                                      const UNumberUnitWidth &width,
+                                      StringPiece unitDisplayCase,
+                                      const PluralRules *rules,
+                                      const MicroPropsGenerator *parent,
+                                      LongNameHandler *fillIn,
+                                      UErrorCode &status) {
     if (uprv_strcmp(unit.getType(), "") == 0 || uprv_strcmp(perUnit.getType(), "") == 0) {
         // TODO(ICU-20941): Unsanctioned unit. Not yet fully supported. Set an
         // error code. Once we support not-built-in units here, unitRef may be
@@ -309,12 +338,14 @@ void LongNameHandler::forCompoundUnit(const Locale &loc, const MeasureUnit &unit
         return;
     }
     UnicodeString primaryData[ARRAY_LENGTH];
-    getMeasureData(loc, unit, width, primaryData, status);
+    // FIXME: determine case from grammaticalInfo
+    getMeasureData(loc, unit, width, "", primaryData, status);
     if (U_FAILURE(status)) {
         return;
     }
     UnicodeString secondaryData[ARRAY_LENGTH];
-    getMeasureData(loc, perUnit, width, secondaryData, status);
+    // FIXME: determine case from grammaticalInfo
+    getMeasureData(loc, perUnit, width, "", secondaryData, status);
     if (U_FAILURE(status)) {
         return;
     }
@@ -364,7 +395,7 @@ UnicodeString LongNameHandler::getUnitDisplayName(
         return ICU_Utility::makeBogusString();
     }
     UnicodeString simpleFormats[ARRAY_LENGTH];
-    getMeasureData(loc, unit, width, simpleFormats, status);
+    getMeasureData(loc, unit, width, "", simpleFormats, status);
     return simpleFormats[DNAM_INDEX];
 }
 
@@ -378,7 +409,7 @@ UnicodeString LongNameHandler::getUnitPattern(
         return ICU_Utility::makeBogusString();
     }
     UnicodeString simpleFormats[ARRAY_LENGTH];
-    getMeasureData(loc, unit, width, simpleFormats, status);
+    getMeasureData(loc, unit, width, "", simpleFormats, status);
     // The above already handles fallback from other widths to short
     if (U_FAILURE(status)) {
         return ICU_Utility::makeBogusString();
@@ -448,10 +479,14 @@ const Modifier* LongNameHandler::getModifier(Signum /*signum*/, StandardPlural::
     return &fModifiers[plural];
 }
 
-void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc, const MeasureUnit &mixedUnit,
-                                              const UNumberUnitWidth &width, const PluralRules *rules,
+void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc,
+                                              const MeasureUnit &mixedUnit,
+                                              const UNumberUnitWidth &width,
+                                              StringPiece unitDisplayCase,
+                                              const PluralRules *rules,
                                               const MicroPropsGenerator *parent,
-                                              MixedUnitLongNameHandler *fillIn, UErrorCode &status) {
+                                              MixedUnitLongNameHandler *fillIn,
+                                              UErrorCode &status) {
     U_ASSERT(mixedUnit.getComplexity(status) == UMEASURE_UNIT_MIXED);
     U_ASSERT(fillIn != nullptr);
 
@@ -462,7 +497,8 @@ void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc, const MeasureUn
     for (int32_t i = 0; i < fillIn->fMixedUnitCount; i++) {
         // Grab data for each of the components.
         UnicodeString *unitData = &fillIn->fMixedUnitData[i * ARRAY_LENGTH];
-        getMeasureData(loc, impl.singleUnits[i]->build(status), width, unitData, status);
+        getMeasureData(loc, impl.singleUnits[i]->build(status), width, unitDisplayCase, unitData,
+                       status);
     }
 
     UListFormatterWidth listWidth = ULISTFMT_WIDTH_SHORT;
@@ -582,10 +618,13 @@ const Modifier *MixedUnitLongNameHandler::getModifier(Signum /*signum*/,
     return nullptr;
 }
 
-LongNameMultiplexer *
-LongNameMultiplexer::forMeasureUnits(const Locale &loc, const MaybeStackVector<MeasureUnit> &units,
-                                     const UNumberUnitWidth &width, const PluralRules *rules,
-                                     const MicroPropsGenerator *parent, UErrorCode &status) {
+LongNameMultiplexer *LongNameMultiplexer::forMeasureUnits(const Locale &loc,
+                                                          const MaybeStackVector<MeasureUnit> &units,
+                                                          const UNumberUnitWidth &width,
+                                                          StringPiece unitDisplayCase,
+                                                          const PluralRules *rules,
+                                                          const MicroPropsGenerator *parent,
+                                                          UErrorCode &status) {
     LocalPointer<LongNameMultiplexer> result(new LongNameMultiplexer(parent), status);
     if (U_FAILURE(status)) {
         return nullptr;
@@ -601,11 +640,11 @@ LongNameMultiplexer::forMeasureUnits(const Locale &loc, const MaybeStackVector<M
         result->fMeasureUnits[i] = unit;
         if (unit.getComplexity(status) == UMEASURE_UNIT_MIXED) {
             MixedUnitLongNameHandler *mlnh = result->fMixedUnitHandlers.createAndCheckErrorCode(status);
-            MixedUnitLongNameHandler::forMeasureUnit(loc, unit, width, rules, NULL, mlnh, status);
+            MixedUnitLongNameHandler::forMeasureUnit(loc, unit, width, unitDisplayCase, rules, NULL, mlnh, status);
             result->fHandlers[i] = mlnh;
         } else {
             LongNameHandler *lnh = result->fLongNameHandlers.createAndCheckErrorCode(status);
-            LongNameHandler::forMeasureUnit(loc, unit, width, rules, NULL, lnh, status);
+            LongNameHandler::forMeasureUnit(loc, unit, width, unitDisplayCase, rules, NULL, lnh, status);
             result->fHandlers[i] = lnh;
         }
         if (U_FAILURE(status)) {
