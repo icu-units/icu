@@ -5,6 +5,7 @@
 
 #if !UCONFIG_NO_FORMATTING
 
+#include "cstr.h"
 #include "unicode/simpleformatter.h"
 #include "unicode/ures.h"
 #include "ureslocs.h"
@@ -367,13 +368,11 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
         return;
     }
     UnicodeString primaryData[ARRAY_LENGTH];
-    // FIXME: determine case from grammaticalInfo
     getMeasureData(loc, unit, width, "", primaryData, status);
     if (U_FAILURE(status)) {
         return;
     }
     UnicodeString secondaryData[ARRAY_LENGTH];
-    // FIXME: determine case from grammaticalInfo
     getMeasureData(loc, perUnit, width, "", secondaryData, status);
     if (U_FAILURE(status)) {
         return;
@@ -412,7 +411,36 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
     fillIn->parent = parent;
     fillIn->multiSimpleFormatsToModifiers(primaryData, perUnitFormat,
                                           {UFIELD_CATEGORY_NUMBER, UNUM_MEASURE_UNIT_FIELD}, status);
-    // FIXME: calculate gender
+
+    // Gender
+    StackUResourceBundle derivationsBundle, stackBundle;
+    ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
+    ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(), &status);
+    ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(), &status);
+    ures_getByKey(derivationsBundle.getAlias(), loc.getLanguage(), stackBundle.getAlias(), &status);
+    if (status == U_MISSING_RESOURCE_ERROR) {
+        status = U_ZERO_ERROR;
+        ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
+    }
+    ures_getByKey(stackBundle.getAlias(), "compound", stackBundle.getAlias(), &status);
+    ures_getByKey(stackBundle.getAlias(), "gender", stackBundle.getAlias(), &status);
+    int32_t uLen;
+    const UChar* uVal = ures_getStringByKey(stackBundle.getAlias(), "per", &uLen, &status);
+    if (U_FAILURE(status)) {
+        return;
+    }
+    U_ASSERT(uVal != nullptr && uLen == 1);
+    switch (uVal[0]) {
+    case u'0':
+        fillIn->gender = getGenderString(primaryData[GENDER_INDEX], status);
+        break;
+    case u'1':
+        fillIn->gender = getGenderString(secondaryData[GENDER_INDEX], status);
+        break;
+    default:
+        // Data error. Assert-fail in debug mode, else return no gender.
+        assert(false);
+    }
 }
 
 UnicodeString LongNameHandler::getUnitDisplayName(

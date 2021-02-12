@@ -2039,6 +2039,7 @@ void NumberFormatterApiTest::unitGender() {
         {"de", "year", "neuter"},
         // grammaticalFeatures deriveCompound "per" rule:
         {"de", "meter-per-hour", "masculine"},
+        {"af", "meter-per-hour", ""},
     };
     LocalizedNumberFormatter formatter;
     FormattedNumber fn;
