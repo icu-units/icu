@@ -1928,6 +1928,32 @@ void NumberFormatterApiTest::unitCurrency() {
             u"123,12 CN¥");
 }
 
+void NumberFormatterApiTest::runUnitInflectionsTestCases(UnlocalizedNumberFormatter unf,
+                                                         const UChar *skeleton,
+                                                         const UChar *conciseSkeleton,
+                                                         const UnitInflectionTestCase *cases,
+                                                         int32_t numCases) {
+    for (int32_t i = 0; i < numCases; i++) {
+        UnitInflectionTestCase t = cases[i];
+        const UChar *skel;
+        const UChar *cSkel;
+        if (t.unitDisplayCase == nullptr || t.unitDisplayCase[0] == 0) {
+            unf = unf.unitDisplayCase("");
+            skel = skeleton;
+            cSkel = conciseSkeleton;
+        } else {
+            unf = unf.unitDisplayCase(t.unitDisplayCase);
+            skel = nullptr;
+            cSkel = nullptr;
+        }
+        assertFormatSingle((UnicodeString("\"") + skeleton + u"\", locale=\"" + t.locale +
+                            u"\", case=\"" + (t.unitDisplayCase ? t.unitDisplayCase : "") +
+                            u"\", value=" + t.value)
+                               .getTerminatedBuffer(),
+                           skel, cSkel, unf, Locale(t.locale), t.value, t.expected);
+    }
+}
+
 void NumberFormatterApiTest::unitInflections() {
     IcuTestErrorCode status(*this, "unitInflections");
 
@@ -1972,45 +1998,71 @@ void NumberFormatterApiTest::unitInflections() {
     // The distinction exists for "one", for "few", and for "other", but not for
     // "many".
 
-    struct TestCase {
-        const char* locale;
-        const char* unitDisplayCase;
-        double value;
-        const UChar* expected;
-    };
 
-    UnlocalizedNumberFormatter unf =
-        NumberFormatter::with().unit(NoUnit::percent()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
-    const UChar *skeleton = u"percent unit-width-full-name";
-    const UChar *conciseSkeleton = u"% unit-width-full-name";
-    const TestCase cases[] = {
-        {"ru", nullptr, 10, u"10 процентов"}, // many
-        {"ru", "genitive", 10, u"10 процентов"}, // many
-        {"ru", nullptr, 33, u"33 процента"}, // few
-        {"ru", "genitive", 33, u"33 процентов"}, // few
-        {"ru", nullptr, 1, u"1 процент"}, // one
-        {"ru", "genitive", 1, u"1 процента"}, // one
-    };
-    for (TestCase t : cases) {
-        const UChar *skel;
-        const UChar *cSkel;
-        if (t.unitDisplayCase == nullptr || t.unitDisplayCase[0] == 0) {
-            unf = unf.unitDisplayCase("");
-            skel = skeleton;
-            cSkel = conciseSkeleton;
-        } else {
-            unf = unf.unitDisplayCase(t.unitDisplayCase);
-            skel = nullptr;
-            cSkel = nullptr;
-        }
-        assertFormatSingle((UnicodeString("\"") + skeleton + u"\", locale=\"" + t.locale +
-                            u"\", case=\"" + (t.unitDisplayCase ? t.unitDisplayCase : "") +
-                            u"\", value=" + t.value)
-                               .getTerminatedBuffer(),
-                           skel, cSkel, unf, Locale(t.locale), t.value, t.expected);
+    UnlocalizedNumberFormatter unf;
+    const UChar *skeleton;
+    const UChar *conciseSkeleton;
+    {
+        unf = NumberFormatter::with().unit(NoUnit::percent()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
+        skeleton = u"percent unit-width-full-name";
+        conciseSkeleton = u"% unit-width-full-name";
+        const UnitInflectionTestCase percentCases[] = {
+            {"ru", nullptr, 10, u"10 процентов"},    // many
+            {"ru", "genitive", 10, u"10 процентов"}, // many
+            {"ru", nullptr, 33, u"33 процента"},     // few
+            {"ru", "genitive", 33, u"33 процентов"}, // few
+            {"ru", nullptr, 1, u"1 процент"},        // one
+            {"ru", "genitive", 1, u"1 процента"},    // one
+        };
+        runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, percentCases,
+                                    UPRV_LENGTHOF(percentCases));
     }
-    unf = unf.unitDisplayCase("");
+    {
+        // Testing "de" rule:
+        // <deriveComponent feature="case" structure="per" value0="compound" value1="accusative"/>
+        //
+        // hour has a per-pattern. per-patterns are uninflected.
+        // FIXME: look for cases without per-pattern.
+        // FIXME: look for cases where per-pattern doesn't match desired pattern!
+        // FIXME: look at "↑↑↑" cases: check that inheritance is done right.
 
+        unf = NumberFormatter::with().unit(MeasureUnit::getMeter()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
+        skeleton = u"unit/meter unit-width-full-name";
+        conciseSkeleton = u"unit/meter unit-width-full-name";
+        const UnitInflectionTestCase meterCases[] = {
+            {"de", nullptr, 1, u"1 Meter"},
+            {"de", "genitive", 1, u"1 Meters"},
+            {"de", nullptr, 2, u"2 Meter"},
+            {"de", "dative", 2, u"2 Metern"},
+        };
+        runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, meterCases,
+                                    UPRV_LENGTHOF(meterCases));
+
+
+        unf = NumberFormatter::with().unit(MeasureUnit::getDay()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
+        skeleton = u"unit/day unit-width-full-name";
+        conciseSkeleton = u"unit/day unit-width-full-name";
+        const UnitInflectionTestCase dayCases[] = {
+            {"de", nullptr, 1, u"1 Tag"},
+            {"de", "genitive", 1, u"1 Tages"},
+            {"de", nullptr, 2, u"2 Tage"},
+            {"de", "dative", 2, u"2 Tagen"},
+        };
+        runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, dayCases, UPRV_LENGTHOF(dayCases));
+
+        unf = NumberFormatter::with()
+                  .unit(MeasureUnit::forIdentifier("meter-per-day", status))
+                  .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
+        skeleton = u"unit/meter-per-day unit-width-full-name";
+        conciseSkeleton = u"unit/meter-per-day unit-width-full-name";
+        const UnitInflectionTestCase meterPerDayCases[] = {
+            {"de", nullptr, 1, u"1 Meter pro Tag"}, {"de", "genitive", 1, u"1 Meters pro Tag"},
+            {"de", nullptr, 2, u"2 Meter pro Tag"}, {"de", "dative", 2, u"2 Metern pro Tag"},
+            {"af", nullptr, 1, u"1 meter per dag"}, {"af", "dative", 1, u"1 meter per dag"},
+        };
+        runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, meterPerDayCases,
+                                    UPRV_LENGTHOF(meterPerDayCases));
+    }
     // FIXME: add a usage case that selects between preferences with different
     // genders (e.g. year, month, day, hour).
 }

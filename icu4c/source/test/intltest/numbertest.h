@@ -172,6 +172,19 @@ class NumberFormatterApiTest : public IntlTestWithFieldPosition {
       const FormattedNumber& formattedNumber,
       const UFieldPosition* expectedFieldPositions,
       int32_t length);
+
+    struct UnitInflectionTestCase {
+        const char *locale;
+        const char *unitDisplayCase;
+        double value;
+        const UChar *expected;
+    };
+
+    void runUnitInflectionsTestCases(UnlocalizedNumberFormatter unf,
+                                     const UChar *skeleton,
+                                     const UChar *conciseSkeleton,
+                                     const UnitInflectionTestCase *cases,
+                                     int32_t numCases);
 };
 
 class DecimalQuantityTest : public IntlTest {

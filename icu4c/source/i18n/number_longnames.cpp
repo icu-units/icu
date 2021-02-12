@@ -367,13 +367,56 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
         status = U_INTERNAL_PROGRAM_ERROR;
         return;
     }
+
+    StringPiece primaryCase, secondaryCase;
+    CharString primaryCase_, secondaryCase_;
+    if (!unitDisplayCase.empty()) {
+        assert(U_SUCCESS(status));
+        StackUResourceBundle derivationsBundle, stackBundle;
+        // FIXME: factor out. Here need: de|root, component, case, per.
+        // FIXME: code currently assumes if the locale exists, the rules are there -
+        // instead of falling back to root when the requested rule is missing.
+        ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
+        ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(),
+                      &status);
+        ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(),
+                      &status);
+        ures_getByKey(derivationsBundle.getAlias(), loc.getLanguage(), stackBundle.getAlias(), &status);
+        if (status == U_MISSING_RESOURCE_ERROR) {
+            status = U_ZERO_ERROR;
+            ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
+        }
+        ures_getByKey(stackBundle.getAlias(), "component", stackBundle.getAlias(), &status);
+        ures_getByKey(stackBundle.getAlias(), "case", stackBundle.getAlias(), &status);
+        ures_getByKey(stackBundle.getAlias(), "per", stackBundle.getAlias(), &status);
+        UnicodeString uVal0 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 0, &status);
+        UnicodeString uVal1 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 1, &status);
+        if (U_SUCCESS(status)) {
+            if (uVal0.compare(UnicodeString(u"compound")) == 0) {
+                primaryCase = unitDisplayCase;
+            } else {
+                primaryCase_.appendInvariantChars(uVal0, status);
+                primaryCase = primaryCase_.toStringPiece();
+            }
+            if (uVal1.compare(UnicodeString(u"compound")) == 0) {
+                secondaryCase = unitDisplayCase;
+            } else {
+                secondaryCase_.appendInvariantChars(uVal1, status);
+                secondaryCase = secondaryCase_.toStringPiece();
+            }
+        } else {
+            // Ignore failures in production code, assert-fail in debug mode.
+            U_ASSERT(false);
+            status = U_ZERO_ERROR;
+        }
+    }
     UnicodeString primaryData[ARRAY_LENGTH];
-    getMeasureData(loc, unit, width, "", primaryData, status);
+    getMeasureData(loc, unit, width, primaryCase, primaryData, status);
     if (U_FAILURE(status)) {
         return;
     }
     UnicodeString secondaryData[ARRAY_LENGTH];
-    getMeasureData(loc, perUnit, width, "", secondaryData, status);
+    getMeasureData(loc, perUnit, width, secondaryCase, secondaryData, status);
     if (U_FAILURE(status)) {
         return;
     }
@@ -414,6 +457,9 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
 
     // Gender
     StackUResourceBundle derivationsBundle, stackBundle;
+    // FIXME: factor out. Here need: de|root, compound, gender, per.
+    // FIXME: code currently assumes if the locale exists, the rules are there -
+    // instead of falling back to root when the requested rule is missing.
     ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
     ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(), &status);
     ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(), &status);
@@ -439,7 +485,7 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
         break;
     default:
         // Data error. Assert-fail in debug mode, else return no gender.
-        assert(false);
+        U_ASSERT(false);
     }
 }
 
