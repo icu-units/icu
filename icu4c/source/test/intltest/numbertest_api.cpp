@@ -1931,8 +1931,6 @@ void NumberFormatterApiTest::unitCurrency() {
 void NumberFormatterApiTest::unitInflections() {
     IcuTestErrorCode status(*this, "unitInflections");
 
-    // FIXME: We decided to have a string setter .unitDisplayCase(case) on NumberFormatter as an @internal Technical Preview, as well as FormattedNumber getGender().
-
     // TODO(icu-units#111)/FIXME(don't submit): inflection examples: in CLDR's
     // grammaticalFeatures.xml I see the following:
     //
@@ -1944,6 +1942,16 @@ void NumberFormatterApiTest::unitInflections() {
     // "10%", but the full form requires the grammatical variant marked by case
     // and number to be expressed correctly.
     // """
+    //
+    // FIXME: 10% might be a bad example, since nominal and genitive look the
+    // same? 2% and 1% would be better - or another value using "few" plural
+    // form.
+    //
+    // Plural rule:
+    //     few{
+    //         "v = 0 and i % 10 = 2..4 and i % 100 != 12..14 @integer 2~4, 22~24, 3"
+    //         "2~34, 42~44, 52~54, 62, 102, 1002, …"
+    //     }
     //
     // Data for ru percent genitive:
     //
@@ -1964,63 +1972,44 @@ void NumberFormatterApiTest::unitInflections() {
     // The distinction exists for "one", for "few", and for "other", but not for
     // "many".
 
+    struct TestCase {
+        const char* locale;
+        const char* unitDisplayCase;
+        double value;
+        const UChar* expected;
+    };
+
     UnlocalizedNumberFormatter unf =
         NumberFormatter::with().unit(NoUnit::percent()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
     const UChar *skeleton = u"percent unit-width-full-name";
     const UChar *conciseSkeleton = u"% unit-width-full-name";
-
-    // Values in assertFormatDescending are all of plural forms "many" or
-    // "other", for which there is no difference to genitive.
-    assertFormatSingle(
-            u"Inflected percentage, nominal, few",
-            skeleton,
-            conciseSkeleton,
-            unf,
-            Locale("ru"),
-            10,
-            u"10 процентов"); // many?, FIXME: bad example in grammaticalFeatures.xml if this matches nominal
-    assertFormatSingle(
-            u"Inflected percentage, genitive, few",
-            nullptr,
-            nullptr,
-            unf.unitDisplayCase("genitive"),
-            Locale("ru"),
-            10,
-            u"10 процентов");  // many?, genitive
-
-    assertFormatSingle(
-            u"Inflected percentage, nominal, few",
-            skeleton,
-            conciseSkeleton,
-            unf,
-            Locale("ru"),
-            2,
-            u"2 процента"); // few
-    assertFormatSingle(
-            u"Inflected percentage, genitive, few",
-            nullptr,
-            nullptr,
-            unf.unitDisplayCase("genitive"),
-            Locale("ru"),
-            2,
-            u"2 процентов");  // few, genitive
-
-    assertFormatSingle(
-            u"Inflected percentage, nominal, one",
-            skeleton,
-            conciseSkeleton,
-            unf,
-            Locale("ru"),
-            1,
-            u"1 процент"); // one
-    assertFormatSingle(
-            u"Inflected percentage, genitive, one",
-            nullptr,
-            nullptr,
-            unf.unitDisplayCase("genitive"),
-            Locale("ru"),
-            1,
-            u"1 процента");  // one, genitive
+    const TestCase cases[] = {
+        {"ru", nullptr, 10, u"10 процентов"}, // many
+        {"ru", "genitive", 10, u"10 процентов"}, // many
+        {"ru", nullptr, 33, u"33 процента"}, // few
+        {"ru", "genitive", 33, u"33 процентов"}, // few
+        {"ru", nullptr, 1, u"1 процент"}, // one
+        {"ru", "genitive", 1, u"1 процента"}, // one
+    };
+    for (TestCase t : cases) {
+        const UChar *skel;
+        const UChar *cSkel;
+        if (t.unitDisplayCase == nullptr || t.unitDisplayCase[0] == 0) {
+            unf = unf.unitDisplayCase("");
+            skel = skeleton;
+            cSkel = conciseSkeleton;
+        } else {
+            unf = unf.unitDisplayCase(t.unitDisplayCase);
+            skel = nullptr;
+            cSkel = nullptr;
+        }
+        assertFormatSingle((UnicodeString("\"") + skeleton + u"\", locale=\"" + t.locale +
+                            u"\", case=\"" + (t.unitDisplayCase ? t.unitDisplayCase : "") +
+                            u"\", value=" + t.value)
+                               .getTerminatedBuffer(),
+                           skel, cSkel, unf, Locale(t.locale), t.value, t.expected);
+    }
+    unf = unf.unitDisplayCase("");
 
     // FIXME: add a usage case that selects between preferences with different
     // genders (e.g. year, month, day, hour).
@@ -2029,7 +2018,7 @@ void NumberFormatterApiTest::unitInflections() {
 void NumberFormatterApiTest::unitGender() {
     IcuTestErrorCode status(*this, "unitGender");
 
-    struct TestCase {
+    const struct TestCase {
         const char *locale;
         const char *unitIdentifier;
         const char *expectedGender;
