@@ -2076,11 +2076,24 @@ void NumberFormatterApiTest::unitGender() {
         const char *expectedGender;
     } cases[] = {
         {"de", "meter", "masculine"},
+        {"de", "minute", "feminine"},
         {"de", "hour", "feminine"},
+        {"de", "day", "masculine"},
         {"de", "year", "neuter"},
+        {"fr", "minute", "feminine"},
+        {"fr", "hour", "feminine"},
+        {"fr", "day", "masculine"},
         // grammaticalFeatures deriveCompound "per" rule:
         {"de", "meter-per-hour", "masculine"},
         {"af", "meter-per-hour", ""},
+        // TODO(ICU-21494): determine whether list genders behave as follows,
+        // and implement proper getListGender support (covering more than just
+        // two genders):
+        // // gender rule for lists of people: de "neutral", fr "maleTaints"
+        // {"de", "day-and-hour-and-minute", "neuter"},
+        // {"de", "hour-and-minute", "feminine"},
+        // {"fr", "day-and-hour-and-minute", "masculine"},
+        // {"fr", "hour-and-minute", "feminine"},
     };
     LocalizedNumberFormatter formatter;
     FormattedNumber fn;
@@ -2096,6 +2109,12 @@ void NumberFormatterApiTest::unitGender() {
                      t.expectedGender, fn.getGender(status));
         status.assertSuccess();
     }
+
+    // Make sure getGender does not return garbage for genderless languages
+    formatter = NumberFormatter::with().locale(Locale::getEnglish());
+    fn = formatter.formatDouble(1.1, status);
+    status.assertSuccess();
+    assertEquals("getGender for a genderless language", "", fn.getGender(status));
 }
 
 void NumberFormatterApiTest::unitPercent() {

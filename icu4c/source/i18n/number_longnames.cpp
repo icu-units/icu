@@ -371,11 +371,15 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
     StringPiece primaryCase, secondaryCase;
     CharString primaryCase_, secondaryCase_;
     if (!unitDisplayCase.empty()) {
-        assert(U_SUCCESS(status));
+        U_ASSERT(U_SUCCESS(status));
         StackUResourceBundle derivationsBundle, stackBundle;
         // FIXME: factor out. Here need: de|root, component, case, per.
         // FIXME: code currently assumes if the locale exists, the rules are there -
         // instead of falling back to root when the requested rule is missing.
+        // FIXME: investigate ures.h functions, see if one that uses
+        // res_findResource() might be better (or use res_findResource
+        // directly), or maybe help improve ures documentation to guide function
+        // selection?
         ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
         ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(),
                       &status);
@@ -701,9 +705,11 @@ const Modifier *MixedUnitLongNameHandler::getMixedUnitModifier(DecimalQuantity &
         }
     }
 
-    // FIXME: set micros.gender to the gender associated with the list formatter
-    // in use below. And document this appropriately? "getMixedUnitModifier"
-    // doesn't sound like it would do something like this.
+    // TODO(ICU-21494): implement gender for lists of mixed units. Presumably we
+    // can set micros.gender to the gender associated with the list formatter in
+    // use below (once we have correct support for that). And then document this
+    // appropriately? "getMixedUnitModifier" doesn't sound like it would do
+    // something like this.
 
     // Combine list into a "premixed" pattern
     UnicodeString premixedFormatPattern;
