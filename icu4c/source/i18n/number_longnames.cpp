@@ -604,6 +604,8 @@ void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc,
     for (int32_t i = 0; i < fillIn->fMixedUnitCount; i++) {
         // Grab data for each of the components.
         UnicodeString *unitData = &fillIn->fMixedUnitData[i * ARRAY_LENGTH];
+        // TODO(CLDR-14502): check from the CLDR-14502 ticket whether this
+        // propagation of unitDisplayCase is correct:
         getMeasureData(loc, impl.singleUnits[i]->build(status), width, unitDisplayCase, unitData,
                        status);
     }
@@ -621,9 +623,10 @@ void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc,
     }
     fillIn->fListFormatter.adoptInsteadAndCheckErrorCode(
         ListFormatter::createInstance(loc, ULISTFMT_TYPE_UNITS, listWidth, status), status);
+    // TODO(ICU-21494): grab gender of each unit, calculate the gender
+    // associated with this list formatter, save it for later.
     fillIn->rules = rules;
     fillIn->parent = parent;
-    // FIXME: grab gender of each unit; calculate gender associated with this list formatter.
 
     // We need a localised NumberFormatter for the numbers of the bigger units
     // (providing Arabic numerals, for example).

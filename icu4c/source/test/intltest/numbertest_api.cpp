@@ -2003,6 +2003,7 @@ void NumberFormatterApiTest::unitInflections() {
     const UChar *skeleton;
     const UChar *conciseSkeleton;
     {
+        // Simple inflected form test
         unf = NumberFormatter::with().unit(NoUnit::percent()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
         skeleton = u"percent unit-width-full-name";
         conciseSkeleton = u"% unit-width-full-name";
@@ -2058,7 +2059,28 @@ void NumberFormatterApiTest::unitInflections() {
         const UnitInflectionTestCase meterPerDayCases[] = {
             {"de", nullptr, 1, u"1 Meter pro Tag"}, {"de", "genitive", 1, u"1 Meters pro Tag"},
             {"de", nullptr, 2, u"2 Meter pro Tag"}, {"de", "dative", 2, u"2 Metern pro Tag"},
+            // testing code path that falls back to "root" but does not inflect:
             {"af", nullptr, 1, u"1 meter per dag"}, {"af", "dative", 1, u"1 meter per dag"},
+        };
+        runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, meterPerDayCases,
+                                    UPRV_LENGTHOF(meterPerDayCases));
+    }
+    {
+        // Testing inflection of mixed units:
+        unf = NumberFormatter::with()
+                  .unit(MeasureUnit::forIdentifier("meter-and-centimeter", status))
+                  .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
+        skeleton = u"unit/meter-and-centimeter unit-width-full-name";
+        conciseSkeleton = u"unit/meter-and-centimeter unit-width-full-name";
+        const UnitInflectionTestCase meterPerDayCases[] = {
+            // TODO(CLDR-14502): check that these inflections are correct, and
+            // whether CLDR needs any rules for them (presumably CLDR spec
+            // should mention it, if it's a consistent rule):
+            {"de", nullptr, 1.01, u"1 Meter, 1 Zentimeter"},
+            {"de", "genitive", 1.01, u"1 Meters, 1 Zentimeters"},
+            {"de", "genitive", 1.1, u"1 Meters, 10 Zentimeter"},
+            {"de", "dative", 1.1, u"1 Meter, 10 Zentimetern"},
+            {"de", "dative", 2.1, u"2 Metern, 10 Zentimetern"},
         };
         runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, meterPerDayCases,
                                     UPRV_LENGTHOF(meterPerDayCases));
