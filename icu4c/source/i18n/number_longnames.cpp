@@ -5,7 +5,6 @@
 
 #if !UCONFIG_NO_FORMATTING
 
-#include "cstr.h"
 #include "unicode/simpleformatter.h"
 #include "unicode/ures.h"
 #include "ureslocs.h"
@@ -53,7 +52,7 @@ const int32_t GENDER_COUNT = 7;
 const char *gGenders[GENDER_COUNT] = {"animate",   "common", "feminine", "inanimate",
                                       "masculine", "neuter", "personal"};
 
-const char* getGenderString(UnicodeString uGender, UErrorCode status) {
+const char *getGenderString(UnicodeString uGender, UErrorCode status) {
     CharString gender;
     gender.appendInvariantChars(uGender, status);
     if (U_FAILURE(status)) {
@@ -67,7 +66,7 @@ const char* getGenderString(UnicodeString uGender, UErrorCode status) {
         if (cmp == 0) {
             return gGenders[mid];
         } else if (cmp > 0) {
-            first = mid+1;
+            first = mid + 1;
         } else if (cmp < 0) {
             last = mid;
         }
@@ -647,7 +646,7 @@ void MixedUnitLongNameHandler::forMeasureUnit(const Locale &loc,
     U_ASSERT(fillIn != nullptr);
 
     MeasureUnitImpl temp;
-    const MeasureUnitImpl& impl = MeasureUnitImpl::forMeasureUnit(mixedUnit, temp, status);
+    const MeasureUnitImpl &impl = MeasureUnitImpl::forMeasureUnit(mixedUnit, temp, status);
     fillIn->fMixedUnitCount = impl.singleUnits.length();
     fillIn->fMixedUnitData.adoptInstead(new UnicodeString[fillIn->fMixedUnitCount * ARRAY_LENGTH]);
     for (int32_t i = 0; i < fillIn->fMixedUnitCount; i++) {
@@ -804,11 +803,12 @@ LongNameMultiplexer *LongNameMultiplexer::forMeasureUnits(const Locale &loc,
     }
     result->fMeasureUnits.adoptInstead(new MeasureUnit[units.length()]);
     for (int32_t i = 0, length = units.length(); i < length; i++) {
-        const MeasureUnit& unit = *units[i];
+        const MeasureUnit &unit = *units[i];
         result->fMeasureUnits[i] = unit;
         if (unit.getComplexity(status) == UMEASURE_UNIT_MIXED) {
             MixedUnitLongNameHandler *mlnh = result->fMixedUnitHandlers.createAndCheckErrorCode(status);
-            MixedUnitLongNameHandler::forMeasureUnit(loc, unit, width, unitDisplayCase, rules, NULL, mlnh, status);
+            MixedUnitLongNameHandler::forMeasureUnit(loc, unit, width, unitDisplayCase, rules, NULL,
+                                                     mlnh, status);
             result->fHandlers[i] = mlnh;
         } else {
             LongNameHandler *lnh = result->fLongNameHandlers.createAndCheckErrorCode(status);

@@ -1997,7 +1997,6 @@ void NumberFormatterApiTest::unitInflections() {
         runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, meterCases,
                                     UPRV_LENGTHOF(meterCases));
 
-
         unf = NumberFormatter::with().unit(MeasureUnit::getDay()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
         skeleton = u"unit/day unit-width-full-name";
         conciseSkeleton = u"unit/day unit-width-full-name";
@@ -2016,10 +2015,13 @@ void NumberFormatterApiTest::unitInflections() {
         skeleton = u"unit/meter-per-day unit-width-full-name";
         conciseSkeleton = u"unit/meter-per-day unit-width-full-name";
         const UnitInflectionTestCase meterPerDayCases[] = {
-            {"de", nullptr, 1, u"1 Meter pro Tag"}, {"de", "genitive", 1, u"1 Meters pro Tag"},
-            {"de", nullptr, 2, u"2 Meter pro Tag"}, {"de", "dative", 2, u"2 Metern pro Tag"},
+            {"de", nullptr, 1, u"1 Meter pro Tag"},
+            {"de", "genitive", 1, u"1 Meters pro Tag"},
+            {"de", nullptr, 2, u"2 Meter pro Tag"},
+            {"de", "dative", 2, u"2 Metern pro Tag"},
             // testing code path that falls back to "root" but does not inflect:
-            {"af", nullptr, 1, u"1 meter per dag"}, {"af", "dative", 1, u"1 meter per dag"},
+            {"af", nullptr, 1, u"1 meter per dag"},
+            {"af", "dative", 1, u"1 meter per dag"},
         };
         runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, meterPerDayCases,
                                     UPRV_LENGTHOF(meterPerDayCases));

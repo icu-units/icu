@@ -1142,22 +1142,24 @@ class U_I18N_API StringProp : public UMemory {
 
   public:
     /** @internal */
-    StringProp(const StringProp& other);
+    StringProp(const StringProp &other);
 
     /** @internal */
-    StringProp& operator=(const StringProp& other);
+    StringProp &operator=(const StringProp &other);
 
     /** @internal */
     StringProp(StringProp &&src) U_NOEXCEPT;
 
     /** @internal */
-    StringProp& operator=(StringProp&& src) U_NOEXCEPT;
+    StringProp &operator=(StringProp &&src) U_NOEXCEPT;
 
     /** @internal */
     ~StringProp();
 
     /** @internal */
-    int16_t length() const { return fLength; }
+    int16_t length() const {
+        return fLength;
+    }
 
     /** @internal
      * Makes a copy of value. Set to "" to unset.
@@ -1165,7 +1167,9 @@ class U_I18N_API StringProp : public UMemory {
     void set(StringPiece value);
 
     /** @internal */
-    bool isSet() const { return fLength > 0; }
+    bool isSet() const {
+        return fLength > 0;
+    }
 
 #endif // U_HIDE_INTERNAL_API
 
@@ -1174,7 +1178,8 @@ class U_I18N_API StringProp : public UMemory {
     int16_t fLength;
     UErrorCode fError;
 
-    StringProp() : fValue(nullptr), fLength(0), fError(U_ZERO_ERROR) {}
+    StringProp() : fValue(nullptr), fLength(0), fError(U_ZERO_ERROR) {
+    }
 
     /** @internal */
     UBool copyErrorTo(UErrorCode &status) const {

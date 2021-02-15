@@ -59,7 +59,9 @@ StringProp &StringProp::operator=(const StringProp &other) {
 }
 
 // Move constructor
-StringProp::StringProp(StringProp &&src) U_NOEXCEPT : fValue(src.fValue), fLength(src.fLength), fError(src.fError) {
+StringProp::StringProp(StringProp &&src) U_NOEXCEPT : fValue(src.fValue),
+                                                      fLength(src.fLength),
+                                                      fError(src.fError) {
     // Take ownership away from src if necessary
     src.fValue = nullptr;
 }
