@@ -210,9 +210,13 @@ void getMeasureData(const Locale &locale,
     key.append("/", status);
     key.append(subtypeForResource, status);
 
+    // Grab desired case first, if available. Then grab nominative case to fill
+    // in the gaps.
+    //
+    // TODO(icu-units#138): implement spec-compliant fallback: case should
+    // fallback to "nominative" before falling back to no case. For the time
+    // being: as of CLDR 39 explicit "nominative" is not yet in use.
     if (width == UNUM_UNIT_WIDTH_FULL_NAME && !unitDisplayCase.empty() &&
-        // Grab desired case first, if available. Then grab nominative case to fill
-        // in the gaps.
         unitDisplayCase.compare("nominative") != 0) {
         CharString caseKey;
         caseKey.append(key, status);
