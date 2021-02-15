@@ -1957,53 +1957,12 @@ void NumberFormatterApiTest::runUnitInflectionsTestCases(UnlocalizedNumberFormat
 void NumberFormatterApiTest::unitInflections() {
     IcuTestErrorCode status(*this, "unitInflections");
 
-    // TODO(icu-units#111)/FIXME(don't submit): inflection examples: in CLDR's
-    // grammaticalFeatures.xml I see the following:
-    //
-    // """
-    // For instance, in Russian "Уменьши яркость света до 10 процентов" ("dim
-    // the light to 10 percent"), the 'percent' unit must be expressed in plural
-    // and in the genitive case, whereas "1%" would be expressed in different
-    // cases depending on the context. The case usage is implicit in short form
-    // "10%", but the full form requires the grammatical variant marked by case
-    // and number to be expressed correctly.
-    // """
-    //
-    // FIXME: 10% might be a bad example, since nominal and genitive look the
-    // same? 2% and 1% would be better - or another value using "few" plural
-    // form.
-    //
-    // Plural rule:
-    //     few{
-    //         "v = 0 and i % 10 = 2..4 and i % 100 != 12..14 @integer 2~4, 22~24, 3"
-    //         "2~34, 42~44, 52~54, 62, 102, 1002, …"
-    //     }
-    //
-    // Data for ru percent genitive:
-    //
-    //     genitive{
-    //         few{"{0} процентов"}
-    //         many{"{0} процентов"}
-    //         one{"{0} процента"}
-    //         other{"{0} процента"}
-    //     }
-    //
-    // Data for ru nominative:
-    //
-    //     few{"{0} процента"}
-    //     many{"{0} процентов"}
-    //     one{"{0} процент"}
-    //     other{"{0} процента"}
-    //
-    // The distinction exists for "one", for "few", and for "other", but not for
-    // "many".
-
-
     UnlocalizedNumberFormatter unf;
     const UChar *skeleton;
     const UChar *conciseSkeleton;
     {
-        // Simple inflected form test
+        // Simple inflected form test - test case based on the example in CLDR's
+        // grammaticalFeatures.xml
         unf = NumberFormatter::with().unit(NoUnit::percent()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
         skeleton = u"percent unit-width-full-name";
         conciseSkeleton = u"% unit-width-full-name";
@@ -2025,9 +1984,6 @@ void NumberFormatterApiTest::unitInflections() {
         //
         // per-patterns use accusative, but happen to match nominative, so we're
         // not testing value1 in the first rule above.
-        //
-        // FIXME: look for cases where per-pattern doesn't match desired pattern!
-        // FIXME: look at "↑↑↑" cases: check that inheritance is done right.
 
         unf = NumberFormatter::with().unit(MeasureUnit::getMeter()).unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
         skeleton = u"unit/meter unit-width-full-name";
@@ -2106,8 +2062,9 @@ void NumberFormatterApiTest::unitInflections() {
         runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, meterPerDayCases,
                                     UPRV_LENGTHOF(meterPerDayCases));
     }
-    // FIXME: add a usage case that selects between preferences with different
+    // TODO: add a usage case that selects between preferences with different
     // genders (e.g. year, month, day, hour).
+    // TODO: look at "↑↑↑" cases: check that inheritance is done right.
 }
 
 void NumberFormatterApiTest::unitGender() {
@@ -2141,7 +2098,7 @@ void NumberFormatterApiTest::unitGender() {
     LocalizedNumberFormatter formatter;
     FormattedNumber fn;
     for (const TestCase &t : cases) {
-        // FIXME: make this work for more than just UNUM_UNIT_WIDTH_FULL_NAME
+        // TODO(icu-units#140): make this work for more than just UNUM_UNIT_WIDTH_FULL_NAME
         formatter = NumberFormatter::with()
                         .unit(MeasureUnit::forIdentifier(t.unitIdentifier, status))
                         .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME)

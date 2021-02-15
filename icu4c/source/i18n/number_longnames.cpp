@@ -195,11 +195,7 @@ void getMeasureData(const Locale &locale,
 
     CharString key;
     key.append("units", status);
-    // // TODO/FIXME(review): do we also want gender with other widths? If so: we
-    // // need to explicitly grab it from units/
-    // if (width != UNUM_UNIT_WIDTH_FULL_NAME) {
-    //     // Fetch gender from units/, it isn't present in unitsNarrow/ and unitsShort/.
-    // }
+    // TODO(icu-units#140): support gender for other unit widths.
     if (width == UNUM_UNIT_WIDTH_NARROW) {
         key.append("Narrow", status);
     } else if (width == UNUM_UNIT_WIDTH_SHORT) {
@@ -288,6 +284,62 @@ UnicodeString getPerUnitFormat(const Locale& locale, const UNumberUnitWidth &wid
     int32_t len = 0;
     const UChar* ptr = ures_getStringByKeyWithFallback(unitsBundle.getAlias(), key.data(), &len, &status);
     return UnicodeString(ptr, len);
+}
+
+// Load data originating from a deriveComponent CLDR element. The feature and
+// structure parameters must be null-terminated.
+void getDeriveComponentRule(Locale locale,
+                            const char *feature,
+                            const char *structure,
+                            UnicodeString &value0,
+                            UnicodeString &value1,
+                            UErrorCode &status) {
+    StackUResourceBundle derivationsBundle, stackBundle;
+    ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
+    ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(),
+                  &status);
+    ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(), &status);
+    // TODO: use standard normal locale resolution algorithms rather than just grabbing language:
+    ures_getByKey(derivationsBundle.getAlias(), locale.getLanguage(), stackBundle.getAlias(), &status);
+    // TODO:
+    // - code currently assumes if the locale exists, the rules are there -
+    //   instead of falling back to root when the requested rule is missing.
+    // - investigate ures.h functions, see if one that uses res_findResource()
+    //   might be better (or use res_findResource directly), or maybe help
+    //   improve ures documentation to guide function selection?
+    if (status == U_MISSING_RESOURCE_ERROR) {
+        status = U_ZERO_ERROR;
+        ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
+    }
+    ures_getByKey(stackBundle.getAlias(), "component", stackBundle.getAlias(), &status);
+    ures_getByKey(stackBundle.getAlias(), feature, stackBundle.getAlias(), &status);
+    ures_getByKey(stackBundle.getAlias(), structure, stackBundle.getAlias(), &status);
+    value0 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 0, &status);
+    value1 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 1, &status);
+}
+
+UnicodeString
+getDeriveCompoundRule(Locale locale, const char *feature, const char *structure, UErrorCode &status) {
+    StackUResourceBundle derivationsBundle, stackBundle;
+    ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
+    ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(),
+                  &status);
+    ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(), &status);
+    // TODO: use standard normal locale resolution algorithms rather than just grabbing language:
+    ures_getByKey(derivationsBundle.getAlias(), locale.getLanguage(), stackBundle.getAlias(), &status);
+    // TODO:
+    // - code currently assumes if the locale exists, the rules are there -
+    //   instead of falling back to root when the requested rule is missing.
+    // - investigate ures.h functions, see if one that uses res_findResource()
+    //   might be better (or use res_findResource directly), or maybe help
+    //   improve ures documentation to guide function selection?
+    if (status == U_MISSING_RESOURCE_ERROR) {
+        status = U_ZERO_ERROR;
+        ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
+    }
+    ures_getByKey(stackBundle.getAlias(), "compound", stackBundle.getAlias(), &status);
+    ures_getByKey(stackBundle.getAlias(), feature, stackBundle.getAlias(), &status);
+    return ures_getUnicodeStringByKey(stackBundle.getAlias(), structure, &status);
 }
 
 ////////////////////////
@@ -397,29 +449,8 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
     CharString primaryCase_, secondaryCase_;
     if (!unitDisplayCase.empty()) {
         U_ASSERT(U_SUCCESS(status));
-        StackUResourceBundle derivationsBundle, stackBundle;
-        // FIXME: factor out. Here need: de|root, component, case, per.
-        // FIXME: code currently assumes if the locale exists, the rules are there -
-        // instead of falling back to root when the requested rule is missing.
-        // FIXME: investigate ures.h functions, see if one that uses
-        // res_findResource() might be better (or use res_findResource
-        // directly), or maybe help improve ures documentation to guide function
-        // selection?
-        ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
-        ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(),
-                      &status);
-        ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(),
-                      &status);
-        ures_getByKey(derivationsBundle.getAlias(), loc.getLanguage(), stackBundle.getAlias(), &status);
-        if (status == U_MISSING_RESOURCE_ERROR) {
-            status = U_ZERO_ERROR;
-            ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
-        }
-        ures_getByKey(stackBundle.getAlias(), "component", stackBundle.getAlias(), &status);
-        ures_getByKey(stackBundle.getAlias(), "case", stackBundle.getAlias(), &status);
-        ures_getByKey(stackBundle.getAlias(), "per", stackBundle.getAlias(), &status);
-        UnicodeString uVal0 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 0, &status);
-        UnicodeString uVal1 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 1, &status);
+        UnicodeString uVal0, uVal1;
+        getDeriveComponentRule(loc, "case", "per", uVal0, uVal1, status);
         if (U_SUCCESS(status)) {
             if (uVal0.compare(UnicodeString(u"compound")) == 0) {
                 primaryCase = unitDisplayCase;
@@ -493,26 +524,11 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
                                           {UFIELD_CATEGORY_NUMBER, UNUM_MEASURE_UNIT_FIELD}, status);
 
     // Gender
-    StackUResourceBundle derivationsBundle, stackBundle;
-    // FIXME: factor out. Here need: de|root, compound, gender, per.
-    // FIXME: code currently assumes if the locale exists, the rules are there -
-    // instead of falling back to root when the requested rule is missing.
-    ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
-    ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(), &status);
-    ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(), &status);
-    ures_getByKey(derivationsBundle.getAlias(), loc.getLanguage(), stackBundle.getAlias(), &status);
-    if (status == U_MISSING_RESOURCE_ERROR) {
-        status = U_ZERO_ERROR;
-        ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
-    }
-    ures_getByKey(stackBundle.getAlias(), "compound", stackBundle.getAlias(), &status);
-    ures_getByKey(stackBundle.getAlias(), "gender", stackBundle.getAlias(), &status);
-    int32_t uLen;
-    const UChar* uVal = ures_getStringByKey(stackBundle.getAlias(), "per", &uLen, &status);
+    UnicodeString uVal = getDeriveCompoundRule(loc, "gender", "per", status);
     if (U_FAILURE(status)) {
         return;
     }
-    U_ASSERT(uVal != nullptr && uLen == 1);
+    U_ASSERT(!uVal.isBogus() && uVal.length() == 1);
     switch (uVal[0]) {
     case u'0':
         fillIn->gender = getGenderString(primaryData[GENDER_INDEX], status);

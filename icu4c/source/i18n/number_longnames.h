@@ -26,8 +26,8 @@ class LongNameHandler : public MicroPropsGenerator, public ModifierStore, public
         UNumberUnitWidth width,
         UErrorCode& status);
 
-// FIXME: document the deprecation? Only used by MeasureFormat, which doesn't do
-// inflections.
+    // This function does not support inflections or other newer NumberFormatter
+    // features: it exists to support the older not-recommended MeasureFormat.
     static UnicodeString getUnitPattern(
         const Locale& loc,
         const MeasureUnit& unit,
