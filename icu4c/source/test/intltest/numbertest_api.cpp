@@ -2019,11 +2019,13 @@ void NumberFormatterApiTest::unitInflections() {
                                     UPRV_LENGTHOF(percentCases));
     }
     {
-        // Testing "de" rule:
+        // Testing "de" rules:
         // <deriveComponent feature="case" structure="per" value0="compound" value1="accusative"/>
+        // <deriveComponent feature="plural" structure="per" value0="compound" value1="one"/>
         //
-        // hour has a per-pattern. per-patterns are uninflected.
-        // FIXME: look for cases without per-pattern.
+        // per-patterns use accusative, but happen to match nominative, so we're
+        // not testing value1 in the first rule above.
+        //
         // FIXME: look for cases where per-pattern doesn't match desired pattern!
         // FIXME: look at "↑↑↑" cases: check that inheritance is done right.
 
@@ -2051,6 +2053,7 @@ void NumberFormatterApiTest::unitInflections() {
         };
         runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, dayCases, UPRV_LENGTHOF(dayCases));
 
+        // Day has a perUnitPattern
         unf = NumberFormatter::with()
                   .unit(MeasureUnit::forIdentifier("meter-per-day", status))
                   .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
@@ -2064,6 +2067,24 @@ void NumberFormatterApiTest::unitInflections() {
         };
         runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, meterPerDayCases,
                                     UPRV_LENGTHOF(meterPerDayCases));
+
+        // Decade does not have a perUnitPattern at this time (CLDR 39 / ICU
+        // 69), so we can test for the correct form of the per part:
+        unf = NumberFormatter::with()
+                  .unit(MeasureUnit::forIdentifier("parsec-per-decade", status))
+                  .unitWidth(UNUM_UNIT_WIDTH_FULL_NAME);
+        skeleton = u"unit/parsec-per-decade unit-width-full-name";
+        conciseSkeleton = u"unit/parsec-per-decade unit-width-full-name";
+        // Fragile test cases: these cases will break when whitespace is more
+        // consistently applied.
+        const UnitInflectionTestCase parsecPerDecadeCases[] = {
+            {"de", nullptr, 1, u"1\u00A0Parsec pro Jahrzehnt"},
+            {"de", "genitive", 1, u"1 Parsec pro Jahrzehnt"},
+            {"de", nullptr, 2, u"2\u00A0Parsec pro Jahrzehnt"},
+            {"de", "dative", 2, u"2 Parsec pro Jahrzehnt"},
+        };
+        runUnitInflectionsTestCases(unf, skeleton, conciseSkeleton, parsecPerDecadeCases,
+                                    UPRV_LENGTHOF(parsecPerDecadeCases));
     }
     {
         // Testing inflection of mixed units:

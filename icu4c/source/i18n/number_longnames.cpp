@@ -294,6 +294,27 @@ UnicodeString getPerUnitFormat(const Locale& locale, const UNumberUnitWidth &wid
 /// END DATA LOADING ///
 ////////////////////////
 
+// TODO: promote this somewhere? It's based on patternprops.cpp' trimWhitespace
+const UChar *trimSpaceChars(const UChar *s, int32_t &length) {
+    if (length <= 0 || (!u_isJavaSpaceChar(s[0]) && !u_isJavaSpaceChar(s[length - 1]))) {
+        return s;
+    }
+    int32_t start = 0;
+    int32_t limit = length;
+    while (start < limit && u_isJavaSpaceChar(s[start])) {
+        ++start;
+    }
+    if (start < limit) {
+        // There is non-white space at start; we will not move limit below that,
+        // so we need not test start<limit in the loop.
+        while (u_isJavaSpaceChar(s[limit - 1])) {
+            --limit;
+        }
+    }
+    length = limit - start;
+    return s + start;
+}
+
 } // namespace
 
 void LongNameHandler::forMeasureUnit(const Locale &loc,
@@ -429,6 +450,10 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
         return;
     }
 
+    // TODO(icu-units#139): implement these rules:
+    // <deriveComponent feature="plural" structure="per" ...>
+    // This has impact on multiSimpleFormatsToModifiers(...) below too.
+    // These rules are currently (ICU 69) all the same and hard-coded below.
     UnicodeString perUnitFormat;
     if (!secondaryData[PER_INDEX].isBogus()) {
         perUnitFormat = secondaryData[PER_INDEX];
@@ -437,7 +462,7 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
         if (U_FAILURE(status)) {
             return;
         }
-        // rawPerUnitFormat is something like "{0}/{1}"; we need to substitute in the secondary unit.
+        // rawPerUnitFormat is something like "{0} per {1}"; we need to substitute in the secondary unit.
         SimpleFormatter compiled(rawPerUnitFormat, 2, 2, status);
         if (U_FAILURE(status)) {
             return;
@@ -451,7 +476,11 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
         if (U_FAILURE(status)) {
             return;
         }
-        UnicodeString secondaryString = secondaryCompiled.getTextWithNoArguments().trim();
+        UnicodeString secondaryFormatString = secondaryCompiled.getTextWithNoArguments();
+        int32_t trimmedSecondaryLen = secondaryFormatString.length();
+        const UChar *trimmedSecondaryString =
+            trimSpaceChars(secondaryFormatString.getBuffer(), trimmedSecondaryLen);
+        UnicodeString secondaryString(false, trimmedSecondaryString, trimmedSecondaryLen);
         // TODO: Why does UnicodeString need to be explicit in the following line?
         compiled.format(UnicodeString(u"{0}"), secondaryString, perUnitFormat, status);
         if (U_FAILURE(status)) {
