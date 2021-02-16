@@ -137,7 +137,6 @@ class PluralTableSink : public ResourceSink {
         ResourceTable pluralsTable = value.getTable(status);
         if (U_FAILURE(status)) { return; }
         for (int32_t i = 0; pluralsTable.getKeyAndValue(i, key, value); ++i) {
-            // TODO(ICU-21123): Load the correct inflected form, possibly from the "case" structure.
             if (uprv_strcmp(key, "case") == 0) {
                 continue;
             }
@@ -205,10 +204,8 @@ void getMeasureData(const Locale &locale,
     key.append("/", status);
     key.append(subtypeForResource, status);
 
-    // Grab desired case first, if available. Then grab nominative case to fill
-    // in the gaps.
-    //
-    // TODO(icu-units#138): check that fallback is spec-compliant
+    // Grab desired case first, if available. Then grab no-case data to fill in
+    // the gaps.
     if (width == UNUM_UNIT_WIDTH_FULL_NAME && !unitDisplayCase.empty()) {
         CharString caseKey;
         caseKey.append(key, status);
@@ -217,6 +214,11 @@ void getMeasureData(const Locale &locale,
 
         UErrorCode localStatus = U_ZERO_ERROR;
         ures_getAllItemsWithFallback(unitsBundle.getAlias(), caseKey.data(), sink, localStatus);
+        // TODO(icu-units#138): our fallback logic is not spec-compliant: we
+        // check the given case, then go straight to the no-case data. The spec
+        // states we should first look for case="nominative". As part of #138,
+        // either get the spec changed, or add unit tests that warn us if
+        // case="nominative" data differs from no-case data?
     }
 
     UErrorCode localStatus = U_ZERO_ERROR;
@@ -282,8 +284,8 @@ UnicodeString getPerUnitFormat(const Locale& locale, const UNumberUnitWidth &wid
     return UnicodeString(ptr, len);
 }
 
-// Load data originating from a deriveComponent CLDR element. The feature and
-// structure parameters must be null-terminated.
+/// Load data originating from a deriveComponent CLDR element. The feature and
+/// structure parameters must be null-terminated.
 void getDeriveComponentRule(Locale locale,
                             const char *feature,
                             const char *structure,
@@ -295,17 +297,23 @@ void getDeriveComponentRule(Locale locale,
     ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(),
                   &status);
     ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(), &status);
+    if (U_FAILURE(status)) {
+        return;
+    }
+    UErrorCode localStatus = U_ZERO_ERROR;
     // TODO: use standard normal locale resolution algorithms rather than just grabbing language:
-    ures_getByKey(derivationsBundle.getAlias(), locale.getLanguage(), stackBundle.getAlias(), &status);
+    ures_getByKey(derivationsBundle.getAlias(), locale.getLanguage(), stackBundle.getAlias(),
+                  &localStatus);
     // TODO:
     // - code currently assumes if the locale exists, the rules are there -
     //   instead of falling back to root when the requested rule is missing.
     // - investigate ures.h functions, see if one that uses res_findResource()
     //   might be better (or use res_findResource directly), or maybe help
     //   improve ures documentation to guide function selection?
-    if (status == U_MISSING_RESOURCE_ERROR) {
-        status = U_ZERO_ERROR;
+    if (localStatus == U_MISSING_RESOURCE_ERROR) {
         ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
+    } else {
+        status = localStatus;
     }
     ures_getByKey(stackBundle.getAlias(), "component", stackBundle.getAlias(), &status);
     ures_getByKey(stackBundle.getAlias(), feature, stackBundle.getAlias(), &status);
