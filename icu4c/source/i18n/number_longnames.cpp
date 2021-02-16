@@ -450,7 +450,7 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
     }
 
     StringPiece primaryCase, secondaryCase;
-    CharString primaryCase_, secondaryCase_;
+    CharString primaryCaseMem, secondaryCaseMem;
     if (!unitDisplayCase.empty()) {
         U_ASSERT(U_SUCCESS(status));
         UnicodeString uVal0, uVal1;
@@ -459,14 +459,14 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
             if (uVal0.compare(UnicodeString(u"compound")) == 0) {
                 primaryCase = unitDisplayCase;
             } else {
-                primaryCase_.appendInvariantChars(uVal0, status);
-                primaryCase = primaryCase_.toStringPiece();
+                primaryCaseMem.appendInvariantChars(uVal0, status);
+                primaryCase = primaryCaseMem.toStringPiece();
             }
             if (uVal1.compare(UnicodeString(u"compound")) == 0) {
                 secondaryCase = unitDisplayCase;
             } else {
-                secondaryCase_.appendInvariantChars(uVal1, status);
-                secondaryCase = secondaryCase_.toStringPiece();
+                secondaryCaseMem.appendInvariantChars(uVal1, status);
+                secondaryCase = secondaryCaseMem.toStringPiece();
             }
         } else {
             // Ignore failures in production code, assert-fail in debug mode.
