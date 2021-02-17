@@ -2684,7 +2684,8 @@ class U_I18N_API FormattedNumber : public UMemory, public FormattedValue {
     MeasureUnit getOutputUnit(UErrorCode& status) const;
 
     /**
-     * The gender of the formatted output.
+     * Gets the gender of the formatted output. Returns "" when the gender is
+     * unknown, or for ungendered languages.
      *
      * @internal ICU 69 technology preview.
      */
