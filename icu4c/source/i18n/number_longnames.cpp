@@ -302,7 +302,13 @@ UnicodeString getPerUnitFormat(const Locale& locale, const UNumberUnitWidth &wid
  */
 class DerivedComponents {
   public:
-    /// The feature and structure parameters must be null-terminated.
+    /**
+     * Constructor.
+     *
+     * The feature and structure parameters must be null-terminated. The string
+     * referenced by compoundValue must exist for longer than the
+     * DerivedComponents instance.
+     */
     DerivedComponents(const Locale &locale,
                       const char *feature,
                       const char *structure,
@@ -351,9 +357,13 @@ class DerivedComponents {
             }
         }
     }
+    // The returned StringPiece is only valid as long as both the instance
+    // exists, and the compoundValue passed to the constructor is valid.
     StringPiece value0() const {
         return sp0;
     }
+    // The returned StringPiece is only valid as long as both the instance
+    // exists, and the compoundValue passed to the constructor is valid.
     StringPiece value1() const {
         return sp1;
     }
