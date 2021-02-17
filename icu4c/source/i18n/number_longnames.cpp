@@ -284,43 +284,87 @@ UnicodeString getPerUnitFormat(const Locale& locale, const UNumberUnitWidth &wid
     return UnicodeString(ptr, len);
 }
 
-/// Load data originating from a deriveComponent CLDR element. The feature and
-/// structure parameters must be null-terminated.
-void getDeriveComponentRule(Locale locale,
-                            const char *feature,
-                            const char *structure,
-                            UnicodeString &value0,
-                            UnicodeString &value1,
-                            UErrorCode &status) {
-    StackUResourceBundle derivationsBundle, stackBundle;
-    ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
-    ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(),
-                  &status);
-    ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(), &status);
-    if (U_FAILURE(status)) {
-        return;
+/**
+ * Loads and applies deriveComponent rules from CLDR's grammaticalFeatures.xml.
+ *
+ * Consider a deriveComponent rule that looks like this:
+ *
+ *     <deriveComponent feature="case" structure="per" value0="compound" value1="nominative"/>
+ *
+ * Instantiating an instance as follows:
+ *
+ *     DerivedComponents d(loc, "case", "per", "foo");
+ *
+ * Applying the rule in the XML element above, `d.value0()` will be "foo", and
+ * `d.value1()` will be "nominative".
+ *
+ * In case of any kind of failure, value0() and value1() will simply return "".
+ */
+class DerivedComponents {
+  public:
+    /// The feature and structure parameters must be null-terminated.
+    DerivedComponents(const Locale &locale,
+                      const char *feature,
+                      const char *structure,
+                      const StringPiece compoundValue) {
+        StackUResourceBundle derivationsBundle, stackBundle;
+        ures_openDirectFillIn(derivationsBundle.getAlias(), NULL, "grammaticalFeatures", &status);
+        ures_getByKey(derivationsBundle.getAlias(), "grammaticalData", derivationsBundle.getAlias(),
+                      &status);
+        ures_getByKey(derivationsBundle.getAlias(), "derivations", derivationsBundle.getAlias(),
+                      &status);
+        if (U_FAILURE(status)) {
+            return;
+        }
+        UErrorCode localStatus = U_ZERO_ERROR;
+        // TODO: use standard normal locale resolution algorithms rather than just grabbing language:
+        ures_getByKey(derivationsBundle.getAlias(), locale.getLanguage(), stackBundle.getAlias(),
+                      &localStatus);
+        // TODO:
+        // - code currently assumes if the locale exists, the rules are there -
+        //   instead of falling back to root when the requested rule is missing.
+        // - investigate ures.h functions, see if one that uses res_findResource()
+        //   might be better (or use res_findResource directly), or maybe help
+        //   improve ures documentation to guide function selection?
+        if (localStatus == U_MISSING_RESOURCE_ERROR) {
+            ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
+        } else {
+            status = localStatus;
+        }
+        ures_getByKey(stackBundle.getAlias(), "component", stackBundle.getAlias(), &status);
+        ures_getByKey(stackBundle.getAlias(), feature, stackBundle.getAlias(), &status);
+        ures_getByKey(stackBundle.getAlias(), structure, stackBundle.getAlias(), &status);
+        UnicodeString val0 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 0, &status);
+        UnicodeString val1 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 1, &status);
+        if (U_SUCCESS(status)) {
+            if (val0.compare(UnicodeString(u"compound")) == 0) {
+                sp0 = compoundValue;
+            } else {
+                memory0.appendInvariantChars(val0, status);
+                sp0 = memory0.toStringPiece();
+            }
+            if (val1.compare(UnicodeString(u"compound")) == 0) {
+                sp1 = compoundValue;
+            } else {
+                memory1.appendInvariantChars(val1, status);
+                sp1 = memory1.toStringPiece();
+            }
+        }
     }
-    UErrorCode localStatus = U_ZERO_ERROR;
-    // TODO: use standard normal locale resolution algorithms rather than just grabbing language:
-    ures_getByKey(derivationsBundle.getAlias(), locale.getLanguage(), stackBundle.getAlias(),
-                  &localStatus);
-    // TODO:
-    // - code currently assumes if the locale exists, the rules are there -
-    //   instead of falling back to root when the requested rule is missing.
-    // - investigate ures.h functions, see if one that uses res_findResource()
-    //   might be better (or use res_findResource directly), or maybe help
-    //   improve ures documentation to guide function selection?
-    if (localStatus == U_MISSING_RESOURCE_ERROR) {
-        ures_getByKey(derivationsBundle.getAlias(), "root", stackBundle.getAlias(), &status);
-    } else {
-        status = localStatus;
+    StringPiece value0() const {
+        return sp0;
     }
-    ures_getByKey(stackBundle.getAlias(), "component", stackBundle.getAlias(), &status);
-    ures_getByKey(stackBundle.getAlias(), feature, stackBundle.getAlias(), &status);
-    ures_getByKey(stackBundle.getAlias(), structure, stackBundle.getAlias(), &status);
-    value0 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 0, &status);
-    value1 = ures_getUnicodeStringByIndex(stackBundle.getAlias(), 1, &status);
-}
+    StringPiece value1() const {
+        return sp1;
+    }
+
+  private:
+    UErrorCode status = U_ZERO_ERROR;
+
+    // Holds strings referred to by value0 and value1;
+    CharString memory0, memory1;
+    StringPiece sp0, sp1;
+};
 
 UnicodeString
 getDeriveCompoundRule(Locale locale, const char *feature, const char *structure, UErrorCode &status) {
@@ -449,38 +493,15 @@ void LongNameHandler::forCompoundUnit(const Locale &loc,
         return;
     }
 
-    StringPiece primaryCase, secondaryCase;
-    CharString primaryCaseMem, secondaryCaseMem;
-    if (!unitDisplayCase.empty()) {
-        U_ASSERT(U_SUCCESS(status));
-        UnicodeString uVal0, uVal1;
-        getDeriveComponentRule(loc, "case", "per", uVal0, uVal1, status);
-        if (U_SUCCESS(status)) {
-            if (uVal0.compare(UnicodeString(u"compound")) == 0) {
-                primaryCase = unitDisplayCase;
-            } else {
-                primaryCaseMem.appendInvariantChars(uVal0, status);
-                primaryCase = primaryCaseMem.toStringPiece();
-            }
-            if (uVal1.compare(UnicodeString(u"compound")) == 0) {
-                secondaryCase = unitDisplayCase;
-            } else {
-                secondaryCaseMem.appendInvariantChars(uVal1, status);
-                secondaryCase = secondaryCaseMem.toStringPiece();
-            }
-        } else {
-            // Ignore failures in production code, assert-fail in debug mode.
-            U_ASSERT(false);
-            status = U_ZERO_ERROR;
-        }
-    }
+    DerivedComponents derivedPerCases(loc, "case", "per", unitDisplayCase);
+
     UnicodeString primaryData[ARRAY_LENGTH];
-    getMeasureData(loc, unit, width, primaryCase, primaryData, status);
+    getMeasureData(loc, unit, width, derivedPerCases.value0(), primaryData, status);
     if (U_FAILURE(status)) {
         return;
     }
     UnicodeString secondaryData[ARRAY_LENGTH];
-    getMeasureData(loc, perUnit, width, secondaryCase, secondaryData, status);
+    getMeasureData(loc, perUnit, width, derivedPerCases.value1(), secondaryData, status);
     if (U_FAILURE(status)) {
         return;
     }
