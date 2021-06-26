@@ -112,15 +112,36 @@ struct U_I18N_API SingleUnitImpl : public UMemory {
         if (index > other.index) {
             return 1;
         }
-        // TODO: revisit if the spec dictates prefix sort order - it doesn't
-        // currently. For now we're sorting binary prefixes before SI prefixes,
-        // as per enum values order.
-        if (unitPrefix < other.unitPrefix) {
+
+        int32_t unitBase = umeas_getPrefixBase(unitPrefix);
+        int32_t otherUnitBase = umeas_getPrefixBase(other.unitPrefix);
+
+        // Values for comparison purposes only.
+        int32_t unitPowerComp =
+            unitBase == 1024 /* Binary Prefix */ ? umeas_getPrefixPower(unitPrefix) * 3
+                                                 : umeas_getPrefixPower(unitPrefix);
+        int32_t otherUnitPowerComp =
+            otherUnitBase == 1024 /* Binary Prefix */ ? umeas_getPrefixPower(other.unitPrefix) * 3
+                                                      : umeas_getPrefixPower(other.unitPrefix);
+
+        // When comparing binary prefixes vs SI prefixes, instead of comparing the actual values, we can
+        // multiply the binary prefix power by 3 and compare the powers. if they are equal, we can can
+        // compare the bases.
+        // NOTE: this methodology will fail if the binary prefix more than or equal 98.
+        if (unitPowerComp < otherUnitPowerComp) {
             return -1;
         }
-        if (unitPrefix > other.unitPrefix) {
+        if (unitPowerComp > otherUnitPowerComp) {
             return 1;
         }
+
+        if (unitBase < otherUnitBase) {
+            return -1;
+        }
+        if (unitBase > otherUnitBase) {
+            return 1;
+        }
+
         return 0;
     }
 
