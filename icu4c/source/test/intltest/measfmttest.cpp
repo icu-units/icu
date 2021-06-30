@@ -4472,6 +4472,7 @@ void MeasureFormatTest::TestIdentifiers() {
         {"exbibyte", "exbibyte"},
         {"zebibyte", "zebibyte"},
         {"yobibyte", "yobibyte"},
+        // Testing sort order of prefixes.
         {"megafoot-mebifoot-kibifoot-kilofoot", "kilofoot-kibifoot-megafoot-mebifoot"},
     };
     for (const auto &cas : cases) {

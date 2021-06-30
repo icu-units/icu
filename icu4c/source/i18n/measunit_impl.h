@@ -113,6 +113,10 @@ struct U_I18N_API SingleUnitImpl : public UMemory {
             return 1;
         }
 
+        // When comparing binary prefixes vs SI prefixes, instead of comparing the actual values, we can
+        // multiply the binary prefix power by 3 and compare the powers. if they are equal, we can can
+        // compare the bases.
+        // NOTE: this methodology will fail if the binary prefix more than or equal 98.
         int32_t unitBase = umeas_getPrefixBase(unitPrefix);
         int32_t otherUnitBase = umeas_getPrefixBase(other.unitPrefix);
 
@@ -123,11 +127,6 @@ struct U_I18N_API SingleUnitImpl : public UMemory {
         int32_t otherUnitPowerComp =
             otherUnitBase == 1024 /* Binary Prefix */ ? umeas_getPrefixPower(other.unitPrefix) * 3
                                                       : umeas_getPrefixPower(other.unitPrefix);
-
-        // When comparing binary prefixes vs SI prefixes, instead of comparing the actual values, we can
-        // multiply the binary prefix power by 3 and compare the powers. if they are equal, we can can
-        // compare the bases.
-        // NOTE: this methodology will fail if the binary prefix more than or equal 98.
         if (unitPowerComp < otherUnitPowerComp) {
             return -1;
         }

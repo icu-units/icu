@@ -3923,12 +3923,8 @@ public class MeasureUnitTest extends TestFmwk {
             new TestCase("exbibyte", "exbibyte"),
             new TestCase("zebibyte", "zebibyte"),
             new TestCase("yobibyte", "yobibyte"),
-
             // Testing sort order of prefixes.
-            //
-            // TODO(icu-units#70): revisit when fixing normalization. For now we're
-            // just checking some consistency between C&J.
-            new TestCase("megafoot-mebifoot-kibifoot-kilofoot", "kibifoot-mebifoot-kilofoot-megafoot"),
+            new TestCase("megafoot-mebifoot-kibifoot-kilofoot", "kilofoot-kibifoot-megafoot-mebifoot"),
         };
 
         for (TestCase testCase : cases) {
