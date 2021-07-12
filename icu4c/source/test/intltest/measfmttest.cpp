@@ -4473,7 +4473,9 @@ void MeasureFormatTest::TestIdentifiers() {
         {"zebibyte", "zebibyte"},
         {"yobibyte", "yobibyte"},
         // Testing sort order of prefixes.
-        {"megafoot-mebifoot-kibifoot-kilofoot", "kilofoot-kibifoot-megafoot-mebifoot"},
+        {"megafoot-mebifoot-kibifoot-kilofoot", "mebifoot-megafoot-kibifoot-kilofoot"},
+        // Testing sort of units.
+        {"inch-foot-yard", "foot-inch-yard"}, // TODO: the result should be "yard-foot-inch"
     };
     for (const auto &cas : cases) {
         status.setScope(cas.id);
