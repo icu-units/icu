@@ -130,25 +130,39 @@ public class SingleUnitImpl {
         int unitBase = this.unitPrefix.getBase();
         int otherUnitBase = other.unitPrefix.getBase();
         // Values for comparison purposes only.
-        int unitPowerComp =
-                unitBase == 1024 /* Binary Prefix */ ? this.unitPrefix.getPower() * 3
-                        : this.unitPrefix.getPower();
-        int otherUnitPowerComp =
-                otherUnitBase == 1024 /* Binary Prefix */ ? other.unitPrefix.getPower() * 3
-                        : other.unitPrefix.getPower();
+        int unitPowerCompAbs =
+                unitBase == 1024 /* Binary Prefix */ ? Math.abs(this.unitPrefix.getPower()) * 3
+                        : Math.abs(this.unitPrefix.getPower());
+        int otherUnitPowerCompAbs =
+                otherUnitBase == 1024 /* Binary Prefix */ ? Math.abs(other.unitPrefix.getPower()) * 3
+                        : Math.abs(other.unitPrefix.getPower());
+        // Signs of the power
+        int unitPowerSign = this.unitPrefix.getPower() > 0 ? 1 : -1;
+        int otherUnitPowerSign = other.unitPrefix.getPower() > 0 ? 1 : -1;
 
-        if (unitPowerComp < otherUnitPowerComp) {
+        if (unitPowerSign < otherUnitPowerSign) {
             return -1;
         }
-        if (unitPowerComp > otherUnitPowerComp) {
+        if (unitPowerSign > otherUnitPowerSign) {
             return 1;
+        }
+
+        // NOTE: if the unitPowerCompAbs is less than the other,
+        // we return 1 not -1. Thus because we want th sorting order
+        // for the bigger prefix to be before the smaller.
+        // Example: megabyte should come before kilobyte.
+        if (unitPowerCompAbs < otherUnitPowerCompAbs) {
+            return 1;
+        }
+        if (unitPowerCompAbs > otherUnitPowerCompAbs) {
+            return -1;
         }
 
         if (unitBase < otherUnitBase) {
-            return -1;
+            return 1;
         }
         if (unitBase > otherUnitBase) {
-            return 1;
+            return -1;
         }
 
         return 0;

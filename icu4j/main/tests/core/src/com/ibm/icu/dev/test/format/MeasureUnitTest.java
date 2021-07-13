@@ -3924,7 +3924,10 @@ public class MeasureUnitTest extends TestFmwk {
             new TestCase("zebibyte", "zebibyte"),
             new TestCase("yobibyte", "yobibyte"),
             // Testing sort order of prefixes.
-            new TestCase("megafoot-mebifoot-kibifoot-kilofoot", "kilofoot-kibifoot-megafoot-mebifoot"),
+            new TestCase("megafoot-mebifoot-kibifoot-kilofoot", "mebifoot-megafoot-kibifoot-kilofoot"),
+            // Testing sort of units.
+            new TestCase("inch-foot-yard", "foot-inch-yard"), // TODO: the result should be "yard-foot-inch"
+
         };
 
         for (TestCase testCase : cases) {
